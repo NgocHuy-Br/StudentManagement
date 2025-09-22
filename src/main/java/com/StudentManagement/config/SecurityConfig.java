@@ -28,7 +28,8 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/auth/login", "/auth/perform-login", "/error",
                                                                 "/favicon.ico",
-                                                                "/css/**", "/js/**", "/images/**", "/webjars/**")
+                                                                "/css/**", "/js/**", "/images/**", "/img/**",
+                                                                "/webjars/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 // Tránh lưu request vào session gây rối khi render login.jsp

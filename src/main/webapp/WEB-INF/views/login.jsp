@@ -13,34 +13,67 @@
             <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
             <style>
-                body {
-                    background: #f5f6f8;
+                :root {
+                    --brand-red: #b91c1c;
+                    --brand-red-hover: #9f1414;
+                    --page-bg: #f5f6f8;
+                    --card-radius: 12px;
                 }
 
+                body {
+                    background: var(--page-bg);
+                }
+
+                /* Header + logo responsive */
+                .brand-header {
+                    padding: clamp(12px, 2vw, 24px) 0;
+                }
+
+                .title-top {
+                    color: var(--brand-red);
+                    font-weight: 600;
+                    letter-spacing: .3px;
+                    font-size: clamp(1rem, 2.2vw + .4rem, 1.6rem);
+                    line-height: 1.2;
+                }
+
+                .title-bottom {
+                    color: #111827;
+                    font-weight: 600;
+                    font-size: clamp(0.9rem, 1.8vw + .3rem, 1.4rem);
+                    line-height: 1.25;
+                }
+
+                .logo-img {
+                    height: clamp(120px, 9vw, 180px);
+                    width: auto;
+                }
+
+                /* Card login responsive */
                 .login-card {
-                    max-width: 380px;
-                    width: 100%;
+                    width: min(92vw, 440px);
                     border: 1px solid #e5e7eb;
-                    border-radius: 12px;
+                    border-radius: var(--card-radius);
                     box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
                     overflow: hidden;
+                    background: #fff;
                 }
 
                 .login-header {
-                    background: #b91c1c;
+                    background: var(--brand-red);
                     color: #fff;
-                    padding: 14px 18px;
+                    padding: clamp(10px, 1.8vw, 16px) clamp(12px, 2vw, 18px);
                     display: flex;
                     align-items: center;
                     gap: 10px;
                 }
 
                 .login-header .bi {
-                    font-size: 1.25rem;
+                    font-size: clamp(1rem, 1.2vw + .6rem, 1.35rem);
                 }
 
                 .login-body {
-                    padding: 20px;
+                    padding: clamp(16px, 3vw, 24px);
                 }
 
                 .input-group-text {
@@ -49,34 +82,44 @@
 
                 .form-control:focus {
                     box-shadow: 0 0 0 .2rem rgba(185, 28, 28, .15);
-                    border-color: #b91c1c;
-                }
-
-                .link-forgot {
-                    color: #b91c1c;
-                    font-style: italic;
-                    text-decoration: none;
-                }
-
-                .link-forgot:hover {
-                    text-decoration: underline;
+                    border-color: var(--brand-red);
                 }
 
                 .btn-login {
-                    background: #b91c1c;
-                    border-color: #b91c1c;
+                    background: var(--brand-red);
+                    border-color: var(--brand-red);
                 }
 
                 .btn-login:hover {
-                    background: #9f1414;
-                    border-color: #9f1414;
+                    background: var(--brand-red-hover);
+                    border-color: var(--brand-red-hover);
+                }
+
+                /* Spacing between header and card on small vs large screens */
+                .main-wrap {
+                    margin-top: clamp(8px, 4vh, 24px);
+                    margin-bottom: clamp(8px, 4vh, 24px);
                 }
             </style>
         </head>
 
-        <body>
-            <div class="container min-vh-100 d-flex align-items-center justify-content-center">
-                <div class="login-card bg-white">
+        <body class="d-flex flex-column min-vh-100">
+
+            <!-- Header: 2 dòng tiêu đề + logo ở giữa phía dưới -->
+            <header class="container brand-header">
+                <div class="text-center">
+                    <div class="title-top">HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG</div>
+                    <div class="title-bottom">HỆ THỐNG QUẢN LÝ HỌC TẬP</div>
+                    <div class="mt-2">
+                        <img src="<c:url value='/img/ptit-logo.png'/>" class="logo-img" alt="PTIT logo">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Card đăng nhập căn giữa, responsive -->
+            <main
+                class="container main-wrap flex-grow-1 d-flex align-items-start align-items-md-center justify-content-center">
+                <div class="login-card">
                     <div class="login-header">
                         <i class="bi bi-person-fill"></i>
                         <strong>ĐĂNG NHẬP</strong>
@@ -86,11 +129,8 @@
                         <c:if test="${param.error == 'true'}">
                             <div class="alert alert-danger py-2 mb-3">Sai tài khoản hoặc mật khẩu.</div>
                         </c:if>
-                        <c:if test="${param.logout == 'true'}">
-                            <div class="alert alert-success py-2 mb-3">Đã đăng xuất.</div>
-                        </c:if>
 
-                        <form method="post" action="/auth/perform-login" autocomplete="on">
+                        <form method="post" action="<c:url value='/auth/perform-login'/>" autocomplete="on">
                             <div class="mb-3">
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-person"></i></span>
@@ -99,7 +139,7 @@
                                 </div>
                             </div>
 
-                            <div class="mb-1">
+                            <div class="mb-3">
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                                     <input type="password" class="form-control" id="password" name="password"
@@ -112,7 +152,7 @@
                             </div>
 
                             <div class="d-flex justify-content-end mb-3">
-                                <a class="link-forgot" href="#">Quên mật khẩu</a>
+                                <a class="link-secondary fst-italic" style="color:#b91c1c" href="#">Quên mật khẩu</a>
                             </div>
 
                             <button class="btn btn-login w-100 text-white" type="submit">
@@ -121,7 +161,7 @@
                         </form>
                     </div>
                 </div>
-            </div>
+            </main>
 
             <script>
                 const toggleBtn = document.getElementById('togglePassword');
