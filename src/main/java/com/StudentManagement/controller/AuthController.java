@@ -16,6 +16,20 @@ public class AuthController {
 
     @GetMapping("/welcome")
     public String welcome(Authentication auth, Model model) {
+        if (auth == null)
+            return "redirect:/auth/login";
+
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        boolean isTeacher = auth.getAuthorities().stream().anyMatch(a -> "ROLE_TEACHER".equals(a.getAuthority()));
+        boolean isStudent = auth.getAuthorities().stream().anyMatch(a -> "ROLE_STUDENT".equals(a.getAuthority()));
+
+        if (isAdmin)
+            return "redirect:/admin";
+        if (isTeacher)
+            return "redirect:/teacher";
+        if (isStudent)
+            return "redirect:/student";
+
         String role = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority).findFirst().orElse("ROLE_USER");
         String roleDisplay = switch (role) {
@@ -26,6 +40,6 @@ public class AuthController {
         };
         model.addAttribute("roleDisplay", roleDisplay);
         model.addAttribute("username", auth.getName());
-        return "welcome";
+        return "welcome"; // fallback
     }
 }
