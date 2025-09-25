@@ -11,7 +11,7 @@ public class AuthController {
 
     @GetMapping("/auth/login")
     public String loginPage() {
-        return "login"; // /WEB-INF/views/login.jsp
+        return "common/login"; // /WEB-INF/views/login.jsp
     }
 
     @GetMapping("/welcome")

@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
@@ -19,7 +18,7 @@ public class SecurityConfig {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
-                                                // Cho phép các forward/error nội bộ (render JSP) để không bị chặn
+                                                // Cho phép các forward/error nội bộ (render JSP)
                                                 .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR)
                                                 .permitAll()
                                                 // Cho phép đường dẫn JSP nội bộ dưới WEB-INF khi forward
@@ -32,14 +31,13 @@ public class SecurityConfig {
                                                                 "/webjars/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
-                                // Tránh lưu request vào session gây rối khi render login.jsp
                                 .requestCache(cache -> cache.disable())
                                 .formLogin(form -> form
                                                 .loginPage("/auth/login")
                                                 .loginProcessingUrl("/auth/perform-login")
                                                 .usernameParameter("username")
                                                 .passwordParameter("password")
-                                                .defaultSuccessUrl("/welcome") // không ép alwaysUse
+                                                .defaultSuccessUrl("/welcome")
                                                 .failureUrl("/auth/login?error=true")
                                                 .permitAll())
                                 .logout(logout -> logout
@@ -51,21 +49,39 @@ public class SecurityConfig {
 
         @Bean
         public PasswordEncoder passwordEncoder() {
-                // CHỈ DÙNG KHI TEST LOCAL: so sánh plain-text
-                return new PasswordEncoder() {
-                        @Override
-                        public String encode(CharSequence rawPassword) {
-                                return rawPassword == null ? null : rawPassword.toString();
-                        }
+                // LƯU: BCrypt; SO KHỚP: nếu encoded là BCrypt thì BCrypt.matches, nếu là
+                // plain-text cũ thì equals
+                return new BackwardCompatiblePasswordEncoder();
+        }
 
-                        @Override
-                        public boolean matches(CharSequence rawPassword, String encodedPassword) {
-                                if (rawPassword == null && encodedPassword == null)
-                                        return true;
-                                if (rawPassword == null || encodedPassword == null)
-                                        return false;
-                                return encodedPassword.equals(rawPassword.toString());
+        // Encoder tương thích ngược: encode = BCrypt, matches hỗ trợ cả BCrypt và
+        // plain-text legacy
+        static class BackwardCompatiblePasswordEncoder implements PasswordEncoder {
+                private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
+
+                @Override
+                public String encode(CharSequence rawPassword) {
+                        return rawPassword == null ? null : bcrypt.encode(rawPassword);
+                }
+
+                @Override
+                public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                        if (rawPassword == null && encodedPassword == null)
+                                return true;
+                        if (rawPassword == null || encodedPassword == null)
+                                return false;
+
+                        // Nếu trong DB là hash BCrypt
+                        if (isBcryptHash(encodedPassword)) {
+                                return bcrypt.matches(rawPassword, encodedPassword);
                         }
-                };
+                        // Legacy: plain-text (tạm thời hỗ trợ để không khóa tài khoản cũ)
+                        return encodedPassword.equals(rawPassword.toString());
+                }
+
+                private boolean isBcryptHash(String s) {
+                        // BCrypt chuẩn bắt đầu với $2a$, $2b$, $2y$
+                        return s.startsWith("$2a$") || s.startsWith("$2b$") || s.startsWith("$2y$");
+                }
         }
 }

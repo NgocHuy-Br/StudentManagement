@@ -9,29 +9,34 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String username; // admin, mã GV, mã SV
+    // Mã đăng nhập: với sinh viên dùng MSSV
+    @Column(unique = true, nullable = false, length = 100)
+    private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 200)
     private String password;
 
+    @Column(length = 100)
     private String fname;
+
+    @Column(length = 100)
     private String lname;
 
-    @Column(unique = true)
+    @Column(unique = true, length = 200)
     private String email;
 
+    @Column(length = 30)
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role; // ADMIN, TEACHER, STUDENT
+    @Column(nullable = false, length = 20)
+    private Role role;
 
     public enum Role {
         ADMIN, TEACHER, STUDENT
     }
 
-    // Getter & Setter
+    // Getters & Setters
     public Long getId() {
         return id;
     }
