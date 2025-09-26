@@ -7,7 +7,7 @@
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>Quản lý môn học</title>
+                <title>Quản lý ngành học</title>
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
                     rel="stylesheet">
@@ -30,11 +30,11 @@
                         box-shadow: 0 10px 25px rgba(0, 0, 0, .06)
                     }
 
-                    .subject-toolbar .search .form-control {
+                    .major-toolbar .search .form-control {
                         min-width: 260px
                     }
 
-                    .table-subjects tbody tr:hover {
+                    .table-majors tbody tr:hover {
                         background: #fffaf7;
                     }
 
@@ -45,10 +45,6 @@
 
                     .sort-link .bi {
                         opacity: .5
-                    }
-
-                    .badge {
-                        font-size: 0.75em;
                     }
                 </style>
             </head>
@@ -61,8 +57,8 @@
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <!-- Toolbar -->
-                                    <div class="d-flex justify-content-between align-items-center mb-3 subject-toolbar">
-                                        <h5 class="mb-0"><i class="bi bi-book me-2"></i>Quản lý môn học</h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-3 major-toolbar">
+                                        <h5 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Quản lý ngành học</h5>
                                         <button class="btn btn-primary" data-bs-toggle="modal"
                                             data-bs-target="#modalCreate">
                                             <i class="bi bi-plus-circle me-1"></i>Thêm mới
@@ -83,75 +79,70 @@
                                         </div>
                                     </c:if>
 
-                                    <!-- Tìm kiếm và lọc -->
-                                    <form method="get" class="d-flex gap-2 mb-3 flex-wrap">
+                                    <!-- Tìm kiếm -->
+                                    <form method="get" class="d-flex gap-2 mb-3">
                                         <div class="search flex-grow-1">
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                                 <input class="form-control" name="q" value="${fn:escapeXml(q)}"
-                                                    placeholder="Tìm mã môn, tên môn, ngành...">
+                                                    placeholder="Tìm mã ngành, tên ngành, mô tả...">
                                             </div>
                                         </div>
-                                        <select name="majorId" class="form-select" style="width: auto;">
-                                            <option value="">-- Tất cả ngành --</option>
-                                            <c:forEach var="major" items="${majors}">
-                                                <option value="${major.id}" ${majorId==major.id ? 'selected' : '' }>
-                                                    ${major.majorCode}
-                                                </option>
-                                            </c:forEach>
-                                        </select>
                                         <button class="btn btn-outline-primary" type="submit">Tìm</button>
-                                        <c:if test="${not empty q or not empty majorId}">
+                                        <c:if test="${not empty q}">
                                             <a class="btn btn-outline-secondary" href="?">Xóa</a>
                                         </c:if>
                                     </form>
 
-                                    <!-- Bảng danh sách môn học -->
+                                    <!-- Bảng danh sách ngành học -->
                                     <div class="table-responsive">
-                                        <table class="table table-hover align-middle table-subjects">
+                                        <table class="table table-hover align-middle table-majors">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th>Mã môn
+                                                    <th>Mã ngành
                                                         <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=subjectCode&dir=${dir=='asc' && sort=='subjectCode' ? 'desc' : 'asc'}">
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=majorCode&dir=${dir=='asc' && sort=='majorCode' ? 'desc' : 'asc'}">
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
-                                                    <th>Tên môn học
+                                                    <th>Tên ngành
                                                         <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=subjectName&dir=${dir=='asc' && sort=='subjectName' ? 'desc' : 'asc'}">
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=majorName&dir=${dir=='asc' && sort=='majorName' ? 'desc' : 'asc'}">
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
-                                                    <th>Tín chỉ
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=credit&dir=${dir=='asc' && sort=='credit' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>Ngành</th>
+                                                    <th>Mô tả</th>
+                                                    <th>Số SV</th>
+                                                    <th>Số môn</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <c:if test="${page.totalElements == 0}">
                                                     <tr>
-                                                        <td colspan="4" class="text-center text-muted py-4">Chưa có môn
-                                                            học nào.</td>
+                                                        <td colspan="5" class="text-center text-muted py-4">Chưa có
+                                                            ngành học nào.</td>
                                                     </tr>
                                                 </c:if>
 
-                                                <c:forEach var="sub" items="${page.content}">
+                                                <c:forEach var="major" items="${page.content}">
                                                     <tr>
-                                                        <td><strong>${sub.subjectCode}</strong></td>
-                                                        <td>${sub.subjectName}</td>
                                                         <td>
-                                                            <span class="badge bg-info">${sub.credit} TC</span>
+                                                            <strong class="text-primary">${major.majorCode}</strong>
+                                                        </td>
+                                                        <td>
+                                                            <strong>${major.majorName}</strong>
+                                                        </td>
+                                                        <td>
+                                                            <small class="text-muted">${major.description}</small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-info">${fn:length(major.students)}
+                                                                SV</span>
                                                         </td>
                                                         <td>
                                                             <span
-                                                                class="badge bg-secondary">${sub.major.majorCode}</span>
-                                                            <small
-                                                                class="text-muted d-block">${sub.major.majorName}</small>
+                                                                class="badge bg-secondary">${fn:length(major.subjects)}
+                                                                môn</span>
                                                         </td>
                                                     </tr>
                                                 </c:forEach>
@@ -165,17 +156,17 @@
                                             <ul class="pagination pagination-sm mb-0">
                                                 <li class="page-item ${page.first ? 'disabled' : ''}">
                                                     <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&majorId=${majorId}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
+                                                        href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
                                                 </li>
                                                 <c:forEach var="i" begin="0" end="${page.totalPages-1}">
                                                     <li class="page-item ${i==page.number ? 'active' : ''}">
                                                         <a class="page-link"
-                                                            href="?q=${fn:escapeXml(q)}&majorId=${majorId}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                            href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
                                                     </li>
                                                 </c:forEach>
                                                 <li class="page-item ${page.last ? 'disabled' : ''}">
                                                     <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&majorId=${majorId}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
+                                                        href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
                                                 </li>
                                             </ul>
                                         </nav>
@@ -184,41 +175,32 @@
                             </div>
                     </main>
 
-                    <!-- Modal: Thêm môn học -->
+                    <!-- Modal: Thêm ngành học -->
                     <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <form class="modal-content" method="post"
-                                action="${pageContext.request.contextPath}/admin/subjects">
+                                action="${pageContext.request.contextPath}/admin/majors">
                                 <div class="modal-header">
-                                    <h5 class="modal-title"><i class="bi bi-book-fill me-2"></i>Thêm môn học</h5>
+                                    <h5 class="modal-title"><i class="bi bi-mortarboard-fill me-2"></i>Thêm ngành học
+                                    </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
                                     <div class="row g-3">
-                                        <div class="col-sm-6">
-                                            <label class="form-label">Mã môn học</label>
-                                            <input name="subjectCode" class="form-control" required
-                                                placeholder="VD: INT1154">
+                                        <div class="col-sm-4">
+                                            <label class="form-label">Mã ngành</label>
+                                            <input name="majorCode" class="form-control" required
+                                                placeholder="VD: CNTT">
                                         </div>
-                                        <div class="col-sm-6">
-                                            <label class="form-label">Số tín chỉ</label>
-                                            <input name="credit" type="number" min="1" max="10" class="form-control"
-                                                required>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Tên môn học</label>
-                                            <input name="subjectName" class="form-control" required
-                                                placeholder="VD: Tin học cơ sở">
+                                        <div class="col-sm-8">
+                                            <label class="form-label">Tên ngành</label>
+                                            <input name="majorName" class="form-control" required
+                                                placeholder="VD: Công nghệ thông tin">
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label">Ngành học</label>
-                                            <select name="majorId" class="form-select" required>
-                                                <option value="">-- Chọn ngành --</option>
-                                                <c:forEach var="major" items="${majors}">
-                                                    <option value="${major.id}">${major.majorCode} - ${major.majorName}
-                                                    </option>
-                                                </c:forEach>
-                                            </select>
+                                            <label class="form-label">Mô tả</label>
+                                            <textarea name="description" class="form-control" rows="3"
+                                                placeholder="Mô tả về ngành học..."></textarea>
                                         </div>
                                     </div>
                                 </div>

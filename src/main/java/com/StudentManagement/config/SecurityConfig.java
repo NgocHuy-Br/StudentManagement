@@ -30,6 +30,10 @@ public class SecurityConfig {
                                                                 "/css/**", "/js/**", "/images/**", "/img/**",
                                                                 "/webjars/**")
                                                 .permitAll()
+                                                // Role-based authorization
+                                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                                .requestMatchers("/teacher/**").hasRole("TEACHER")
+                                                .requestMatchers("/student/**").hasRole("STUDENT")
                                                 .anyRequest().authenticated())
                                 .requestCache(cache -> cache.disable())
                                 .formLogin(form -> form

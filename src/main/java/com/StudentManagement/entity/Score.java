@@ -4,24 +4,41 @@ package com.StudentManagement.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "scores")
+@Table(name = "scores", uniqueConstraints = @UniqueConstraint(columnNames = { "student_id", "subject_id", "semester" }))
 public class Score {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "student_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @ManyToOne
-    @JoinColumn(name = "course_id")
-    private Course course;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id", nullable = false)
+    private Subject subject;
 
-    private Float score;
-    private String type; // Midterm, Final, ...
+    @Column(name = "avg_score")
+    private Float avgScore; // Điểm trung bình môn (chỉ 1 cột)
 
-    // Getter & Setter
+    @Column(length = 20, nullable = false)
+    private String semester; // Học kỳ: 2024-1, 2024-2, etc.
+
+    @Column(length = 500)
+    private String notes; // Ghi chú (nếu cần)
+
+    // Constructors
+    public Score() {
+    }
+
+    public Score(Student student, Subject subject, Float avgScore, String semester) {
+        this.student = student;
+        this.subject = subject;
+        this.avgScore = avgScore;
+        this.semester = semester;
+    }
+
+    // Getters & Setters
     public Long getId() {
         return id;
     }
@@ -38,27 +55,35 @@ public class Score {
         this.student = student;
     }
 
-    public Course getCourse() {
-        return course;
+    public Subject getSubject() {
+        return subject;
     }
 
-    public void setCourse(Course course) {
-        this.course = course;
+    public void setSubject(Subject subject) {
+        this.subject = subject;
     }
 
-    public Float getScore() {
-        return score;
+    public Float getAvgScore() {
+        return avgScore;
     }
 
-    public void setScore(Float score) {
-        this.score = score;
+    public void setAvgScore(Float avgScore) {
+        this.avgScore = avgScore;
     }
 
-    public String getType() {
-        return type;
+    public String getSemester() {
+        return semester;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setSemester(String semester) {
+        this.semester = semester;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }

@@ -140,9 +140,9 @@
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
-                                                    <th>Khoa
+                                                    <th>Ngành
                                                         <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=faculty&dir=${dir=='asc' && sort=='faculty' ? 'desc' : 'asc'}">
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=major.majorName&dir=${dir=='asc' && sort=='major.majorName' ? 'desc' : 'asc'}">
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
@@ -164,7 +164,7 @@
                                                         <td>${s.user.email}</td>
                                                         <td>${s.user.phone}</td>
                                                         <td>${s.className}</td>
-                                                        <td>${s.faculty}</td>
+                                                        <td>${s.major.majorName}</td>
                                                     </tr>
                                                 </c:forEach>
                                             </tbody>
@@ -236,8 +236,14 @@
                                             <input name="className" class="form-control" placeholder="VD: D20CQCN01-N">
                                         </div>
                                         <div class="col-sm-6">
-                                            <label class="form-label">Khoa</label>
-                                            <input name="faculty" class="form-control" placeholder="VD: CNTT">
+                                            <label class="form-label">Ngành học</label>
+                                            <select name="majorId" class="form-select" required>
+                                                <option value="">-- Chọn ngành --</option>
+                                                <c:forEach var="major" items="${majors}">
+                                                    <option value="${major.id}">${major.majorCode} - ${major.majorName}
+                                                    </option>
+                                                </c:forEach>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>

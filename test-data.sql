@@ -1,4 +1,4 @@
--- Script SQL để tạo dữ liệu test cho hệ thống Student Management
+-- Script SQL để tạo dữ liệu test cho hệ thống Student Management (Updated Structure)
 -- Chạy script này trong MySQL Workbench sau khi đã tạo database student_management
 
 USE student_management;
@@ -13,41 +13,99 @@ INSERT INTO users (username, password, fname, lname, email, phone, role) VALUES
 ('GV002', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Trần Thị', 'Bình', 'ttb@ptit.edu.vn', '0987654322', 'TEACHER'),
 ('GV003', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Lê Hoàng', 'Cường', 'lhc@ptit.edu.vn', '0987654323', 'TEACHER'),
 
--- Students
+-- Students (updated with huy3, huy4 from your screenshot)
+('huy3', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', '333', '', '333@11', '333', 'STUDENT'),
+('huy4', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', '123', '456', '222@gmail', '123', 'STUDENT'),
 ('B21DCCN001', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Phạm Minh', 'Đức', 'pmd@student.ptit.edu.vn', '0123456701', 'STUDENT'),
 ('B21DCCN002', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Vũ Thị', 'Emi', 've@student.ptit.edu.vn', '0123456702', 'STUDENT'),
-('B21DCCN003', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Hoàng Văn', 'Phúc', 'hvp@student.ptit.edu.vn', '0123456703', 'STUDENT'),
-('B21DCCN004', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Đỗ Thị', 'Giang', 'dtg@student.ptit.edu.vn', '0123456704', 'STUDENT'),
-('B21DCCN005', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Ngô Minh', 'Hải', 'nmh@student.ptit.edu.vn', '0123456705', 'STUDENT');
+('B21DCCN003', '$2a$10$9j8YgUqVjK8RJ2vXDu0bceK5kAX5pOJy4.fJhf8wR6K8vNJyJKJy.', 'Hoàng Văn', 'Phúc', 'hvp@student.ptit.edu.vn', '0123456703', 'STUDENT');
 
--- 2. Thêm dữ liệu teachers
+-- 2. Thêm dữ liệu majors (ngành học)
+INSERT INTO majors (major_code, major_name, description) VALUES
+('CNTT', 'Công nghệ thông tin', 'Ngành đào tạo chuyên gia về công nghệ thông tin và phần mềm'),
+('KHMT', 'Khoa học máy tính', 'Ngành nghiên cứu về khoa học máy tính và trí tuệ nhân tạo'),
+('KTPM', 'Kỹ thuật phần mềm', 'Ngành đào tạo kỹ sư phần mềm chuyên nghiệp'),
+('HTTT', 'Hệ thống thông tin', 'Ngành về quản lý và phân tích hệ thống thông tin');
+
+-- 3. Thêm dữ liệu teachers
 INSERT INTO teachers (id, department) VALUES
 (2, 'Khoa học máy tính'),
 (3, 'Toán ứng dụng'),
 (4, 'Kỹ thuật phần mềm');
 
--- 3. Thêm dữ liệu students
-INSERT INTO students (id, class_name, faculty) VALUES
-(5, 'D21CQCN01-B', 'Công nghệ thông tin'),
-(6, 'D21CQCN02-B', 'Công nghệ thông tin'),
-(7, 'D21CQCN03-B', 'Công nghệ thông tin'),
-(8, 'D21CQCN04-B', 'Công nghệ thông tin'),
-(9, 'D21CQCN05-B', 'Công nghệ thông tin');
+-- 4. Thêm dữ liệu students (với major_id thay vì faculty)
+INSERT INTO students (id, class_name, major_id) VALUES
+(5, 'aaa', 1), -- huy3 - CNTT
+(6, 'l4', 2),  -- huy4 - KHMT  
+(7, 'D21CQCN01-B', 1), -- B21DCCN001 - CNTT
+(8, 'D21CQCN02-B', 1), -- B21DCCN002 - CNTT
+(9, 'D21CQCN03-B', 1); -- B21DCCN003 - CNTT
 
--- 4. Thêm dữ liệu subjects (môn học)
-INSERT INTO subjects (subject_code, subject_name, credit) VALUES
-('INT1154', 'Tin học cơ sở', 4),
-('INT1155', 'Lập trình căn bản', 4),
-('INT1339', 'Ngôn ngữ lập trình Java', 4),
-('INT2204', 'Lập trình hướng đối tượng', 3),
-('INT2210', 'Cấu trúc dữ liệu và giải thuật', 4),
-('INT3306', 'Phát triển ứng dụng web', 3),
-('INT3505', 'Kiến trúc máy tính', 3),
-('MAT1093', 'Đại số tuyến tính', 3),
-('MAT1041', 'Giải tích 1', 4),
-('PHY1110', 'Vật lý đại cương', 4);
+-- 5. Thêm dữ liệu subjects (môn học với major_id)
+INSERT INTO subjects (subject_code, subject_name, credit, major_id) VALUES
+-- Môn chung cho CNTT
+('INT1154', 'Tin học cơ sở', 4, 1),
+('INT1155', 'Lập trình căn bản', 4, 1),
+('INT1339', 'Ngôn ngữ lập trình Java', 4, 1),
+('INT2204', 'Lập trình hướng đối tượng', 3, 1),
+('INT2210', 'Cấu trúc dữ liệu và giải thuật', 4, 1),
+('INT3306', 'Phát triển ứng dụng web', 3, 1),
 
--- 5. Thêm dữ liệu courses (lớp học phần)
+-- Môn cho KHMT
+('INT3505', 'Kiến trúc máy tính', 3, 2),
+('INT3401', 'Trí tuệ nhân tạo', 3, 2),
+('INT3402', 'Học máy', 4, 2),
+
+-- Môn cho KTPM
+('INT3501', 'Quản lý dự án phần mềm', 3, 3),
+('INT3502', 'Kiểm thử phần mềm', 3, 3),
+
+-- Môn cơ bản
+('MAT1093', 'Đại số tuyến tính', 3, 1),
+('MAT1041', 'Giải tích 1', 4, 1),
+('PHY1110', 'Vật lý đại cương', 4, 1);
+
+-- 6. Thêm dữ liệu teacher_subjects (phân công giảng dạy)
+INSERT INTO teacher_subjects (teacher_id, subject_id, semester, class_name) VALUES
+-- GV001 dạy các môn CNTT
+(2, 1, '2024-1', 'N1'), -- INT1154
+(2, 2, '2024-1', 'N1'), -- INT1155
+(2, 3, '2024-2', 'N1'), -- INT1339
+
+-- GV002 dạy toán
+(3, 11, '2024-1', 'N1'), -- MAT1093
+(3, 12, '2024-1', 'N2'), -- MAT1041
+
+-- GV003 dạy KTPM
+(4, 10, '2024-1', 'N1'), -- INT3501
+(4, 11, '2024-2', 'N1'); -- INT3502
+
+-- 7. Thêm dữ liệu scores (điểm số đơn giản)
+INSERT INTO scores (student_id, subject_id, avg_score, semester, notes) VALUES
+-- Điểm của huy3 (student_id = 5)
+(5, 1, 8.5, '2024-1', 'Học tốt'),
+(5, 2, 7.0, '2024-1', null),
+(5, 11, 9.0, '2024-1', 'Xuất sắc'),
+
+-- Điểm của huy4 (student_id = 6) 
+(6, 7, 8.0, '2024-1', null),
+(6, 8, 7.5, '2024-1', 'Khá'),
+(6, 12, 6.5, '2024-1', null),
+
+-- Điểm của B21DCCN001 (student_id = 7)
+(7, 1, 8.8, '2024-1', null),
+(7, 2, 9.2, '2024-1', 'Rất tốt'),
+(7, 3, 8.0, '2024-2', null),
+
+-- Điểm của B21DCCN002 (student_id = 8)
+(8, 1, 7.2, '2024-1', null),
+(8, 2, 8.5, '2024-1', null),
+(8, 11, 8.0, '2024-1', null),
+
+-- Điểm của B21DCCN003 (student_id = 9)
+(9, 1, 9.0, '2024-1', 'Xuất sắc'),
+(9, 2, 8.3, '2024-1', null),
+(9, 3, 8.7, '2024-2', 'Tốt');
 INSERT INTO courses (subject_id, teacher_id, semester, group_name) VALUES
 -- Học kỳ 2024.1
 (1, 2, '2024.1', 'Nhóm 1'),

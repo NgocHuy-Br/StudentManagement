@@ -1,6 +1,7 @@
 package com.StudentManagement.entity;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "students")
@@ -14,9 +15,16 @@ public class Student {
     private User user;
 
     private String className; // Lớp sinh viên
-    private String faculty; // Khoa
 
-    // Getter & Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "major_id", nullable = false)
+    private Major major; // Ngành học thay vì faculty
+
+    // Quan hệ với Score (1 sinh viên có nhiều điểm)
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Score> scores;
+
+    // Getters & Setters
     public Long getId() {
         return id;
     }
@@ -41,11 +49,19 @@ public class Student {
         this.className = className;
     }
 
-    public String getFaculty() {
-        return faculty;
+    public Major getMajor() {
+        return major;
     }
 
-    public void setFaculty(String faculty) {
-        this.faculty = faculty;
+    public void setMajor(Major major) {
+        this.major = major;
+    }
+
+    public List<Score> getScores() {
+        return scores;
+    }
+
+    public void setScores(List<Score> scores) {
+        this.scores = scores;
     }
 }

@@ -1,7 +1,6 @@
 package com.StudentManagement.controller;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,16 +29,7 @@ public class AuthController {
         if (isStudent)
             return "redirect:/student";
 
-        String role = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority).findFirst().orElse("ROLE_USER");
-        String roleDisplay = switch (role) {
-            case "ROLE_ADMIN" -> "Quản trị viên";
-            case "ROLE_TEACHER" -> "Giảng viên";
-            case "ROLE_STUDENT" -> "Sinh viên";
-            default -> "Người dùng";
-        };
-        model.addAttribute("roleDisplay", roleDisplay);
-        model.addAttribute("username", auth.getName());
-        return "welcome"; // fallback
+        // Fallback: redirect to login if no valid role
+        return "redirect:/auth/login";
     }
 }
