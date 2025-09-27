@@ -36,4 +36,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
         or lower(s.major.majorCode) like lower(concat('%', :q, '%'))
       """)
   Page<Student> search(@Param("q") String q, Pageable pageable);
+
+  // Đếm số sinh viên theo ngành
+  @Query("select count(s) from Student s where s.major.id = :majorId")
+  long countByMajorId(@Param("majorId") Long majorId);
 }

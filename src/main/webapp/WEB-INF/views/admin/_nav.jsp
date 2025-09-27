@@ -67,5 +67,11 @@
                         <i class="bi bi-book me-1"></i> Môn học
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link ${activeTab == 'majors' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/majors">
+                        <i class="bi bi-mortarboard-fill me-1"></i> Ngành học
+                    </a>
+                </li>
             </ul>
         </div>
