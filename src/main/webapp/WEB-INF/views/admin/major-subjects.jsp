@@ -133,10 +133,25 @@
                                                 <i class="bi bi-book me-2"></i>
                                                 Danh sách môn học
                                             </h5>
-                                            <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                                                data-bs-target="#addSubjectModal">
-                                                <i class="bi bi-plus-lg me-1"></i>Thêm môn học
-                                            </button>
+                                            <div class="dropdown">
+                                                <button class="btn btn-success dropdown-toggle" type="button"
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-plus-lg me-1"></i>Thêm môn học
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                            data-bs-target="#addSubjectModal">
+                                                            <i class="bi bi-plus-circle me-2"></i>Tạo môn học mới
+                                                        </a></li>
+                                                    <c:if test="${not empty availableSubjects}">
+                                                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                                data-bs-target="#addExistingSubjectModal">
+                                                                <i class="bi bi-bookmark-plus me-2"></i>Thêm môn học có
+                                                                sẵn
+                                                            </a></li>
+                                                    </c:if>
+                                                </ul>
+                                            </div>
                                         </div>
                                         <div class="card-body">
                                             <!-- Search and Filter -->
@@ -340,6 +355,55 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="number" class="form-control" id="addSubjectCredit"
                                                     name="credit" min="1" max="10" value="3" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="bi bi-check-lg me-1"></i>Thêm môn học
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Existing Subject Modal -->
+                        <div class="modal fade" id="addExistingSubjectModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            <i class="bi bi-bookmark-plus me-2"></i>Thêm môn học có sẵn vào ngành
+                                            ${major.majorCode}
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="post"
+                                        action="${contextPath}/admin/majors/${major.id}/subjects/add-existing">
+                                        <div class="modal-body">
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                Chọn môn học có sẵn để thêm vào ngành:
+                                                <strong>${major.majorName}</strong>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="existingSubjectId" class="form-label">Chọn môn học <span
+                                                        class="text-danger">*</span></label>
+                                                <select class="form-select" id="existingSubjectId" name="subjectId"
+                                                    required>
+                                                    <option value="">-- Chọn môn học --</option>
+                                                    <c:forEach var="subject" items="${availableSubjects}">
+                                                        <option value="${subject.id}">
+                                                            ${subject.subjectCode} - ${subject.subjectName}
+                                                            (${subject.credit} TC)
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+                                                <div class="form-text">
+                                                    Chỉ hiển thị các môn học chưa thuộc ngành này.
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="modal-footer">

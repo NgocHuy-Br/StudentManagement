@@ -89,19 +89,11 @@
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                                 <input class="form-control" name="q" value="${fn:escapeXml(q)}"
-                                                    placeholder="Tìm mã môn, tên môn, ngành...">
+                                                    placeholder="Tìm mã môn, tên môn...">
                                             </div>
                                         </div>
-                                        <select name="majorId" class="form-select" style="width: auto;">
-                                            <option value="">-- Tất cả ngành --</option>
-                                            <c:forEach var="major" items="${majors}">
-                                                <option value="${major.id}" ${majorId==major.id ? 'selected' : '' }>
-                                                    ${major.majorCode}
-                                                </option>
-                                            </c:forEach>
-                                        </select>
                                         <button class="btn btn-outline-primary" type="submit">Tìm</button>
-                                        <c:if test="${not empty q or not empty majorId}">
+                                        <c:if test="${not empty q}">
                                             <a class="btn btn-outline-secondary" href="?">Xóa</a>
                                         </c:if>
                                     </form>
@@ -125,11 +117,11 @@
                                                     </th>
                                                     <th>Tín chỉ
                                                         <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=credit&dir=${dir=='asc' && sort=='credit' ? 'desc' : 'asc'}">
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=credit&dir=${dir=='asc' && sort=='credit' ? 'desc' : 'asc'}">
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
-                                                    <th>Ngành</th>
+                                                    <th>Các ngành</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -148,10 +140,27 @@
                                                             <span class="badge bg-info">${sub.credit} TC</span>
                                                         </td>
                                                         <td>
-                                                            <span
-                                                                class="badge bg-secondary">${sub.major.majorCode}</span>
-                                                            <small
-                                                                class="text-muted d-block">${sub.major.majorName}</small>
+                                                            <c:choose>
+                                                                <c:when test="${empty sub.majors}">
+                                                                    <span class="text-muted">Chưa thuộc ngành nào</span>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <c:forEach var="major" items="${sub.majors}"
+                                                                        varStatus="status">
+                                                                        <span
+                                                                            class="badge bg-secondary me-1">${major.majorCode}</span>
+                                                                        <c:if test="${!status.last}">
+                                                                        </c:if>
+                                                                    </c:forEach>
+                                                                    <br>
+                                                                    <c:forEach var="major" items="${sub.majors}"
+                                                                        varStatus="status">
+                                                                        <small
+                                                                            class="text-muted">${major.majorName}</small>
+                                                                        <c:if test="${!status.last}">, </c:if>
+                                                                    </c:forEach>
+                                                                </c:otherwise>
+                                                            </c:choose>
                                                         </td>
                                                     </tr>
                                                 </c:forEach>
@@ -165,17 +174,17 @@
                                             <ul class="pagination pagination-sm mb-0">
                                                 <li class="page-item ${page.first ? 'disabled' : ''}">
                                                     <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&majorId=${majorId}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
+                                                        href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
                                                 </li>
                                                 <c:forEach var="i" begin="0" end="${page.totalPages-1}">
                                                     <li class="page-item ${i==page.number ? 'active' : ''}">
                                                         <a class="page-link"
-                                                            href="?q=${fn:escapeXml(q)}&majorId=${majorId}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                            href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
                                                     </li>
                                                 </c:forEach>
                                                 <li class="page-item ${page.last ? 'disabled' : ''}">
                                                     <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&majorId=${majorId}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
+                                                        href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
                                                 </li>
                                             </ul>
                                         </nav>
@@ -209,16 +218,6 @@
                                             <label class="form-label">Tên môn học</label>
                                             <input name="subjectName" class="form-control" required
                                                 placeholder="VD: Tin học cơ sở">
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Ngành học</label>
-                                            <select name="majorId" class="form-select" required>
-                                                <option value="">-- Chọn ngành --</option>
-                                                <c:forEach var="major" items="${majors}">
-                                                    <option value="${major.id}">${major.majorCode} - ${major.majorName}
-                                                    </option>
-                                                </c:forEach>
-                                            </select>
                                         </div>
                                     </div>
                                 </div>

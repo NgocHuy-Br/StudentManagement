@@ -120,6 +120,8 @@ public class AdminController {
             @RequestParam(required = false) String lname,
             @RequestParam String email,
             @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String birthDate,
             @RequestParam(required = false) String className,
             @RequestParam Long majorId,
             RedirectAttributes ra) {
@@ -155,6 +157,19 @@ public class AdminController {
         svUser.setLname(lname);
         svUser.setEmail(e);
         svUser.setPhone(phone);
+        svUser.setAddress(address);
+
+        // Xử lý ngày sinh
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            try {
+                svUser.setBirthDate(java.time.LocalDate.parse(birthDate.trim()));
+            } catch (Exception ex) {
+                ra.addFlashAttribute("error",
+                        "Định dạng ngày sinh không hợp lệ. Vui lòng sử dụng định dạng: YYYY-MM-DD");
+                return "redirect:/admin/students";
+            }
+        }
+
         svUser.setRole(User.Role.STUDENT);
         svUser = userRepository.save(svUser);
 
@@ -202,6 +217,8 @@ public class AdminController {
             @RequestParam(required = false) String lname,
             @RequestParam String email,
             @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String birthDate,
             @RequestParam(required = false) String department,
             RedirectAttributes ra) {
 
@@ -229,6 +246,19 @@ public class AdminController {
         teacherUser.setLname(lname);
         teacherUser.setEmail(e);
         teacherUser.setPhone(phone);
+        teacherUser.setAddress(address);
+
+        // Xử lý ngày sinh
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            try {
+                teacherUser.setBirthDate(java.time.LocalDate.parse(birthDate.trim()));
+            } catch (Exception ex) {
+                ra.addFlashAttribute("error",
+                        "Định dạng ngày sinh không hợp lệ. Vui lòng sử dụng định dạng: YYYY-MM-DD");
+                return "redirect:/admin/teachers";
+            }
+        }
+
         teacherUser.setRole(User.Role.TEACHER);
         teacherUser = userRepository.save(teacherUser);
 
@@ -256,7 +286,7 @@ public class AdminController {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
 
         Page<Subject> subjects = (q == null || q.isBlank())
-                ? subjectRepository.findAllWithMajor(pageable)
+                ? subjectRepository.findAll(pageable)
                 : subjectRepository.search(q.trim(), pageable);
 
         // Lấy danh sách ngành học để hiển thị trong form thêm môn học
@@ -275,7 +305,6 @@ public class AdminController {
     public String createSubject(@RequestParam String subjectCode,
             @RequestParam String subjectName,
             @RequestParam int credit,
-            @RequestParam Long majorId,
             RedirectAttributes ra) {
 
         String code = subjectCode.trim();
@@ -290,17 +319,11 @@ public class AdminController {
             return "redirect:/admin/subjects";
         }
 
-        Major major = majorRepository.findById(majorId).orElse(null);
-        if (major == null) {
-            ra.addFlashAttribute("error", "Ngành học không tồn tại.");
-            return "redirect:/admin/subjects";
-        }
-
         Subject subject = new Subject();
         subject.setSubjectCode(code);
         subject.setSubjectName(name);
         subject.setCredit(credit);
-        subject.setMajor(major);
+        // Không cần set major nữa vì sử dụng Many-to-Many
         subjectRepository.save(subject);
 
         ra.addFlashAttribute("success", "Đã tạo môn học: " + code + " - " + name);
@@ -449,8 +472,15 @@ public class AdminController {
                 ? subjectRepository.findByMajorId(id, pageable)
                 : subjectRepository.searchByMajorId(id, q.trim(), pageable);
 
+        // Lấy danh sách môn học chưa thuộc ngành này để có thể thêm vào
+        List<Subject> availableSubjects = subjectRepository.findAll();
+        if (major.getSubjects() != null) {
+            availableSubjects.removeAll(major.getSubjects());
+        }
+
         model.addAttribute("major", major);
         model.addAttribute("page", subjects);
+        model.addAttribute("availableSubjects", availableSubjects);
         model.addAttribute("q", q);
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
@@ -489,8 +519,14 @@ public class AdminController {
         subject.setSubjectCode(code);
         subject.setSubjectName(name);
         subject.setCredit(credit);
-        subject.setMajor(major);
-        subjectRepository.save(subject);
+        subject = subjectRepository.save(subject);
+
+        // Thêm môn học vào danh sách của ngành
+        if (major.getSubjects() == null) {
+            major.setSubjects(new java.util.ArrayList<>());
+        }
+        major.getSubjects().add(subject);
+        majorRepository.save(major);
 
         ra.addFlashAttribute("success", "Đã thêm môn học: " + code);
         return "redirect:/admin/majors/" + majorId + "/subjects";
@@ -509,18 +545,55 @@ public class AdminController {
             return "redirect:/admin/majors/" + majorId + "/subjects";
         }
 
-        // Kiểm tra xem có điểm nào cho môn này không
-        long scoreCount = scoreRepository.countBySubjectId(subjectId);
-        if (scoreCount > 0) {
-            ra.addFlashAttribute("error", "Không thể xóa môn học vì đã có " + scoreCount + " điểm số được ghi nhận.");
+        Major major = majorRepository.findById(majorId).orElse(null);
+        if (major == null) {
+            ra.addFlashAttribute("error", "Ngành học không tồn tại.");
+            return "redirect:/admin/majors";
+        }
+
+        // Chỉ xóa liên kết giữa ngành và môn học, không xóa môn học
+        if (major.getSubjects() != null) {
+            major.getSubjects().remove(subject);
+            majorRepository.save(major);
+        }
+
+        ra.addFlashAttribute("success", "Đã xóa môn học khỏi ngành: " + subject.getSubjectCode());
+        return "redirect:/admin/majors/" + majorId + "/subjects";
+    }
+
+    // Thêm môn học có sẵn vào ngành
+    @PostMapping("/majors/{majorId}/subjects/add-existing")
+    @Transactional
+    public String addExistingSubjectToMajor(@PathVariable Long majorId,
+            @RequestParam Long subjectId,
+            RedirectAttributes ra) {
+
+        Major major = majorRepository.findById(majorId).orElse(null);
+        if (major == null) {
+            ra.addFlashAttribute("error", "Ngành học không tồn tại.");
+            return "redirect:/admin/majors";
+        }
+
+        Subject subject = subjectRepository.findById(subjectId).orElse(null);
+        if (subject == null) {
+            ra.addFlashAttribute("error", "Môn học không tồn tại.");
             return "redirect:/admin/majors/" + majorId + "/subjects";
         }
 
-        // Xóa phân công giảng dạy cho môn này
-        teacherSubjectRepository.deleteBySubjectId(subjectId);
+        // Kiểm tra xem môn học đã thuộc ngành này chưa
+        if (major.getSubjects() != null && major.getSubjects().contains(subject)) {
+            ra.addFlashAttribute("error", "Môn học đã thuộc ngành này: " + subject.getSubjectCode());
+            return "redirect:/admin/majors/" + majorId + "/subjects";
+        }
 
-        subjectRepository.delete(subject);
-        ra.addFlashAttribute("success", "Đã xóa môn học: " + subject.getSubjectCode());
+        // Thêm môn học vào ngành
+        if (major.getSubjects() == null) {
+            major.setSubjects(new java.util.ArrayList<>());
+        }
+        major.getSubjects().add(subject);
+        majorRepository.save(major);
+
+        ra.addFlashAttribute("success", "Đã thêm môn học vào ngành: " + subject.getSubjectCode());
         return "redirect:/admin/majors/" + majorId + "/subjects";
     }
 }

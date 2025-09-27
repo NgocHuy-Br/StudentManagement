@@ -28,6 +28,12 @@ public class User {
     @Column(length = 30)
     private String phone;
 
+    @Column(length = 500)
+    private String address; // Địa chỉ
+
+    @Column
+    private java.time.LocalDate birthDate; // Ngày sinh
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
@@ -91,6 +97,22 @@ public class User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public java.time.LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(java.time.LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 
     public Role getRole() {

@@ -149,7 +149,17 @@
                                                     <tr>
                                                         <td>${t.user.username}</td>
                                                         <td>${t.user.fname}</td>
-                                                        <td>${t.user.lname}</td>
+                                                        <td>
+                                                            <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                data-bs-title="<c:if test='${not empty t.user.address}'>Địa chỉ: ${t.user.address}</c:if><c:if test='${not empty t.user.birthDate}'><c:if test='${not empty t.user.address}'> | </c:if>Ngày sinh: ${t.user.birthDate}</c:if>">
+                                                                ${t.user.lname}
+                                                                <c:if
+                                                                    test="${not empty t.user.address or not empty t.user.birthDate}">
+                                                                    <i class="bi bi-info-circle-fill text-muted ms-1"
+                                                                        style="font-size: 0.8em;"></i>
+                                                                </c:if>
+                                                            </span>
+                                                        </td>
                                                         <td>${t.user.email}</td>
                                                         <td>${t.user.phone}</td>
                                                         <td>${t.department}</td>
@@ -221,6 +231,14 @@
                                             <input name="email" type="email" class="form-control" required>
                                         </div>
                                         <div class="col-12">
+                                            <label class="form-label">Địa chỉ</label>
+                                            <input name="address" class="form-control" placeholder="Nhập địa chỉ">
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="form-label">Ngày sinh</label>
+                                            <input name="birthDate" type="date" class="form-control">
+                                        </div>
+                                        <div class="col-sm-6">
                                             <label class="form-label">Bộ môn</label>
                                             <input name="department" class="form-control"
                                                 placeholder="VD: Khoa học máy tính">
@@ -241,6 +259,15 @@
                     </div>
 
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    <script>
+                        // Kích hoạt tooltip
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                html: true
+                            });
+                        });
+                    </script>
             </body>
 
             </html>

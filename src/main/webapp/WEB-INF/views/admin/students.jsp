@@ -160,7 +160,17 @@
                                                     <tr>
                                                         <td>${s.user.username}</td>
                                                         <td>${s.user.fname}</td>
-                                                        <td>${s.user.lname}</td>
+                                                        <td>
+                                                            <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                data-bs-title="<c:if test='${not empty s.user.address}'>Địa chỉ: ${s.user.address}</c:if><c:if test='${not empty s.user.birthDate}'><c:if test='${not empty s.user.address}'> | </c:if>Ngày sinh: ${s.user.birthDate}</c:if>">
+                                                                ${s.user.lname}
+                                                                <c:if
+                                                                    test="${not empty s.user.address or not empty s.user.birthDate}">
+                                                                    <i class="bi bi-info-circle-fill text-muted ms-1"
+                                                                        style="font-size: 0.8em;"></i>
+                                                                </c:if>
+                                                            </span>
+                                                        </td>
                                                         <td>${s.user.email}</td>
                                                         <td>${s.user.phone}</td>
                                                         <td>${s.className}</td>
@@ -231,11 +241,19 @@
                                             <label class="form-label">Email</label>
                                             <input name="email" type="email" class="form-control" required>
                                         </div>
-                                        <div class="col-sm-6">
+                                        <div class="col-12">
+                                            <label class="form-label">Địa chỉ</label>
+                                            <input name="address" class="form-control" placeholder="Nhập địa chỉ">
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <label class="form-label">Ngày sinh</label>
+                                            <input name="birthDate" type="date" class="form-control">
+                                        </div>
+                                        <div class="col-sm-4">
                                             <label class="form-label">Lớp</label>
                                             <input name="className" class="form-control" placeholder="VD: D20CQCN01-N">
                                         </div>
-                                        <div class="col-sm-6">
+                                        <div class="col-sm-4">
                                             <label class="form-label">Ngành học</label>
                                             <select name="majorId" class="form-select" required>
                                                 <option value="">-- Chọn ngành --</option>
@@ -261,6 +279,15 @@
                     </div>
 
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    <script>
+                        // Kích hoạt tooltip
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                html: true
+                            });
+                        });
+                    </script>
             </body>
 
             </html>

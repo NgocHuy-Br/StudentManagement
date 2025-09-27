@@ -23,8 +23,10 @@ public class Major {
     @OneToMany(mappedBy = "major", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Student> students;
 
-    // Quan hệ với Subject (1 ngành có nhiều môn học)
-    @OneToMany(mappedBy = "major", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // Quan hệ Many-to-Many với Subject (1 ngành có nhiều môn học, 1 môn có thể
+    // thuộc nhiều ngành)
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
+    @JoinTable(name = "major_subjects", joinColumns = @JoinColumn(name = "major_id"), inverseJoinColumns = @JoinColumn(name = "subject_id"))
     private List<Subject> subjects;
 
     // Constructors

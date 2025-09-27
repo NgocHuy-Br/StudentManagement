@@ -18,9 +18,9 @@ public class Subject {
 
     private int credit; // Số tín chỉ
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "major_id", nullable = false)
-    private Major major; // Môn thuộc ngành nào
+    // Quan hệ Many-to-Many với Major (1 môn có thể thuộc nhiều ngành)
+    @ManyToMany(mappedBy = "subjects", fetch = FetchType.LAZY)
+    private List<Major> majors;
 
     // Quan hệ với TeacherSubject (1 môn có thể được nhiều giáo viên dạy)
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -63,12 +63,12 @@ public class Subject {
         this.credit = credit;
     }
 
-    public Major getMajor() {
-        return major;
+    public List<Major> getMajors() {
+        return majors;
     }
 
-    public void setMajor(Major major) {
-        this.major = major;
+    public void setMajors(List<Major> majors) {
+        this.majors = majors;
     }
 
     public List<TeacherSubject> getTeacherSubjects() {
