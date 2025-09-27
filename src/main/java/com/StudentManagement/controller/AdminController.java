@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Controller
 @RequestMapping("/admin")
@@ -38,6 +39,9 @@ public class AdminController {
     private final TeacherSubjectRepository teacherSubjectRepository;
     private final ClassroomRepository classroomRepository;
     private final PasswordEncoder passwordEncoder;
+
+    // Pattern for course year validation
+    private static final Pattern COURSE_YEAR_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{4}$");
 
     public AdminController(UserRepository userRepository,
             StudentRepository studentRepository,
@@ -57,6 +61,49 @@ public class AdminController {
         this.teacherSubjectRepository = teacherSubjectRepository;
         this.classroomRepository = classroomRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    /**
+     * Validate course year format and logic
+     * Format should be YYYY-YYYY where the second year > first year
+     */
+    private String validateCourseYear(String courseYear) {
+        if (courseYear == null || courseYear.trim().isEmpty()) {
+            return "Khóa học không được để trống";
+        }
+
+        String trimmed = courseYear.trim();
+
+        if (!COURSE_YEAR_PATTERN.matcher(trimmed).matches()) {
+            return "Định dạng khóa học phải là YYYY-YYYY (ví dụ: 2025-2029)";
+        }
+
+        try {
+            String[] years = trimmed.split("-");
+            int startYear = Integer.parseInt(years[0]);
+            int endYear = Integer.parseInt(years[1]);
+
+            if (startYear < 1900 || startYear > 2100) {
+                return "Năm bắt đầu phải nằm trong khoảng từ 1900 đến 2100";
+            }
+
+            if (endYear < 1900 || endYear > 2100) {
+                return "Năm kết thúc phải nằm trong khoảng từ 1900 đến 2100";
+            }
+
+            if (endYear <= startYear) {
+                return "Năm kết thúc phải lớn hơn năm bắt đầu";
+            }
+
+            if (endYear - startYear > 10) {
+                return "Khoảng cách giữa năm bắt đầu và kết thúc không được quá 10 năm";
+            }
+
+        } catch (NumberFormatException e) {
+            return "Năm phải là số hợp lệ";
+        }
+
+        return null; // No error
     }
 
     private void addUserInfo(Authentication auth, Model model) {
@@ -167,8 +214,15 @@ public class AdminController {
         String code = classCode.trim().toUpperCase();
         String year = courseYear.trim();
 
-        if (code.isEmpty() || year.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ mã lớp và khóa học.");
+        if (code.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập mã lớp.");
+            return "redirect:/admin/classrooms";
+        }
+
+        // Validate course year format and logic
+        String courseYearError = validateCourseYear(year);
+        if (courseYearError != null) {
+            ra.addFlashAttribute("error", courseYearError);
             return "redirect:/admin/classrooms";
         }
 
@@ -290,6 +344,11 @@ public class AdminController {
 
                 // Cập nhật khóa học nếu có
                 if (courseYear != null && !courseYear.trim().isEmpty()) {
+                    String courseYearError = validateCourseYear(courseYear.trim());
+                    if (courseYearError != null) {
+                        ra.addFlashAttribute("error", courseYearError);
+                        return "redirect:/admin/classrooms";
+                    }
                     classroom.setCourseYear(courseYear.trim());
                 }
 

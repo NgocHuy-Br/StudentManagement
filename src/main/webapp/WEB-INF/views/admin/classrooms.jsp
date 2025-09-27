@@ -65,22 +65,34 @@
                                                     <!-- Search Form -->
                                                     <form method="get"
                                                         action="${pageContext.request.contextPath}/admin/classrooms"
-                                                        class="mb-3">
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control" name="search"
-                                                                placeholder="Tìm kiếm theo tên lớp..."
-                                                                value="${param.search}">
-                                                            <select name="majorId" class="form-select">
-                                                                <option value="">Tất cả ngành</option>
-                                                                <c:forEach var="major" items="${majors}">
-                                                                    <option value="${major.id}"
-                                                                        ${param.majorId==major.id ? 'selected' : '' }>
-                                                                        ${major.majorName}</option>
-                                                                </c:forEach>
-                                                            </select>
-                                                            <button class="btn btn-outline-secondary" type="submit">
-                                                                <i class="bi bi-search"></i>
-                                                            </button>
+                                                        class="mb-3" id="searchForm">
+                                                        <div class="row g-2">
+                                                            <!-- Ô tìm kiếm và nút search -->
+                                                            <div class="col-md-8">
+                                                                <div class="input-group">
+                                                                    <input type="text" class="form-control"
+                                                                        name="search"
+                                                                        placeholder="Tìm kiếm theo mã lớp, khóa học, tên giáo viên..."
+                                                                        value="${param.search}">
+                                                                    <button class="btn btn-outline-secondary"
+                                                                        type="submit">
+                                                                        <i class="bi bi-search"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Dropdown lọc ngành -->
+                                                            <div class="col-md-4">
+                                                                <select name="majorId" class="form-select"
+                                                                    id="majorSelect" onchange="autoSubmitSearch()">
+                                                                    <option value="">Tất cả ngành</option>
+                                                                    <c:forEach var="major" items="${majors}">
+                                                                        <option value="${major.id}"
+                                                                            ${param.majorId==major.id ? 'selected' : ''
+                                                                            }>
+                                                                            ${major.majorName}</option>
+                                                                    </c:forEach>
+                                                                </select>
+                                                            </div>
                                                         </div>
                                                     </form>
 
@@ -328,7 +340,12 @@
                                         <div class="mb-3">
                                             <label class="form-label">Khóa học</label>
                                             <input type="text" class="form-control" name="courseYear" required
-                                                placeholder="VD: 2022-2026">
+                                                pattern="[0-9]{4}-[0-9]{4}" placeholder="VD: 2025-2029"
+                                                title="Định dạng: YYYY-YYYY (năm sau phải lớn hơn năm trước)"
+                                                id="addCourseYear">
+                                            <div class="invalid-feedback" id="addCourseYearError">
+                                                Vui lòng nhập đúng định dạng YYYY-YYYY và năm sau phải lớn hơn năm trước
+                                            </div>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Ngành</label>
@@ -501,7 +518,12 @@
                                             <label for="editCourseYear" class="form-label">Khóa học <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="editCourseYear"
-                                                name="courseYear" placeholder="VD: 2022-2026" required>
+                                                name="courseYear" pattern="[0-9]{4}-[0-9]{4}"
+                                                placeholder="VD: 2025-2029"
+                                                title="Định dạng: YYYY-YYYY (năm sau phải lớn hơn năm trước)" required>
+                                            <div class="invalid-feedback" id="editCourseYearError">
+                                                Vui lòng nhập đúng định dạng YYYY-YYYY và năm sau phải lớn hơn năm trước
+                                            </div>
                                         </div>
 
                                         <div class="mb-3" id="editMajorGroup">
@@ -747,6 +769,110 @@
                                 form.submit();
                             }
                         }
+
+                        // Auto-submit search form when major dropdown changes
+                        function autoSubmitSearch() {
+                            const form = document.getElementById('searchForm');
+                            if (form) {
+                                form.submit();
+                            }
+                        }
+
+                        // Course Year Validation Function
+                        function validateCourseYear(courseYear) {
+                            // Check format YYYY-YYYY
+                            const pattern = /^[0-9]{4}-[0-9]{4}$/;
+                            if (!pattern.test(courseYear)) {
+                                return { isValid: false, message: "Định dạng phải là YYYY-YYYY (ví dụ: 2025-2029)" };
+                            }
+
+                            // Extract years
+                            const years = courseYear.split('-');
+                            const startYear = parseInt(years[0]);
+                            const endYear = parseInt(years[1]);
+
+                            // Check if end year is greater than start year
+                            if (endYear <= startYear) {
+                                return { isValid: false, message: "Năm kết thúc phải lớn hơn năm bắt đầu" };
+                            }
+
+                            // Check reasonable year range (between 1900 and 2100)
+                            if (startYear < 1900 || startYear > 2100 || endYear < 1900 || endYear > 2100) {
+                                return { isValid: false, message: "Năm phải nằm trong khoảng từ 1900 đến 2100" };
+                            }
+
+                            return { isValid: true, message: "" };
+                        }
+
+                        // Add validation to Create Form
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const addCourseYearInput = document.getElementById('addCourseYear');
+                            const editCourseYearInput = document.getElementById('editCourseYear');
+
+                            // Validation for Add Form
+                            if (addCourseYearInput) {
+                                addCourseYearInput.addEventListener('blur', function () {
+                                    const validation = validateCourseYear(this.value);
+                                    const errorDiv = document.getElementById('addCourseYearError');
+
+                                    if (!validation.isValid) {
+                                        this.classList.add('is-invalid');
+                                        errorDiv.textContent = validation.message;
+                                    } else {
+                                        this.classList.remove('is-invalid');
+                                        this.classList.add('is-valid');
+                                    }
+                                });
+                            }
+
+                            // Validation for Edit Form
+                            if (editCourseYearInput) {
+                                editCourseYearInput.addEventListener('blur', function () {
+                                    const validation = validateCourseYear(this.value);
+                                    const errorDiv = document.getElementById('editCourseYearError');
+
+                                    if (!validation.isValid) {
+                                        this.classList.add('is-invalid');
+                                        errorDiv.textContent = validation.message;
+                                    } else {
+                                        this.classList.remove('is-invalid');
+                                        this.classList.add('is-valid');
+                                    }
+                                });
+                            }
+
+                            // Form submit validation for Add Form
+                            const addForm = document.querySelector('#addClassroomModal form');
+                            if (addForm) {
+                                addForm.addEventListener('submit', function (e) {
+                                    const courseYear = addCourseYearInput.value;
+                                    const validation = validateCourseYear(courseYear);
+
+                                    if (!validation.isValid) {
+                                        e.preventDefault();
+                                        alert('Lỗi Khóa học: ' + validation.message);
+                                        addCourseYearInput.focus();
+                                        return false;
+                                    }
+                                });
+                            }
+
+                            // Form submit validation for Edit Form
+                            const editForm = document.querySelector('#editClassroomModal form');
+                            if (editForm) {
+                                editForm.addEventListener('submit', function (e) {
+                                    const courseYear = editCourseYearInput.value;
+                                    const validation = validateCourseYear(courseYear);
+
+                                    if (!validation.isValid) {
+                                        e.preventDefault();
+                                        alert('Lỗi Khóa học: ' + validation.message);
+                                        editCourseYearInput.focus();
+                                        return false;
+                                    }
+                                });
+                            }
+                        });
                     </script>
 
                     <!-- Show success/error messages -->
