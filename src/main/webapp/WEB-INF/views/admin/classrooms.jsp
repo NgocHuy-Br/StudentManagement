@@ -96,6 +96,23 @@
                                                         </div>
                                                     </form>
 
+                                                    <!-- Dropdown sắp xếp lớp học -->
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small">Sắp xếp danh sách
+                                                                lớp:</label>
+                                                            <select class="form-select form-select-sm"
+                                                                id="sortClassrooms" onchange="sortClassroomList()">
+                                                                <option value="classCode-asc" ${sort=='classCode' &&
+                                                                    dir=='asc' || (empty sort && empty dir) ? 'selected'
+                                                                    : '' }>Mã lớp (A-Z)</option>
+                                                                <option value="courseYear-asc" ${sort=='courseYear' &&
+                                                                    dir=='asc' ? 'selected' : '' }>Năm bắt đầu khóa
+                                                                    (tăng dần)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
                                                     <!-- Classroom List -->
                                                     <div class="list-group">
                                                         <c:forEach var="classroom" items="${classrooms}">
@@ -261,20 +278,44 @@
                                                         <c:otherwise>
                                                             <!-- Student List -->
                                                             <c:if test="${not empty classStudents}">
+                                                                <!-- Sắp xếp dropdown -->
+                                                                <div class="row mb-3">
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label small">Sắp xếp danh
+                                                                            sách:</label>
+                                                                        <select class="form-select form-select-sm"
+                                                                            id="sortStudents"
+                                                                            onchange="sortStudentList()">
+                                                                            <option value="username-asc"
+                                                                                ${studentSort=='username-asc' || empty
+                                                                                studentSort ? 'selected' : '' }>Mã sinh
+                                                                                viên (A-Z)</option>
+                                                                            <option value="name-asc"
+                                                                                ${studentSort=='name-asc' ? 'selected'
+                                                                                : '' }>Tên (A-Z)</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
                                                                 <div class="table-responsive">
                                                                     <table class="table table-hover">
                                                                         <thead class="table-light">
                                                                             <tr>
+                                                                                <th width="60px">TT</th>
                                                                                 <th>MSV</th>
                                                                                 <th>Họ tên</th>
                                                                                 <th>Email</th>
-                                                                                <th>Thao tác</th>
+                                                                                <th width="100px">Thao tác</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
                                                                             <c:forEach var="student"
-                                                                                items="${classStudents}">
+                                                                                items="${classStudents}"
+                                                                                varStatus="status">
                                                                                 <tr>
+                                                                                    <td><span
+                                                                                            class="badge bg-secondary">${status.index
+                                                                                            + 1}</span></td>
                                                                                     <td><strong>${student.user.username}</strong>
                                                                                     </td>
                                                                                     <td>
@@ -775,6 +816,37 @@
                             const form = document.getElementById('searchForm');
                             if (form) {
                                 form.submit();
+                            }
+                        }
+
+                        // Sort classroom list
+                        function sortClassroomList() {
+                            const sortValue = document.getElementById('sortClassrooms').value;
+                            const currentUrl = new URL(window.location.href);
+
+                            // Parse sort value (format: field-direction)
+                            const [sortField, sortDir] = sortValue.split('-');
+
+                            // Set sort parameters
+                            currentUrl.searchParams.set('sort', sortField);
+                            currentUrl.searchParams.set('dir', sortDir);
+
+                            // Remove selectedClassId to avoid confusion
+                            currentUrl.searchParams.delete('selectedClassId');
+
+                            window.location.href = currentUrl.toString();
+                        }
+
+                        // Sort student list
+                        function sortStudentList() {
+                            const sortValue = document.getElementById('sortStudents').value;
+                            const selectedClassId = '${selectedClass != null ? selectedClass.id : ""}';
+
+                            if (selectedClassId) {
+                                const currentUrl = new URL(window.location.href);
+                                currentUrl.searchParams.set('selectedClassId', selectedClassId);
+                                currentUrl.searchParams.set('studentSort', sortValue);  // Sử dụng studentSort thay vì sort
+                                window.location.href = currentUrl.toString();
                             }
                         }
 

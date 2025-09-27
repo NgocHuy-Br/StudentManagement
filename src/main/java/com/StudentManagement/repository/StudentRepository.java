@@ -15,6 +15,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
   Optional<Student> findByUser(User user);
 
+  // Tìm sinh viên theo username của user
+  @EntityGraph(attributePaths = { "user", "major", "classroom" })
+  Optional<Student> findByUserUsername(String username);
+
   // Lấy danh sách sinh viên kèm user để phân trang/sắp xếp theo cả trường của
   // user
   @EntityGraph(attributePaths = { "user" })

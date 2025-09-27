@@ -142,7 +142,8 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "classCode") String sort,
             @RequestParam(defaultValue = "asc") String dir,
-            @RequestParam(required = false) Long selectedClassId) {
+            @RequestParam(required = false) Long selectedClassId,
+            @RequestParam(defaultValue = "username-asc") String studentSort) {
         addUserInfo(auth, model);
         model.addAttribute("activeTab", "classrooms");
 
@@ -184,12 +185,21 @@ public class AdminController {
         if (selectedClassId != null) {
             Classroom selectedClass = classroomRepository.findById(selectedClassId).orElse(null);
             if (selectedClass != null) {
-                Pageable studentPageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.username"));
+                // Xử lý sắp xếp sinh viên
+                Sort studentSortBy;
+                if ("name-asc".equals(studentSort)) {
+                    studentSortBy = Sort.by(Sort.Direction.ASC, "user.fname");
+                } else { // mặc định username-asc
+                    studentSortBy = Sort.by(Sort.Direction.ASC, "user.username");
+                }
+
+                Pageable studentPageable = PageRequest.of(0, 50, studentSortBy);
                 Page<Student> studentsInClass = studentRepository.findByClassroomId(selectedClassId, studentPageable);
 
                 model.addAttribute("selectedClass", selectedClass);
                 model.addAttribute("classStudents", studentsInClass.getContent());
                 model.addAttribute("studentsInClass", studentsInClass);
+                model.addAttribute("studentSort", studentSort);
 
                 // Lấy danh sách sinh viên chưa có lớp cùng ngành để thêm vào lớp
                 Page<Student> unassignedStudents = studentRepository.findUnassignedStudentsByMajorId(
@@ -420,11 +430,13 @@ public class AdminController {
     @Transactional
     public String createStudentForClass(@PathVariable Long classId,
             @RequestParam String username,
-            @RequestParam String password,
-            @RequestParam String fname,
+            @RequestParam(required = false) String password,
+            @RequestParam(required = false) String fname,
             @RequestParam(required = false) String lname,
+            @RequestParam(required = false) String fullName,
             @RequestParam String email,
             @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String phoneNumber,
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String birthDate,
             RedirectAttributes ra) {
@@ -438,8 +450,29 @@ public class AdminController {
         String u = username.trim();
         String e = email.trim();
 
-        if (u.isEmpty() || password == null || password.isBlank() || fname == null || fname.isBlank() || e.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã SV, Mật khẩu, Họ, Email.");
+        // Tự động gán password = username nếu không có
+        String pwd = (password != null && !password.trim().isEmpty()) ? password.trim() : u;
+
+        // Xử lý fullName nếu có (tách thành fname và lname)
+        String firstName = fname;
+        String lastName = lname;
+        if (fullName != null && !fullName.trim().isEmpty() && (firstName == null || firstName.trim().isEmpty())) {
+            String[] nameParts = fullName.trim().split("\\s+");
+            if (nameParts.length >= 2) {
+                lastName = nameParts[0]; // Phần đầu là họ
+                firstName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 1, nameParts.length)); // Phần còn
+                                                                                                            // lại là
+                                                                                                            // tên
+            } else {
+                firstName = fullName.trim();
+            }
+        }
+
+        // Xử lý phoneNumber
+        String phoneNum = (phone != null && !phone.trim().isEmpty()) ? phone : phoneNumber;
+
+        if (u.isEmpty() || firstName == null || firstName.trim().isEmpty() || e.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã SV, Họ tên, Email.");
             return "redirect:/admin/classrooms?selectedClassId=" + classId;
         }
         if (userRepository.existsByUsername(u)) {
@@ -451,15 +484,23 @@ public class AdminController {
             return "redirect:/admin/classrooms?selectedClassId=" + classId;
         }
 
+        // Kiểm tra xem sinh viên đã thuộc lớp nào chưa (nếu username đã tồn tại)
+        Student existingStudent = studentRepository.findByUserUsername(u).orElse(null);
+        if (existingStudent != null && existingStudent.getClassroom() != null) {
+            ra.addFlashAttribute("error",
+                    "Sinh viên " + u + " đã thuộc lớp: " + existingStudent.getClassroom().getClassCode());
+            return "redirect:/admin/classrooms?selectedClassId=" + classId;
+        }
+
         // Tạo User
         User svUser = new User();
         svUser.setUsername(u);
-        svUser.setPassword(passwordEncoder.encode(password));
-        svUser.setFname(fname);
-        svUser.setLname(lname);
+        svUser.setPassword(passwordEncoder.encode(pwd)); // sử dụng pwd đã xử lý
+        svUser.setFname(firstName != null ? firstName.trim() : null);
+        svUser.setLname(lastName != null ? lastName.trim() : null);
         svUser.setEmail(e);
-        svUser.setPhone(phone);
-        svUser.setAddress(address);
+        svUser.setPhone(phoneNum != null ? phoneNum.trim() : null);
+        svUser.setAddress(address != null ? address.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {
@@ -512,11 +553,13 @@ public class AdminController {
     @PostMapping("/students")
     @Transactional
     public String createStudent(@RequestParam String username,
-            @RequestParam String password,
-            @RequestParam String fname,
+            @RequestParam(required = false) String password,
+            @RequestParam(required = false) String fname,
             @RequestParam(required = false) String lname,
+            @RequestParam(required = false) String fullName,
             @RequestParam String email,
             @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String phoneNumber,
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String birthDate,
             @RequestParam(required = false) String className,
@@ -526,8 +569,29 @@ public class AdminController {
         String u = username.trim();
         String e = email.trim();
 
-        if (u.isEmpty() || password == null || password.isBlank() || fname == null || fname.isBlank() || e.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã SV, Mật khẩu, Họ, Email.");
+        // Tự động gán password = username nếu không có
+        String pwd = (password != null && !password.trim().isEmpty()) ? password.trim() : u;
+
+        // Xử lý fullName nếu có (tách thành fname và lname)
+        String firstName = fname;
+        String lastName = lname;
+        if (fullName != null && !fullName.trim().isEmpty() && (firstName == null || firstName.trim().isEmpty())) {
+            String[] nameParts = fullName.trim().split("\\s+");
+            if (nameParts.length >= 2) {
+                lastName = nameParts[0]; // Phần đầu là họ
+                firstName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 1, nameParts.length)); // Phần còn
+                                                                                                            // lại là
+                                                                                                            // tên
+            } else {
+                firstName = fullName.trim();
+            }
+        }
+
+        // Xử lý phoneNumber
+        String phoneNum = (phone != null && !phone.trim().isEmpty()) ? phone : phoneNumber;
+
+        if (u.isEmpty() || firstName == null || firstName.trim().isEmpty() || e.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã SV, Họ tên, Email.");
             return "redirect:/admin/students";
         }
         if (userRepository.existsByUsername(u)) {
@@ -536,6 +600,15 @@ public class AdminController {
         }
         if (userRepository.existsByEmail(e)) {
             ra.addFlashAttribute("error", "Email đã tồn tại: " + e);
+            return "redirect:/admin/students";
+        }
+
+        // Kiểm tra xem sinh viên đã tồn tại chưa (bằng username)
+        Student existingStudent = studentRepository.findByUserUsername(u).orElse(null);
+        if (existingStudent != null) {
+            String currentClass = existingStudent.getClassroom() != null ? existingStudent.getClassroom().getClassCode()
+                    : "chưa có lớp";
+            ra.addFlashAttribute("error", "Sinh viên " + u + " đã tồn tại trong hệ thống (lớp: " + currentClass + ")");
             return "redirect:/admin/students";
         }
 
@@ -549,12 +622,12 @@ public class AdminController {
         // 1) User
         User svUser = new User();
         svUser.setUsername(u);
-        svUser.setPassword(passwordEncoder.encode(password)); // mã hóa
-        svUser.setFname(fname);
-        svUser.setLname(lname);
+        svUser.setPassword(passwordEncoder.encode(pwd)); // sử dụng pwd đã xử lý
+        svUser.setFname(firstName != null ? firstName.trim() : null);
+        svUser.setLname(lastName != null ? lastName.trim() : null);
         svUser.setEmail(e);
-        svUser.setPhone(phone);
-        svUser.setAddress(address);
+        svUser.setPhone(phoneNum != null ? phoneNum.trim() : null);
+        svUser.setAddress(address != null ? address.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {
