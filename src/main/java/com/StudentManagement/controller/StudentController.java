@@ -87,7 +87,7 @@ public class StudentController {
 
         Student student = getCurrentStudent(auth);
         if (student != null && student.getMajor() != null) {
-            List<Subject> subjects = subjectRepository.findByMajor(student.getMajor());
+            List<Subject> subjects = subjectRepository.findByMajorId(student.getMajor().getId());
             List<Score> scores = scoreRepository.findByStudent(student);
             model.addAttribute("subjects", subjects);
             model.addAttribute("scores", scores);
@@ -129,7 +129,7 @@ public class StudentController {
             Double gpa = scoreRepository.calculateGPAForStudent(student);
 
             // Lấy danh sách môn học và học kỳ để filter
-            List<Subject> subjects = subjectRepository.findByMajor(student.getMajor());
+            List<Subject> subjects = subjectRepository.findByMajorId(student.getMajor().getId());
             List<String> semesters = allScores.stream()
                     .map(Score::getSemester)
                     .distinct()

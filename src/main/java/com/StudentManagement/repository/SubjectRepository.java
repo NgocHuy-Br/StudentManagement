@@ -32,10 +32,15 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
       """)
   Page<Subject> search(@Param("q") String q, Pageable pageable);
 
-  // Lấy môn học theo ngành (Many-to-Many)
+  // Lấy môn học theo ngành (Many-to-Many) - Pageable version
   @EntityGraph(attributePaths = { "majors" })
   @Query("select distinct s from Subject s join s.majors m where m.id = :majorId")
   Page<Subject> findByMajorId(Long majorId, Pageable pageable);
+
+  // Lấy môn học theo ngành (Many-to-Many) - List version
+  @EntityGraph(attributePaths = { "majors" })
+  @Query("select distinct s from Subject s join s.majors m where m.id = :majorId")
+  List<Subject> findByMajorId(Long majorId);
 
   // Tìm kiếm môn học trong một ngành cụ thể
   @EntityGraph(attributePaths = { "majors" })

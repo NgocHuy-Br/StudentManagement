@@ -50,9 +50,9 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'students' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin/students">
-                        <i class="bi bi-mortarboard-fill me-1"></i> Sinh viên
+                    <a class="nav-link ${activeTab == 'classrooms' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/classrooms">
+                        <i class="bi bi-collection-fill me-1"></i> Lớp sinh viên
                     </a>
                 </li>
                 <li class="nav-item">

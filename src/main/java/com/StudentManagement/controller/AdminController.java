@@ -1,10 +1,12 @@
 package com.StudentManagement.controller;
 
+import com.StudentManagement.entity.Classroom;
 import com.StudentManagement.entity.Major;
 import com.StudentManagement.entity.Student;
 import com.StudentManagement.entity.Subject;
 import com.StudentManagement.entity.Teacher;
 import com.StudentManagement.entity.User;
+import com.StudentManagement.repository.ClassroomRepository;
 import com.StudentManagement.repository.MajorRepository;
 import com.StudentManagement.repository.ScoreRepository;
 import com.StudentManagement.repository.StudentRepository;
@@ -34,6 +36,7 @@ public class AdminController {
     private final SubjectRepository subjectRepository;
     private final ScoreRepository scoreRepository;
     private final TeacherSubjectRepository teacherSubjectRepository;
+    private final ClassroomRepository classroomRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AdminController(UserRepository userRepository,
@@ -43,6 +46,7 @@ public class AdminController {
             SubjectRepository subjectRepository,
             ScoreRepository scoreRepository,
             TeacherSubjectRepository teacherSubjectRepository,
+            ClassroomRepository classroomRepository,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -51,6 +55,7 @@ public class AdminController {
         this.subjectRepository = subjectRepository;
         this.scoreRepository = scoreRepository;
         this.teacherSubjectRepository = teacherSubjectRepository;
+        this.classroomRepository = classroomRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -79,39 +84,252 @@ public class AdminController {
         return "admin/admin-dashboard";
     }
 
-    // Danh sách sinh viên: dùng Page<Student> để có đủ field (lớp, ngành) và field
-    // user
-    @GetMapping("/students")
-    public String students(Authentication auth,
+    // Danh sách lớp học: giao diện 2 panel - trái: quản lý lớp, phải: sinh viên
+    // trong lớp
+    @GetMapping("/classrooms")
+    public String classrooms(Authentication auth,
             Model model,
             @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "user.username") String sort,
-            @RequestParam(defaultValue = "asc") String dir) {
+            @RequestParam(defaultValue = "classCode") String sort,
+            @RequestParam(defaultValue = "asc") String dir,
+            @RequestParam(required = false) Long selectedClassId) {
         addUserInfo(auth, model);
-        model.addAttribute("activeTab", "students");
+        model.addAttribute("activeTab", "classrooms");
 
         Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        // Cho phép sắp xếp theo cả trường của user và của student
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
 
-        Page<Student> students = (q == null || q.isBlank())
-                ? studentRepository.findAllWithUser(pageable)
-                : studentRepository.search(q.trim(), pageable);
+        Page<Classroom> classrooms = (q == null || q.isBlank())
+                ? classroomRepository.findAll(pageable)
+                : classroomRepository.search(q.trim(), pageable);
 
-        // Lấy danh sách ngành học để hiển thị trong form thêm sinh viên
+        // Lấy danh sách ngành và giáo viên cho form tạo lớp
         List<Major> majors = majorRepository.findAll();
+        List<Teacher> teachers = teacherRepository.findAll();
 
-        model.addAttribute("page", students);
+        model.addAttribute("classrooms", classrooms.getContent());
+        model.addAttribute("page", classrooms);
         model.addAttribute("majors", majors);
+        model.addAttribute("teachers", teachers);
         model.addAttribute("q", q);
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
-        return "admin/students";
+        model.addAttribute("selectedClassId", selectedClassId);
+
+        // Nếu có lớp được chọn, lấy thông tin sinh viên trong lớp
+        if (selectedClassId != null) {
+            Classroom selectedClass = classroomRepository.findById(selectedClassId).orElse(null);
+            if (selectedClass != null) {
+                Pageable studentPageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "user.username"));
+                Page<Student> studentsInClass = studentRepository.findByClassroomId(selectedClassId, studentPageable);
+
+                model.addAttribute("selectedClass", selectedClass);
+                model.addAttribute("classStudents", studentsInClass.getContent());
+                model.addAttribute("studentsInClass", studentsInClass);
+
+                // Lấy danh sách sinh viên chưa có lớp cùng ngành để thêm vào lớp
+                Page<Student> unassignedStudents = studentRepository.findUnassignedStudentsByMajorId(
+                        selectedClass.getMajor().getId(), PageRequest.of(0, 50, Sort.by("user.username")));
+                model.addAttribute("availableStudents", unassignedStudents.getContent());
+                model.addAttribute("unassignedStudents", unassignedStudents);
+            }
+        }
+
+        return "admin/classrooms";
     }
 
-    // Thêm sinh viên: lưu User (mã hóa mật khẩu) + Student trong cùng transaction
+    // Thêm lớp học mới
+    @PostMapping("/classrooms")
+    @Transactional
+    public String createClassroom(@RequestParam String classCode,
+            @RequestParam String courseYear,
+            @RequestParam Long majorId,
+            @RequestParam(required = false) Long teacherId,
+            RedirectAttributes ra) {
+
+        String code = classCode.trim().toUpperCase();
+        String year = courseYear.trim();
+
+        if (code.isEmpty() || year.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ mã lớp và khóa học.");
+            return "redirect:/admin/classrooms";
+        }
+
+        if (classroomRepository.existsByClassCode(code)) {
+            ra.addFlashAttribute("error", "Mã lớp đã tồn tại: " + code);
+            return "redirect:/admin/classrooms";
+        }
+
+        Major major = majorRepository.findById(majorId).orElse(null);
+        if (major == null) {
+            ra.addFlashAttribute("error", "Ngành học không tồn tại.");
+            return "redirect:/admin/classrooms";
+        }
+
+        Teacher teacher = null;
+        if (teacherId != null) {
+            teacher = teacherRepository.findById(teacherId).orElse(null);
+        }
+
+        Classroom classroom = new Classroom(code, year, major);
+        classroom.setHomeRoomTeacher(teacher);
+        classroomRepository.save(classroom);
+
+        ra.addFlashAttribute("success", "Đã tạo lớp học: " + code);
+        return "redirect:/admin/classrooms";
+    }
+
+    // Xóa lớp học
+    @PostMapping("/classrooms/delete")
+    @Transactional
+    public String deleteClassroom(@RequestParam Long id, RedirectAttributes ra) {
+        Classroom classroom = classroomRepository.findById(id).orElse(null);
+        if (classroom == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy lớp học.");
+            return "redirect:/admin/classrooms";
+        }
+
+        // Kiểm tra xem có sinh viên nào trong lớp không
+        long studentCount = classroomRepository.countStudentsByClassroomId(id);
+        if (studentCount > 0) {
+            ra.addFlashAttribute("error", "Không thể xóa lớp học vì còn " + studentCount + " sinh viên.");
+            return "redirect:/admin/classrooms";
+        }
+
+        classroomRepository.delete(classroom);
+        ra.addFlashAttribute("success", "Đã xóa lớp học: " + classroom.getClassCode());
+        return "redirect:/admin/classrooms";
+    }
+
+    // Thêm sinh viên vào lớp
+    @PostMapping("/classrooms/{classId}/students/add")
+    @Transactional
+    public String addStudentToClass(@PathVariable Long classId,
+            @RequestParam Long studentId,
+            RedirectAttributes ra) {
+
+        Classroom classroom = classroomRepository.findById(classId).orElse(null);
+        if (classroom == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy lớp học.");
+            return "redirect:/admin/classrooms";
+        }
+
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy sinh viên.");
+            return "redirect:/admin/classrooms?selectedClassId=" + classId;
+        }
+
+        // Kiểm tra ngành của sinh viên có khớp với ngành của lớp không
+        if (!student.getMajor().getId().equals(classroom.getMajor().getId())) {
+            ra.addFlashAttribute("error", "Sinh viên phải cùng ngành với lớp học.");
+            return "redirect:/admin/classrooms?selectedClassId=" + classId;
+        }
+
+        student.setClassroom(classroom);
+        student.setClassName(classroom.getClassCode()); // Cập nhật legacy field
+        studentRepository.save(student);
+
+        ra.addFlashAttribute("success", "Đã thêm sinh viên vào lớp: " + student.getUser().getUsername());
+        return "redirect:/admin/classrooms?selectedClassId=" + classId;
+    }
+
+    // Tạo sinh viên mới cho lớp
+    @PostMapping("/classrooms/{classId}/students/create")
+    @Transactional
+    public String createStudentForClass(@PathVariable Long classId,
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam String fname,
+            @RequestParam(required = false) String lname,
+            @RequestParam String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String birthDate,
+            RedirectAttributes ra) {
+
+        Classroom classroom = classroomRepository.findById(classId).orElse(null);
+        if (classroom == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy lớp học.");
+            return "redirect:/admin/classrooms";
+        }
+
+        String u = username.trim();
+        String e = email.trim();
+
+        if (u.isEmpty() || password == null || password.isBlank() || fname == null || fname.isBlank() || e.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã SV, Mật khẩu, Họ, Email.");
+            return "redirect:/admin/classrooms?selectedClassId=" + classId;
+        }
+        if (userRepository.existsByUsername(u)) {
+            ra.addFlashAttribute("error", "Mã SV/Username đã tồn tại: " + u);
+            return "redirect:/admin/classrooms?selectedClassId=" + classId;
+        }
+        if (userRepository.existsByEmail(e)) {
+            ra.addFlashAttribute("error", "Email đã tồn tại: " + e);
+            return "redirect:/admin/classrooms?selectedClassId=" + classId;
+        }
+
+        // Tạo User
+        User svUser = new User();
+        svUser.setUsername(u);
+        svUser.setPassword(passwordEncoder.encode(password));
+        svUser.setFname(fname);
+        svUser.setLname(lname);
+        svUser.setEmail(e);
+        svUser.setPhone(phone);
+        svUser.setAddress(address);
+
+        // Xử lý ngày sinh
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            try {
+                svUser.setBirthDate(java.time.LocalDate.parse(birthDate.trim()));
+            } catch (Exception ex) {
+                ra.addFlashAttribute("error",
+                        "Định dạng ngày sinh không hợp lệ. Vui lòng sử dụng định dạng: YYYY-MM-DD");
+                return "redirect:/admin/classrooms?selectedClassId=" + classId;
+            }
+        }
+
+        svUser.setRole(User.Role.STUDENT);
+        svUser = userRepository.save(svUser);
+
+        // Tạo Student và gán vào lớp
+        Student st = new Student();
+        st.setUser(svUser);
+        st.setClassroom(classroom);
+        st.setClassName(classroom.getClassCode());
+        st.setMajor(classroom.getMajor()); // Ngành của sinh viên phải giống lớp
+        studentRepository.save(st);
+
+        ra.addFlashAttribute("success", "Đã tạo sinh viên cho lớp: " + u);
+        return "redirect:/admin/classrooms?selectedClassId=" + classId;
+    }
+
+    // Xóa sinh viên khỏi lớp
+    @PostMapping("/classrooms/{classId}/students/{studentId}/remove")
+    @Transactional
+    public String removeStudentFromClass(@PathVariable Long classId,
+            @PathVariable Long studentId,
+            RedirectAttributes ra) {
+
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy sinh viên.");
+            return "redirect:/admin/classrooms?selectedClassId=" + classId;
+        }
+
+        student.setClassroom(null);
+        student.setClassName(null);
+        studentRepository.save(student);
+
+        ra.addFlashAttribute("success", "Đã xóa sinh viên khỏi lớp: " + student.getUser().getUsername());
+        return "redirect:/admin/classrooms?selectedClassId=" + classId;
+    }
+
+    // Thêm sinh viên: giữ lại method cũ cho backward compatibility
     @PostMapping("/students")
     @Transactional
     public String createStudent(@RequestParam String username,

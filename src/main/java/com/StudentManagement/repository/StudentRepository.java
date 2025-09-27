@@ -40,4 +40,26 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
   // Đếm số sinh viên theo ngành
   @Query("select count(s) from Student s where s.major.id = :majorId")
   long countByMajorId(@Param("majorId") Long majorId);
+
+  // Lấy sinh viên theo lớp học
+  @EntityGraph(attributePaths = { "user", "major", "classroom" })
+  Page<Student> findByClassroomId(Long classroomId, Pageable pageable);
+
+  // Tìm kiếm sinh viên trong lớp cụ thể
+  @EntityGraph(attributePaths = { "user", "major", "classroom" })
+  @Query("""
+      select s from Student s join s.user u
+      where s.classroom.id = :classroomId
+        and (lower(u.username) like lower(concat('%', :q, '%'))
+             or lower(u.fname) like lower(concat('%', :q, '%'))
+             or lower(u.lname) like lower(concat('%', :q, '%'))
+             or lower(u.email) like lower(concat('%', :q, '%'))
+             or lower(u.phone) like lower(concat('%', :q, '%')))
+      """)
+  Page<Student> searchByClassroomId(@Param("classroomId") Long classroomId, @Param("q") String q, Pageable pageable);
+
+  // Lấy sinh viên chưa có lớp (để thêm vào lớp)
+  @EntityGraph(attributePaths = { "user", "major" })
+  @Query("select s from Student s where s.classroom is null and s.major.id = :majorId")
+  Page<Student> findUnassignedStudentsByMajorId(@Param("majorId") Long majorId, Pageable pageable);
 }

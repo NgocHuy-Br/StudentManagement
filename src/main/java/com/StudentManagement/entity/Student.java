@@ -14,7 +14,12 @@ public class Student {
     @JoinColumn(name = "id")
     private User user;
 
-    private String className; // Lớp sinh viên
+    private String className; // Lớp sinh viên (legacy field)
+
+    // Quan hệ với Classroom (1 sinh viên thuộc 1 lớp)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "classroom_id")
+    private Classroom classroom;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "major_id", nullable = false)
@@ -47,6 +52,14 @@ public class Student {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public Classroom getClassroom() {
+        return classroom;
+    }
+
+    public void setClassroom(Classroom classroom) {
+        this.classroom = classroom;
     }
 
     public Major getMajor() {

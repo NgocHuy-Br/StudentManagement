@@ -122,4 +122,19 @@ public class User {
     public void setRole(Role role) {
         this.role = role;
     }
+
+    // Helper method for full name
+    public String getFullName() {
+        StringBuilder fullName = new StringBuilder();
+        if (fname != null && !fname.trim().isEmpty()) {
+            fullName.append(fname.trim());
+        }
+        if (lname != null && !lname.trim().isEmpty()) {
+            if (fullName.length() > 0) {
+                fullName.append(" ");
+            }
+            fullName.append(lname.trim());
+        }
+        return fullName.length() > 0 ? fullName.toString() : username;
+    }
 }
