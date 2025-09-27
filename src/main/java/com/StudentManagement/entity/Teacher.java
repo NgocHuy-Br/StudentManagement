@@ -14,6 +14,9 @@ public class Teacher {
     @JoinColumn(name = "id")
     private User user;
 
+    @Column(unique = true, length = 20)
+    private String teacherCode; // Mã giáo viên: GV001, GV002, etc.
+
     @Column(length = 200)
     private String department; // Bộ môn
 
@@ -36,6 +39,14 @@ public class Teacher {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getTeacherCode() {
+        return teacherCode;
+    }
+
+    public void setTeacherCode(String teacherCode) {
+        this.teacherCode = teacherCode;
     }
 
     public String getDepartment() {

@@ -49,4 +49,26 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Long> {
 
   // Lấy danh sách lớp theo ngành (không phân trang)
   List<Classroom> findByMajorId(Long majorId);
+
+  // Lấy danh sách lớp theo ngành (có phân trang)
+  @EntityGraph(attributePaths = { "major", "homeRoomTeacher", "homeRoomTeacher.user", "students" })
+  Page<Classroom> findByMajorId(Long majorId, Pageable pageable);
+
+  // Tìm kiếm theo tên lớp và lọc theo ngành
+  @EntityGraph(attributePaths = { "major", "homeRoomTeacher", "homeRoomTeacher.user", "students" })
+  @Query("""
+      select c from Classroom c
+      left join c.major m
+      left join c.homeRoomTeacher t
+      left join t.user tu
+      where
+        m.id = :majorId AND (
+          lower(c.classCode) like lower(concat('%', :search, '%'))
+          or lower(c.courseYear) like lower(concat('%', :search, '%'))
+          or lower(tu.fname) like lower(concat('%', :search, '%'))
+          or lower(tu.lname) like lower(concat('%', :search, '%'))
+        )
+      """)
+  Page<Classroom> searchByClassCodeAndMajor(@Param("search") String search, @Param("majorId") Long majorId,
+      Pageable pageable);
 }

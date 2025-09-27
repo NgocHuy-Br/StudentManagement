@@ -88,49 +88,105 @@
                                                     <div class="list-group">
                                                         <c:forEach var="classroom" items="${classrooms}">
                                                             <div class="list-group-item classroom-item ${selectedClassId == classroom.id ? 'selected' : ''}"
+                                                                data-classroom-id="${classroom.id}"
                                                                 onclick="selectClassroom('${classroom.id}')">
                                                                 <div
                                                                     class="d-flex justify-content-between align-items-start">
                                                                     <div class="flex-grow-1">
-                                                                        <h6 class="mb-1">${classroom.classCode}</h6>
-                                                                        <p class="mb-1 text-muted small">Ngành:
-                                                                            ${classroom.major.majorName}</p>
-                                                                        <p class="mb-1 text-muted small">Giáo viên chủ
-                                                                            nhiệm:
-                                                                            <c:choose>
-                                                                                <c:when
-                                                                                    test="${classroom.homeRoomTeacher != null}">
-                                                                                    <c:choose>
-                                                                                        <c:when
-                                                                                            test="${not empty classroom.homeRoomTeacher.user.fname and not empty classroom.homeRoomTeacher.user.lname}">
-                                                                                            ${classroom.homeRoomTeacher.user.fname}
-                                                                                            ${classroom.homeRoomTeacher.user.lname}
-                                                                                        </c:when>
-                                                                                        <c:otherwise>
-                                                                                            ${classroom.homeRoomTeacher.user.username}
-                                                                                        </c:otherwise>
-                                                                                    </c:choose>
-                                                                                </c:when>
-                                                                                <c:otherwise>
-                                                                                    <em class="text-muted">Chưa có</em>
-                                                                                </c:otherwise>
-                                                                            </c:choose>
-                                                                        </p>
-                                                                        <small class="text-primary">Sĩ số:
-                                                                            ${classroom.studentCount}/50</small>
+                                                                        <!-- Dòng 1: Mã lớp và Ngành -->
+                                                                        <div class="d-flex align-items-center mb-1">
+                                                                            <h6 class="mb-0 fw-bold me-5"
+                                                                                style="min-width: 120px;">
+                                                                                ${classroom.classCode}
+                                                                            </h6>
+                                                                            <small class="text-muted ms-3">
+                                                                                Ngành: ${classroom.major.majorCode} -
+                                                                                ${classroom.major.majorName}
+                                                                            </small>
+                                                                        </div>
+
+                                                                        <!-- Dòng 2: Khóa và Giáo viên chủ nhiệm -->
+                                                                        <div class="d-flex align-items-center mb-1">
+                                                                            <small class="text-muted me-5"
+                                                                                style="min-width: 120px;">
+                                                                                Khóa: ${classroom.courseYear}
+                                                                            </small>
+                                                                            <small class="text-muted ms-3">
+                                                                                Giáo viên chủ nhiệm:
+                                                                                <c:choose>
+                                                                                    <c:when
+                                                                                        test="${classroom.homeRoomTeacher != null}">
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${not empty classroom.homeRoomTeacher.teacherCode}">
+                                                                                                ${classroom.homeRoomTeacher.teacherCode}
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                ${classroom.homeRoomTeacher.user.username}
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                        -
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${not empty classroom.homeRoomTeacher.user.fname and not empty classroom.homeRoomTeacher.user.lname}">
+                                                                                                ${classroom.homeRoomTeacher.user.fname}
+                                                                                                ${classroom.homeRoomTeacher.user.lname}
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                ${classroom.homeRoomTeacher.user.username}
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </c:when>
+                                                                                    <c:otherwise>
+                                                                                        <em>Chưa có</em>
+                                                                                    </c:otherwise>
+                                                                                </c:choose>
+                                                                            </small>
+                                                                        </div>
+
+                                                                        <!-- Dòng 3: Sĩ số -->
+                                                                        <div class="d-flex align-items-center">
+                                                                            <small class="text-primary fw-bold"
+                                                                                style="min-width: 120px;">
+                                                                                Sĩ số: ${classroom.studentCount}
+                                                                            </small>
+                                                                        </div>
                                                                     </div>
-                                                                    <div class="dropdown">
+                                                                    <!-- Action Dropdown Menu -->
+                                                                    <div class="dropdown"
+                                                                        onclick="event.stopPropagation();">
                                                                         <button
                                                                             class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                                            type="button" data-bs-toggle="dropdown">
+                                                                            type="button" data-bs-toggle="dropdown"
+                                                                            aria-expanded="false" title="Tùy chọn"
+                                                                            onclick="event.stopPropagation();">
                                                                             <i class="bi bi-three-dots-vertical"></i>
                                                                         </button>
                                                                         <ul class="dropdown-menu">
-                                                                            <li><a class="dropdown-item" href="#"
-                                                                                    onclick="deleteClassroom('${classroom.id}', '${classroom.classCode}')">
+                                                                            <li>
+                                                                                <a class="dropdown-item" href="#"
+                                                                                    data-classroom-id="${classroom.id}"
+                                                                                    data-class-code="${classroom.classCode}"
+                                                                                    data-course-year="${classroom.courseYear}"
+                                                                                    data-major-id="${classroom.major.id}"
+                                                                                    data-teacher-id="${empty classroom.homeRoomTeacher ? '' : classroom.homeRoomTeacher.id}"
+                                                                                    onclick="event.preventDefault(); event.stopPropagation(); editClassroomWithData(this);">
+                                                                                    <i
+                                                                                        class="bi bi-pencil-square me-2 text-primary"></i>Chỉnh
+                                                                                    sửa thông tin lớp
+                                                                                </a>
+                                                                            </li>
+                                                                            <li>
+                                                                                <hr class="dropdown-divider">
+                                                                            </li>
+                                                                            <li>
+                                                                                <a class="dropdown-item text-danger"
+                                                                                    href="#"
+                                                                                    onclick="event.preventDefault(); event.stopPropagation(); deleteClassroom('${classroom.id}', '${classroom.classCode}');">
                                                                                     <i class="bi bi-trash me-2"></i>Xóa
                                                                                     lớp
-                                                                                </a></li>
+                                                                                </a>
+                                                                            </li>
                                                                         </ul>
                                                                     </div>
                                                                 </div>
@@ -414,6 +470,75 @@
                         </div>
                     </c:if>
 
+                    <!-- Edit Classroom Modal -->
+                    <div class="modal fade" id="editClassroomModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Chỉnh sửa thông tin lớp học</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="editClassroomForm"
+                                        action="${pageContext.request.contextPath}/admin/classrooms/update"
+                                        method="post">
+                                        <input type="hidden" id="editClassroomId" name="id">
+
+                                        <!-- Warning message for classes with students -->
+                                        <div id="editWarningMessage" class="alert alert-warning d-none">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Lớp học đã có sinh viên. Chỉ có thể thay đổi giáo viên chủ nhiệm.
+                                        </div>
+
+                                        <div class="mb-3" id="editClassCodeGroup">
+                                            <label for="editClassCode" class="form-label">Mã lớp <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="editClassCode" name="classCode"
+                                                required>
+                                        </div>
+
+                                        <div class="mb-3" id="editCourseYearGroup">
+                                            <label for="editCourseYear" class="form-label">Khóa học <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="editCourseYear"
+                                                name="courseYear" placeholder="VD: 2022-2026" required>
+                                        </div>
+
+                                        <div class="mb-3" id="editMajorGroup">
+                                            <label for="editMajorId" class="form-label">Ngành <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="editMajorId" name="majorId" required>
+                                                <option value="">Chọn ngành...</option>
+                                                <c:forEach var="major" items="${majors}">
+                                                    <option value="${major.id}">${major.majorCode} - ${major.majorName}
+                                                    </option>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="editTeacherId" class="form-label">Giáo viên chủ nhiệm (tùy
+                                                chọn)</label>
+                                            <select class="form-select" id="editTeacherId" name="teacherId">
+                                                <option value="">Chọn giáo viên...</option>
+                                                <c:forEach var="teacher" items="${teachers}">
+                                                    <option value="${teacher.id}">${teacher.user.username} -
+                                                        ${teacher.user.fname} ${teacher.user.lname}</option>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-primary">Cập nhật</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                     <script>
                         function selectClassroom(classroomId) {
@@ -423,19 +548,180 @@
                         }
 
                         function deleteClassroom(classroomId, classroomName) {
-                            if (confirm('Bạn có chắc chắn muốn xóa lớp "' + classroomName + '"?\nTất cả sinh viên trong lớp sẽ được chuyển về trạng thái không có lớp.')) {
-                                const form = document.createElement('form');
-                                form.method = 'POST';
-                                form.action = '${pageContext.request.contextPath}/admin/classrooms/delete';
+                            console.log('deleteClassroom called with id:', classroomId, 'name:', classroomName);
+                            if (confirm('Bạn có chắc chắn muốn xóa lớp "' + classroomName + '"?\nLưu ý: Chỉ có thể xóa lớp không có sinh viên nào.')) {
+                                console.log('User confirmed deletion');
+                                console.log('Timestamp:', new Date().toISOString());
 
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = 'classroomId';
-                                input.value = classroomId;
+                                // Using fetch instead of form submit for better debugging
+                                const formData = new FormData();
+                                formData.append('id', classroomId);
 
-                                form.appendChild(input);
-                                document.body.appendChild(form);
-                                form.submit();
+                                console.log('About to send DELETE request...');
+                                fetch('${pageContext.request.contextPath}/admin/classrooms/delete', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                    .then(response => {
+                                        console.log('Response received:', response.status, response.statusText);
+                                        if (response.ok || response.redirected) {
+                                            console.log('Delete request successful, refreshing page...');
+                                            window.location.reload();
+                                        } else {
+                                            console.error('Delete request failed:', response.status);
+                                            alert('Lỗi khi xóa lớp học. Vui lòng thử lại.');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Network error:', error);
+                                        alert('Lỗi kết nối khi xóa lớp học.');
+                                    });
+                            }
+                        }
+
+                        function editClassroomWithData(element) {
+                            const classroomId = element.getAttribute('data-classroom-id');
+                            const classCode = element.getAttribute('data-class-code');
+                            const courseYear = element.getAttribute('data-course-year');
+                            const majorId = element.getAttribute('data-major-id');
+                            const teacherId = element.getAttribute('data-teacher-id');
+
+                            editClassroom(classroomId, classCode, courseYear, majorId, teacherId);
+                        }
+
+                        function editClassroom(classroomId, currentClassCode, currentCourseYear, currentMajorId, currentTeacherId) {
+                            console.log('editClassroom called with:', {
+                                id: classroomId,
+                                classCode: currentClassCode,
+                                courseYear: currentCourseYear,
+                                majorId: currentMajorId,
+                                teacherId: currentTeacherId
+                            });
+
+                            // Check if modal element exists
+                            const modalElement = document.getElementById('editClassroomModal');
+                            if (!modalElement) {
+                                console.error('Modal element not found!');
+                                alert('Lỗi: Không tìm thấy modal chỉnh sửa');
+                                return;
+                            }
+
+                            console.log('Modal element found:', modalElement);
+
+                            // Find classroom data from the list-group-item using data attribute
+                            let classroomItem = document.querySelector(`div.list-group-item[data-classroom-id="${classroomId}"]`);
+                            if (!classroomItem) {
+                                console.error('Classroom item not found for id:', classroomId);
+                                // Try alternative method - find by class code in h6
+                                const alternativeItem = Array.from(document.querySelectorAll('div.list-group-item')).find(item => {
+                                    const h6 = item.querySelector('h6');
+                                    return h6 && h6.textContent.trim() === currentClassCode;
+                                });
+
+                                if (alternativeItem) {
+                                    console.log('Found classroom by class code:', alternativeItem);
+                                    classroomItem = alternativeItem;
+                                } else {
+                                    alert('Không tìm thấy thông tin lớp học');
+                                    return;
+                                }
+                            }
+
+                            console.log('Classroom item found:', classroomItem);
+
+                            // Extract student count for conditional logic
+                            const studentCountElement = classroomItem.querySelector('small');
+                            const studentCountText = studentCountElement ? studentCountElement.textContent : '0/50';
+                            const studentCount = parseInt(studentCountText.split('/')[0].replace('Sĩ số: ', '')) || 0;
+
+                            console.log('Student count:', studentCount);
+
+                            // Check if form elements exist
+                            const editClassroomId = document.getElementById('editClassroomId');
+                            const editClassCode = document.getElementById('editClassCode');
+                            const editCourseYear = document.getElementById('editCourseYear');
+                            const editMajorId = document.getElementById('editMajorId');
+                            const editTeacherId = document.getElementById('editTeacherId');
+
+                            if (!editClassroomId || !editClassCode || !editCourseYear || !editMajorId || !editTeacherId) {
+                                console.error('Form elements not found!');
+                                alert('Lỗi: Không tìm thấy form elements');
+                                return;
+                            }
+
+                            // Fill modal fields with current values
+                            editClassroomId.value = classroomId;
+                            editClassCode.value = currentClassCode || '';
+                            editCourseYear.value = currentCourseYear || '';
+
+                            // Select current major
+                            editMajorId.selectedIndex = 0; // Reset first
+                            if (currentMajorId && currentMajorId !== '') {
+                                for (let option of editMajorId.options) {
+                                    if (option.value === currentMajorId.toString()) {
+                                        option.selected = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Select current teacher
+                            editTeacherId.selectedIndex = 0; // Reset first
+                            if (currentTeacherId && currentTeacherId !== '') {
+                                for (let option of editTeacherId.options) {
+                                    if (option.value === currentTeacherId.toString()) {
+                                        option.selected = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            console.log('Form filled with values:', {
+                                classCode: editClassCode.value,
+                                courseYear: editCourseYear.value,
+                                majorId: editMajorId.value,
+                                teacherId: editTeacherId.value
+                            });
+
+                            // Show/hide fields based on student count
+                            const hasStudents = studentCount > 0;
+                            const warningMsg = document.getElementById('editWarningMessage');
+                            const classCodeGroup = document.getElementById('editClassCodeGroup');
+                            const courseYearGroup = document.getElementById('editCourseYearGroup');
+                            const majorGroup = document.getElementById('editMajorGroup');
+
+                            if (hasStudents) {
+                                if (warningMsg) warningMsg.classList.remove('d-none');
+                                if (classCodeGroup) classCodeGroup.style.display = 'none';
+                                if (courseYearGroup) courseYearGroup.style.display = 'none';
+                                if (majorGroup) majorGroup.style.display = 'none';
+
+                                // Remove required attributes
+                                if (editClassCode) editClassCode.removeAttribute('required');
+                                if (editCourseYear) editCourseYear.removeAttribute('required');
+                                if (editMajorId) editMajorId.removeAttribute('required');
+                            } else {
+                                if (warningMsg) warningMsg.classList.add('d-none');
+                                if (classCodeGroup) classCodeGroup.style.display = 'block';
+                                if (courseYearGroup) courseYearGroup.style.display = 'block';
+                                if (majorGroup) majorGroup.style.display = 'block';
+
+                                // Add required attributes back
+                                if (editClassCode) editClassCode.setAttribute('required', 'required');
+                                if (editCourseYear) editCourseYear.setAttribute('required', 'required');
+                                if (editMajorId) editMajorId.setAttribute('required', 'required');
+                            }
+
+                            console.log('About to show modal...');
+
+                            // Show modal using Bootstrap 5 method
+                            try {
+                                const modal = new bootstrap.Modal(modalElement);
+                                modal.show();
+                                console.log('Modal show() called successfully');
+                            } catch (error) {
+                                console.error('Error showing modal:', error);
+                                alert('Lỗi khi hiển thị modal: ' + error.message);
                             }
                         }
 
@@ -461,16 +747,16 @@
                                 form.submit();
                             }
                         }
-
-        // Show success/error messages
-        <c:if test="${not empty successMessage}">
-            alert('<c:out value="${successMessage}" />');
-        </c:if>
-        
-        <c:if test="${not empty errorMessage}">
-            alert('Lỗi: <c:out value="${errorMessage}" />');
-        </c:if>
                     </script>
+
+                    <!-- Show success/error messages -->
+                    <c:if test="${not empty success}">
+                        <script>alert('<c:out value="${success}" />');</script>
+                    </c:if>
+
+                    <c:if test="${not empty error}">
+                        <script>alert('Lỗi: <c:out value="${error}" />');</script>
+                    </c:if>
             </body>
 
             </html>

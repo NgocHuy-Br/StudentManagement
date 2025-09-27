@@ -28,10 +28,10 @@ INSERT INTO majors (major_code, major_name, description) VALUES
 ('HTTT', 'Hệ thống thông tin', 'Ngành về quản lý và phân tích hệ thống thông tin');
 
 -- 3. Thêm dữ liệu teachers
-INSERT INTO teachers (id, department) VALUES
-(2, 'Khoa học máy tính'),
-(3, 'Toán ứng dụng'),
-(4, 'Kỹ thuật phần mềm');
+INSERT INTO teachers (id, teacher_code, department) VALUES
+(2, 'GV001', 'Khoa học máy tính'),
+(3, 'GV002', 'Toán ứng dụng'),
+(4, 'GV003', 'Kỹ thuật phần mềm');
 
 -- 4. Thêm dữ liệu students (với major_id thay vì faculty)
 INSERT INTO students (id, class_name, major_id) VALUES

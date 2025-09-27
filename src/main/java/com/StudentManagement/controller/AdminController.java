@@ -89,7 +89,8 @@ public class AdminController {
     @GetMapping("/classrooms")
     public String classrooms(Authentication auth,
             Model model,
-            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(required = false) Long majorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "classCode") String sort,
@@ -101,9 +102,22 @@ public class AdminController {
         Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
 
-        Page<Classroom> classrooms = (q == null || q.isBlank())
-                ? classroomRepository.findAll(pageable)
-                : classroomRepository.search(q.trim(), pageable);
+        Page<Classroom> classrooms;
+
+        // Tìm kiếm và lọc theo điều kiện
+        if ((search == null || search.isBlank()) && majorId == null) {
+            // Không có điều kiện tìm kiếm
+            classrooms = classroomRepository.findAll(pageable);
+        } else if (majorId != null && (search == null || search.isBlank())) {
+            // Chỉ lọc theo ngành
+            classrooms = classroomRepository.findByMajorId(majorId, pageable);
+        } else if (majorId == null && search != null && !search.isBlank()) {
+            // Chỉ tìm kiếm theo tên
+            classrooms = classroomRepository.search(search.trim(), pageable);
+        } else {
+            // Cả tìm kiếm và lọc theo ngành
+            classrooms = classroomRepository.searchByClassCodeAndMajor(search.trim(), majorId, pageable);
+        }
 
         // Lấy danh sách ngành và giáo viên cho form tạo lớp
         List<Major> majors = majorRepository.findAll();
@@ -113,7 +127,8 @@ public class AdminController {
         model.addAttribute("page", classrooms);
         model.addAttribute("majors", majors);
         model.addAttribute("teachers", teachers);
-        model.addAttribute("q", q);
+        model.addAttribute("search", search);
+        model.addAttribute("majorId", majorId);
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
         model.addAttribute("selectedClassId", selectedClassId);
@@ -185,21 +200,126 @@ public class AdminController {
     @PostMapping("/classrooms/delete")
     @Transactional
     public String deleteClassroom(@RequestParam Long id, RedirectAttributes ra) {
+        System.out.println("=== DELETE CLASSROOM ENDPOINT CALLED ===");
+        System.out.println("DEBUG: deleteClassroom called with id: " + id);
+        System.out.println("DEBUG: Request timestamp: " + System.currentTimeMillis());
+
         Classroom classroom = classroomRepository.findById(id).orElse(null);
         if (classroom == null) {
+            System.out.println("DEBUG: Classroom not found with id: " + id);
             ra.addFlashAttribute("error", "Không tìm thấy lớp học.");
             return "redirect:/admin/classrooms";
         }
 
+        System.out.println("DEBUG: Found classroom: " + classroom.getClassCode());
+
         // Kiểm tra xem có sinh viên nào trong lớp không
         long studentCount = classroomRepository.countStudentsByClassroomId(id);
+        System.out.println("DEBUG: Student count in classroom: " + studentCount);
+
         if (studentCount > 0) {
+            System.out.println("DEBUG: Cannot delete classroom - has students");
             ra.addFlashAttribute("error", "Không thể xóa lớp học vì còn " + studentCount + " sinh viên.");
             return "redirect:/admin/classrooms";
         }
 
-        classroomRepository.delete(classroom);
-        ra.addFlashAttribute("success", "Đã xóa lớp học: " + classroom.getClassCode());
+        System.out.println("DEBUG: About to delete classroom: " + classroom.getClassCode());
+        try {
+            classroomRepository.delete(classroom);
+            System.out.println("DEBUG: Classroom deleted successfully from database");
+            ra.addFlashAttribute("success", "Đã xóa lớp học: " + classroom.getClassCode());
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error deleting classroom: " + e.getMessage());
+            e.printStackTrace();
+            ra.addFlashAttribute("error", "Lỗi khi xóa lớp học: " + e.getMessage());
+        }
+
+        System.out.println("DEBUG: Redirecting to /admin/classrooms");
+        return "redirect:/admin/classrooms";
+    }
+
+    // Cập nhật thông tin lớp học
+    @PostMapping("/classrooms/update")
+    @Transactional
+    public String updateClassroom(@RequestParam Long id,
+            @RequestParam(required = false) String classCode,
+            @RequestParam(required = false) String courseYear,
+            @RequestParam(required = false) Long majorId,
+            @RequestParam(required = false) Long teacherId,
+            RedirectAttributes ra) {
+        System.out.println("DEBUG: updateClassroom called with id: " + id);
+
+        Classroom classroom = classroomRepository.findById(id).orElse(null);
+        if (classroom == null) {
+            System.out.println("DEBUG: Classroom not found with id: " + id);
+            ra.addFlashAttribute("error", "Không tìm thấy lớp học.");
+            return "redirect:/admin/classrooms";
+        }
+
+        boolean hasStudents = classroom.getStudents() != null && !classroom.getStudents().isEmpty();
+        System.out.println("DEBUG: Classroom has students: " + hasStudents);
+
+        String oldCode = classroom.getClassCode();
+        String oldYear = classroom.getCourseYear();
+        String oldMajor = classroom.getMajor().getMajorName();
+
+        try {
+            // Nếu lớp đã có sinh viên, chỉ cho phép sửa giáo viên chủ nhiệm
+            if (hasStudents) {
+                // Chỉ cập nhật giáo viên chủ nhiệm
+                Teacher newTeacher = null;
+                if (teacherId != null && teacherId > 0) {
+                    newTeacher = teacherRepository.findById(teacherId).orElse(null);
+                }
+                classroom.setHomeRoomTeacher(newTeacher);
+
+                classroomRepository.save(classroom);
+                ra.addFlashAttribute("success", "Đã cập nhật giáo viên chủ nhiệm cho lớp " + oldCode);
+            } else {
+                // Lớp chưa có sinh viên - cho phép sửa tất cả thông tin
+
+                // Cập nhật mã lớp nếu có
+                if (classCode != null && !classCode.trim().isEmpty()) {
+                    String newCode = classCode.trim().toUpperCase();
+                    if (!newCode.equals(oldCode) && classroomRepository.existsByClassCode(newCode)) {
+                        ra.addFlashAttribute("error", "Mã lớp đã tồn tại: " + newCode);
+                        return "redirect:/admin/classrooms";
+                    }
+                    classroom.setClassCode(newCode);
+                }
+
+                // Cập nhật khóa học nếu có
+                if (courseYear != null && !courseYear.trim().isEmpty()) {
+                    classroom.setCourseYear(courseYear.trim());
+                }
+
+                // Cập nhật ngành nếu có
+                if (majorId != null) {
+                    Major newMajor = majorRepository.findById(majorId).orElse(null);
+                    if (newMajor != null) {
+                        classroom.setMajor(newMajor);
+                    }
+                }
+
+                // Cập nhật giáo viên chủ nhiệm
+                Teacher newTeacher = null;
+                if (teacherId != null && teacherId > 0) {
+                    newTeacher = teacherRepository.findById(teacherId).orElse(null);
+                }
+                classroom.setHomeRoomTeacher(newTeacher);
+
+                classroomRepository.save(classroom);
+                ra.addFlashAttribute("success", "Đã cập nhật thông tin lớp học thành công!");
+            }
+
+            System.out.println("DEBUG: Classroom updated successfully");
+
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error updating classroom: " + e.getMessage());
+            e.printStackTrace();
+            ra.addFlashAttribute("error", "Lỗi khi cập nhật lớp học: " + e.getMessage());
+        }
+
         return "redirect:/admin/classrooms";
     }
 
