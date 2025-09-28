@@ -453,18 +453,19 @@ public class AdminController {
         // Tự động gán password = username nếu không có
         String pwd = (password != null && !password.trim().isEmpty()) ? password.trim() : u;
 
-        // Xử lý fullName nếu có (tách thành fname và lname)
-        String firstName = fname;
-        String lastName = lname;
+        // Xử lý fullName nếu có (tách thành fname và lname theo chuẩn Việt Nam)
+        String firstName = fname; // Tên (phần cuối)
+        String lastName = lname; // Họ và tên đệm (phần đầu)
         if (fullName != null && !fullName.trim().isEmpty() && (firstName == null || firstName.trim().isEmpty())) {
             String[] nameParts = fullName.trim().split("\\s+");
             if (nameParts.length >= 2) {
-                lastName = nameParts[0]; // Phần đầu là họ
-                firstName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 1, nameParts.length)); // Phần còn
-                                                                                                            // lại là
-                                                                                                            // tên
+                // Tên là phần cuối cùng
+                firstName = nameParts[nameParts.length - 1];
+                // Họ và tên đệm là phần còn lại
+                lastName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 0, nameParts.length - 1));
             } else {
                 firstName = fullName.trim();
+                lastName = "";
             }
         }
 
@@ -549,6 +550,27 @@ public class AdminController {
         return "redirect:/admin/classrooms?selectedClassId=" + classId;
     }
 
+    // Xóa sinh viên khỏi lớp - mapping mới để match với JavaScript
+    @PostMapping("/classrooms/removeStudent")
+    @Transactional
+    public String removeStudentFromClassNew(@RequestParam Long studentId,
+            @RequestParam Long classroomId,
+            RedirectAttributes ra) {
+
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy sinh viên.");
+            return "redirect:/admin/classrooms?selectedClassId=" + classroomId;
+        }
+
+        student.setClassroom(null);
+        student.setClassName(null);
+        studentRepository.save(student);
+
+        ra.addFlashAttribute("success", "Đã xóa sinh viên khỏi lớp: " + student.getUser().getUsername());
+        return "redirect:/admin/classrooms?selectedClassId=" + classroomId;
+    }
+
     // Thêm sinh viên: giữ lại method cũ cho backward compatibility
     @PostMapping("/students")
     @Transactional
@@ -572,18 +594,19 @@ public class AdminController {
         // Tự động gán password = username nếu không có
         String pwd = (password != null && !password.trim().isEmpty()) ? password.trim() : u;
 
-        // Xử lý fullName nếu có (tách thành fname và lname)
-        String firstName = fname;
-        String lastName = lname;
+        // Xử lý fullName nếu có (tách thành fname và lname theo chuẩn Việt Nam)
+        String firstName = fname; // Tên (phần cuối)
+        String lastName = lname; // Họ và tên đệm (phần đầu)
         if (fullName != null && !fullName.trim().isEmpty() && (firstName == null || firstName.trim().isEmpty())) {
             String[] nameParts = fullName.trim().split("\\s+");
             if (nameParts.length >= 2) {
-                lastName = nameParts[0]; // Phần đầu là họ
-                firstName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 1, nameParts.length)); // Phần còn
-                                                                                                            // lại là
-                                                                                                            // tên
+                // Tên là phần cuối cùng
+                firstName = nameParts[nameParts.length - 1];
+                // Họ và tên đệm là phần còn lại
+                lastName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 0, nameParts.length - 1));
             } else {
                 firstName = fullName.trim();
+                lastName = "";
             }
         }
 

@@ -1,6 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-        <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+        <%@ taglib
+            uri="http://java.sun.com/jsp/jstl/f                                                                onclick="
+            editScore(${score.id}, '${score.student.user.username}'
+            , '${score.student.user.lname} ${score.student.user.fname}' , '${score.avgScore}'
+            , '${fn:escapeXml(score.notes)}' );">nctions" prefix="fn" %>
             <!DOCTYPE html>
             <html lang="vi">
 
@@ -138,7 +142,7 @@
                                                     <tr>
                                                         <td>${(scores.number * scores.size) + status.index + 1}</td>
                                                         <td><strong>${score.student.user.username}</strong></td>
-                                                        <td>${score.student.user.fname} ${score.student.user.lname}</td>
+                                                        <td>${score.student.user.lname} ${score.student.user.fname}</td>
                                                         <td>${score.student.className}</td>
                                                         <td>
                                                             <c:choose>
@@ -173,7 +177,7 @@
                                                         <td>
                                                             <button class="btn btn-outline-primary btn-sm"
                                                                 data-bs-toggle="modal" data-bs-target="#modalEditScore"
-                                                                onclick="editScore(${score.id}, '${score.student.user.username}', '${score.student.user.fname} ${score.student.user.lname}', '${score.avgScore}', '${fn:escapeXml(score.notes)}')">
+                                                                onclick="editScore(${score.id}, '${score.student.user.username}', '${score.student.user.lname} ${score.student.user.fname}', '${score.avgScore}', '${fn:escapeXml(score.notes)}')">
                                                                 <i class="bi bi-pencil"></i>
                                                             </button>
                                                         </td>
