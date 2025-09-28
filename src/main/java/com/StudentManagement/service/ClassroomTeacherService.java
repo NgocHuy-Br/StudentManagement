@@ -171,4 +171,14 @@ public class ClassroomTeacherService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học"));
         return classroomTeacherRepository.existsByClassroomAndEndDateIsNull(classroom);
     }
+
+    /**
+     * Kiểm tra xem giáo viên có đang là chủ nhiệm hiện tại không
+     */
+    @Transactional(readOnly = true)
+    public boolean isCurrentHomeRoomTeacher(Long teacherId) {
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên"));
+        return classroomTeacherRepository.existsByTeacherAndEndDateIsNull(teacher);
+    }
 }

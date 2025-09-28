@@ -13,26 +13,70 @@ import java.util.Optional;
 
 public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
-    boolean existsByUser(User user);
+  boolean existsByUser(User user);
 
-    Optional<Teacher> findByUser(User user);
+  Optional<Teacher> findByUser(User user);
 
-    // Lấy danh sách giáo viên kèm user để phân trang/sắp xếp
-    @EntityGraph(attributePaths = { "user" })
-    @Query("select t from Teacher t join t.user u")
-    Page<Teacher> findAllWithUser(Pageable pageable);
+  // Lấy danh sách giáo viên kèm user để phân trang/sắp xếp
+  @EntityGraph(attributePaths = { "user" })
+  @Query("select t from Teacher t join t.user u")
+  Page<Teacher> findAllWithUser(Pageable pageable);
 
-    // Tìm kiếm theo mã GV, họ, tên, email, SĐT, bộ môn
-    @EntityGraph(attributePaths = { "user" })
-    @Query("""
-            select t from Teacher t join t.user u
-            where
-              lower(u.username) like lower(concat('%', :q, '%'))
-              or lower(u.fname) like lower(concat('%', :q, '%'))
-              or lower(u.lname) like lower(concat('%', :q, '%'))
-              or lower(u.email) like lower(concat('%', :q, '%'))
-              or lower(u.phone) like lower(concat('%', :q, '%'))
-              or lower(t.department) like lower(concat('%', :q, '%'))
-            """)
-    Page<Teacher> search(@Param("q") String q, Pageable pageable);
+  // Tìm kiếm theo mã GV, họ, tên, email, SĐT, bộ môn
+  @EntityGraph(attributePaths = { "user" })
+  @Query("""
+      select t from Teacher t join t.user u
+      where
+        lower(u.username) like lower(concat('%', :q, '%'))
+        or lower(u.fname) like lower(concat('%', :q, '%'))
+        or lower(u.lname) like lower(concat('%', :q, '%'))
+        or lower(u.email) like lower(concat('%', :q, '%'))
+        or lower(u.phone) like lower(concat('%', :q, '%'))
+        or lower(t.department) like lower(concat('%', :q, '%'))
+      """)
+  Page<Teacher> search(@Param("q") String q, Pageable pageable);
+
+  // Lọc theo khoa (Faculty)
+  @EntityGraph(attributePaths = { "user", "faculty" })
+  @Query("select t from Teacher t join t.user u where t.faculty.name = :facultyName")
+  Page<Teacher> findByFacultyName(@Param("facultyName") String facultyName, Pageable pageable);
+
+  // Lọc theo khoa bằng ID
+  @EntityGraph(attributePaths = { "user", "faculty" })
+  @Query("select t from Teacher t join t.user u where t.faculty.id = :facultyId")
+  Page<Teacher> findByFacultyId(@Param("facultyId") Long facultyId, Pageable pageable);
+
+  // Lọc theo khoa (department - tạm thời giữ để tương thích)
+  @EntityGraph(attributePaths = { "user" })
+  @Query("select t from Teacher t join t.user u where t.department = :department")
+  Page<Teacher> findByDepartment(@Param("department") String department, Pageable pageable);
+
+  // Tìm kiếm theo từ khóa và lọc theo khoa (Faculty)
+  @EntityGraph(attributePaths = { "user", "faculty" })
+  @Query("""
+      select t from Teacher t join t.user u
+      where t.faculty.name = :facultyName and (
+        lower(u.username) like lower(concat('%', :q, '%'))
+        or lower(u.fname) like lower(concat('%', :q, '%'))
+        or lower(u.lname) like lower(concat('%', :q, '%'))
+        or lower(u.email) like lower(concat('%', :q, '%'))
+        or lower(u.phone) like lower(concat('%', :q, '%'))
+        or lower(t.department) like lower(concat('%', :q, '%'))
+      )
+      """)
+  Page<Teacher> searchByFacultyName(@Param("q") String q, @Param("facultyName") String facultyName, Pageable pageable);
+
+  // Tìm kiếm theo từ khóa và lọc theo khoa (tạm thời giữ để tương thích)
+  @EntityGraph(attributePaths = { "user" })
+  @Query("""
+      select t from Teacher t join t.user u
+      where t.department = :department and (
+        lower(u.username) like lower(concat('%', :q, '%'))
+        or lower(u.fname) like lower(concat('%', :q, '%'))
+        or lower(u.lname) like lower(concat('%', :q, '%'))
+        or lower(u.email) like lower(concat('%', :q, '%'))
+        or lower(u.phone) like lower(concat('%', :q, '%'))
+      )
+      """)
+  Page<Teacher> searchByDepartment(@Param("q") String q, @Param("department") String department, Pageable pageable);
 }

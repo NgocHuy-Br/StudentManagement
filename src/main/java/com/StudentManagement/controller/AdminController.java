@@ -1,12 +1,14 @@
 package com.StudentManagement.controller;
 
 import com.StudentManagement.entity.Classroom;
+import com.StudentManagement.entity.Faculty;
 import com.StudentManagement.entity.Major;
 import com.StudentManagement.entity.Student;
 import com.StudentManagement.entity.Subject;
 import com.StudentManagement.entity.Teacher;
 import com.StudentManagement.entity.User;
 import com.StudentManagement.repository.ClassroomRepository;
+import com.StudentManagement.repository.FacultyRepository;
 import com.StudentManagement.repository.MajorRepository;
 import com.StudentManagement.repository.ScoreRepository;
 import com.StudentManagement.repository.StudentRepository;
@@ -23,6 +25,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -33,6 +38,7 @@ public class AdminController {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
+    private final FacultyRepository facultyRepository;
     private final MajorRepository majorRepository;
     private final SubjectRepository subjectRepository;
     private final ScoreRepository scoreRepository;
@@ -46,6 +52,7 @@ public class AdminController {
     public AdminController(UserRepository userRepository,
             StudentRepository studentRepository,
             TeacherRepository teacherRepository,
+            FacultyRepository facultyRepository,
             MajorRepository majorRepository,
             SubjectRepository subjectRepository,
             ScoreRepository scoreRepository,
@@ -55,6 +62,7 @@ public class AdminController {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
+        this.facultyRepository = facultyRepository;
         this.majorRepository = majorRepository;
         this.subjectRepository = subjectRepository;
         this.scoreRepository = scoreRepository;
@@ -710,6 +718,7 @@ public class AdminController {
     @GetMapping("/teachers")
     public String teachers(Authentication auth, Model model,
             @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "") String faculty,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "user.username") String sort,
@@ -720,14 +729,44 @@ public class AdminController {
         Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
 
-        Page<Teacher> teachers = (q == null || q.isBlank())
-                ? teacherRepository.findAllWithUser(pageable)
-                : teacherRepository.search(q.trim(), pageable);
+        Page<Teacher> teachers;
+
+        // Apply filters using Faculty
+        if ((q == null || q.isBlank()) && (faculty == null || faculty.isBlank())) {
+            teachers = teacherRepository.findAllWithUser(pageable);
+        } else if (faculty != null && !faculty.isBlank() && (q == null || q.isBlank())) {
+            // Kiểm tra xem faculty là ID hay tên
+            try {
+                Long facultyId = Long.parseLong(faculty);
+                teachers = teacherRepository.findByFacultyId(facultyId, pageable);
+            } catch (NumberFormatException e) {
+                // Nếu không phải ID, tìm theo tên khoa
+                teachers = teacherRepository.findByFacultyName(faculty, pageable);
+            }
+        } else if (q != null && !q.isBlank() && (faculty == null || faculty.isBlank())) {
+            teachers = teacherRepository.search(q.trim(), pageable);
+        } else {
+            // Both q and faculty are provided
+            try {
+                Long facultyId = Long.parseLong(faculty);
+                // Tạm thời dùng faculty name để search
+                Faculty facultyObj = facultyRepository.findById(facultyId).orElse(null);
+                if (facultyObj != null) {
+                    teachers = teacherRepository.searchByFacultyName(q.trim(), facultyObj.getName(), pageable);
+                } else {
+                    teachers = teacherRepository.search(q.trim(), pageable);
+                }
+            } catch (NumberFormatException e) {
+                teachers = teacherRepository.searchByFacultyName(q.trim(), faculty, pageable);
+            }
+        }
 
         model.addAttribute("page", teachers);
         model.addAttribute("q", q);
+        model.addAttribute("faculty", faculty);
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
+        model.addAttribute("faculties", facultyRepository.findAllOrderByName());
         return "admin/teachers";
     }
 
@@ -735,22 +774,21 @@ public class AdminController {
     @PostMapping("/teachers")
     @Transactional
     public String createTeacher(@RequestParam String username,
-            @RequestParam String password,
-            @RequestParam String fname,
-            @RequestParam(required = false) String lname,
+            @RequestParam String fullName,
             @RequestParam String email,
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String nationalId,
             @RequestParam(required = false) String birthDate,
-            @RequestParam(required = false) String department,
+            @RequestParam(required = false) Long facultyId,
             RedirectAttributes ra) {
 
         String u = username.trim();
         String e = email.trim();
+        String fn = fullName.trim();
 
-        if (u.isEmpty() || password == null || password.isBlank() || fname == null || fname.isBlank() || e.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã GV, Mật khẩu, Họ, Email.");
+        if (u.isEmpty() || fn.isEmpty() || e.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã GV, Họ Tên, Email.");
             return "redirect:/admin/teachers";
         }
         if (userRepository.existsByUsername(u)) {
@@ -775,12 +813,17 @@ public class AdminController {
             }
         }
 
-        // 1) User
+        // Tách họ tên thành fname và lname
+        String[] nameParts = fn.split("\\s+", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+        // 1) User với mật khẩu mặc định là mã giáo viên
         User teacherUser = new User();
         teacherUser.setUsername(u);
-        teacherUser.setPassword(passwordEncoder.encode(password));
-        teacherUser.setFname(fname);
-        teacherUser.setLname(lname);
+        teacherUser.setPassword(passwordEncoder.encode(u)); // Mật khẩu mặc định = mã giáo viên
+        teacherUser.setFname(firstName);
+        teacherUser.setLname(lastName);
         teacherUser.setEmail(e);
         teacherUser.setPhone(phone);
         teacherUser.setAddress(address);
@@ -800,13 +843,163 @@ public class AdminController {
         teacherUser.setRole(User.Role.TEACHER);
         teacherUser = userRepository.save(teacherUser);
 
-        // 2) Teacher
+        // 2) Teacher với Faculty
         Teacher teacher = new Teacher();
         teacher.setUser(teacherUser);
-        teacher.setDepartment(department);
+        // Không set department nữa vì đã bỏ trường này
+
+        // Liên kết với Faculty nếu có
+        if (facultyId != null && facultyId > 0) {
+            Faculty faculty = facultyRepository.findById(facultyId).orElse(null);
+            if (faculty != null) {
+                teacher.setFaculty(faculty);
+            }
+        }
+
         teacherRepository.save(teacher);
 
-        ra.addFlashAttribute("success", "Đã tạo giáo viên: " + u);
+        ra.addFlashAttribute("success", "Đã tạo giáo viên: " + u + " (mật khẩu mặc định: " + u + ")");
+        return "redirect:/admin/teachers";
+    } // Chỉnh sửa giáo viên
+
+    @PostMapping("/teachers/{teacherId}/edit")
+    @Transactional
+    public String editTeacher(@PathVariable Long teacherId,
+            @RequestParam String username,
+            @RequestParam String fullName,
+            @RequestParam String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String nationalId,
+            @RequestParam(required = false) String birthDate,
+            @RequestParam(required = false) Long facultyId,
+            RedirectAttributes ra) {
+
+        Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
+        if (teacher == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy giáo viên");
+            return "redirect:/admin/teachers";
+        }
+
+        User user = teacher.getUser();
+        String e = email.trim();
+        String fn = fullName.trim();
+
+        if (fn.isEmpty() || e.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Họ Tên, Email.");
+            return "redirect:/admin/teachers";
+        }
+
+        // Kiểm tra email trùng (trừ user hiện tại)
+        if (!user.getEmail().equals(e) && userRepository.existsByEmail(e)) {
+            ra.addFlashAttribute("error", "Email đã tồn tại: " + e);
+            return "redirect:/admin/teachers";
+        }
+
+        // Kiểm tra nationalId nếu có
+        if (nationalId != null && !nationalId.trim().isEmpty()) {
+            String nId = nationalId.trim();
+            if (nId.length() != 12 || !nId.matches("\\d+")) {
+                ra.addFlashAttribute("error", "CCCD phải có 12 chữ số");
+                return "redirect:/admin/teachers";
+            }
+            // Kiểm tra CCCD trùng (trừ user hiện tại)
+            if (!nId.equals(user.getNationalId()) && userRepository.existsByNationalId(nId)) {
+                ra.addFlashAttribute("error", "CCCD đã tồn tại: " + nId);
+                return "redirect:/admin/teachers";
+            }
+        }
+
+        // Tách họ tên thành fname và lname
+        String[] nameParts = fn.split("\\s+", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+        // Cập nhật thông tin
+        user.setFname(firstName);
+        user.setLname(lastName);
+        user.setEmail(e);
+        user.setPhone(phone);
+        user.setAddress(address);
+        user.setNationalId(nationalId != null && !nationalId.trim().isEmpty() ? nationalId.trim() : null);
+
+        // Xử lý ngày sinh
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            try {
+                user.setBirthDate(java.time.LocalDate.parse(birthDate.trim()));
+            } catch (Exception ex) {
+                ra.addFlashAttribute("error",
+                        "Định dạng ngày sinh không hợp lệ. Vui lòng sử dụng định dạng: YYYY-MM-DD");
+                return "redirect:/admin/teachers";
+            }
+        } else {
+            user.setBirthDate(null);
+        }
+
+        userRepository.save(user);
+
+        // Cập nhật Faculty cho teacher nếu có
+        if (facultyId != null && facultyId > 0) {
+            Faculty faculty = facultyRepository.findById(facultyId).orElse(null);
+            teacher.setFaculty(faculty);
+        } else {
+            teacher.setFaculty(null);
+        }
+
+        teacherRepository.save(teacher);
+
+        ra.addFlashAttribute("success", "Đã cập nhật giáo viên: " + user.getUsername());
+        return "redirect:/admin/teachers";
+    }
+
+    // Kiểm tra có thể xóa giáo viên không (API endpoint)
+    @GetMapping("/teachers/{teacherId}/can-delete")
+    @ResponseBody
+    public Map<String, Object> canDeleteTeacher(@PathVariable Long teacherId) {
+        Map<String, Object> response = new HashMap<>();
+
+        Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
+        if (teacher == null) {
+            response.put("canDelete", false);
+            response.put("reason", "Không tìm thấy giáo viên");
+            return response;
+        }
+
+        // Kiểm tra xem giáo viên có đang là chủ nhiệm không
+        boolean isHomeRoomTeacher = classroomTeacherService.isCurrentHomeRoomTeacher(teacherId);
+
+        response.put("canDelete", !isHomeRoomTeacher);
+        if (isHomeRoomTeacher) {
+            response.put("reason", "Giáo viên đang là chủ nhiệm của một lớp học");
+        }
+
+        return response;
+    }
+
+    // Xóa giáo viên
+    @PostMapping("/teachers/{teacherId}/delete")
+    @Transactional
+    public String deleteTeacher(@PathVariable Long teacherId, RedirectAttributes ra) {
+        Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
+        if (teacher == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy giáo viên");
+            return "redirect:/admin/teachers";
+        }
+
+        // Kiểm tra xem giáo viên có đang là chủ nhiệm không
+        boolean isHomeRoomTeacher = classroomTeacherService.isCurrentHomeRoomTeacher(teacherId);
+        if (isHomeRoomTeacher) {
+            ra.addFlashAttribute("error", "Không thể xóa giáo viên đang là chủ nhiệm của một lớp học");
+            return "redirect:/admin/teachers";
+        }
+
+        String username = teacher.getUser().getUsername();
+
+        // Xóa teacher trước, sau đó xóa user
+        teacherRepository.delete(teacher);
+        userRepository.delete(teacher.getUser());
+
+        ra.addFlashAttribute("success", "Đã xóa giáo viên: " + username);
         return "redirect:/admin/teachers";
     }
 
@@ -835,6 +1028,7 @@ public class AdminController {
         model.addAttribute("q", q);
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
+        model.addAttribute("faculties", facultyRepository.findAllOrderByName());
         return "admin/subjects";
     }
 
@@ -1159,5 +1353,153 @@ public class AdminController {
         model.addAttribute("teacherHistory", classroomTeacherService.getTeacherHomeRoomHistory(teacherId));
 
         return "admin/teacher-classroom-history";
+    }
+
+    // FACULTY MANAGEMENT
+    // ==================
+
+    /**
+     * API endpoint để tạo khoa mới
+     */
+    @PostMapping("/faculties")
+    @ResponseBody
+    public Map<String, Object> createFaculty(@RequestParam String name,
+            @RequestParam(required = false) String description) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String facultyName = name.trim();
+
+            if (facultyName.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Tên khoa không được để trống");
+                return response;
+            }
+
+            if (facultyRepository.existsByName(facultyName)) {
+                response.put("success", false);
+                response.put("message", "Khoa đã tồn tại: " + facultyName);
+                return response;
+            }
+
+            Faculty faculty = new Faculty();
+            faculty.setName(facultyName);
+            faculty.setDescription(description != null ? description.trim() : null);
+
+            faculty = facultyRepository.save(faculty);
+
+            response.put("success", true);
+            response.put("message", "Đã tạo khoa: " + facultyName);
+            response.put("faculty", Map.of(
+                    "id", faculty.getId(),
+                    "name", faculty.getName(),
+                    "description", faculty.getDescription() != null ? faculty.getDescription() : ""));
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi tạo khoa: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API endpoint để cập nhật khoa
+     */
+    @PostMapping("/faculties/{id}/edit")
+    @ResponseBody
+    public Map<String, Object> editFaculty(@PathVariable Long id,
+            @RequestParam String name,
+            @RequestParam(required = false) String description) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Faculty faculty = facultyRepository.findById(id).orElse(null);
+            if (faculty == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy khoa");
+                return response;
+            }
+
+            String facultyName = name.trim();
+
+            if (facultyName.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Tên khoa không được để trống");
+                return response;
+            }
+
+            // Kiểm tra trung tên (trừ khoa hiện tại)
+            Faculty existingFaculty = facultyRepository.findByName(facultyName).orElse(null);
+            if (existingFaculty != null && !existingFaculty.getId().equals(id)) {
+                response.put("success", false);
+                response.put("message", "Khoa đã tồn tại: " + facultyName);
+                return response;
+            }
+
+            faculty.setName(facultyName);
+            faculty.setDescription(description != null ? description.trim() : null);
+
+            faculty = facultyRepository.save(faculty);
+
+            response.put("success", true);
+            response.put("message", "Đã cập nhật khoa: " + facultyName);
+            response.put("faculty", Map.of(
+                    "id", faculty.getId(),
+                    "name", faculty.getName(),
+                    "description", faculty.getDescription() != null ? faculty.getDescription() : ""));
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi cập nhật khoa: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API endpoint để xóa khoa
+     */
+    @PostMapping("/faculties/{id}/delete")
+    @ResponseBody
+    public Map<String, Object> deleteFaculty(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Faculty faculty = facultyRepository.findById(id).orElse(null);
+            if (faculty == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy khoa");
+                return response;
+            }
+
+            // Kiểm tra xem có giáo viên nào thuộc khoa này không
+            if (faculty.getTeachers() != null && !faculty.getTeachers().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Không thể xóa khoa vì còn có giáo viên thuộc khoa này");
+                return response;
+            }
+
+            String facultyName = faculty.getName();
+            facultyRepository.delete(faculty);
+
+            response.put("success", true);
+            response.put("message", "Đã xóa khoa: " + facultyName);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi xóa khoa: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /**
+     * API endpoint để lấy danh sách các khoa
+     */
+    @GetMapping("/faculties")
+    @ResponseBody
+    public List<Faculty> getFaculties() {
+        return facultyRepository.findAllOrderByName();
     }
 }

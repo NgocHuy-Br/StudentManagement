@@ -22,6 +22,11 @@ public class Teacher {
     @Column(length = 200)
     private String department; // Bộ môn
 
+    // Liên kết với Faculty (Khoa)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "faculty_id")
+    private Faculty faculty;
+
     // Quan hệ với ClassroomTeacher (1 giáo viên có thể chủ nhiệm nhiều lớp trong
     // lịch sử)
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -58,6 +63,14 @@ public class Teacher {
 
     public void setDepartment(String department) {
         this.department = department;
+    }
+
+    public Faculty getFaculty() {
+        return faculty;
+    }
+
+    public void setFaculty(Faculty faculty) {
+        this.faculty = faculty;
     }
 
     public List<ClassroomTeacher> getClassroomTeachers() {
