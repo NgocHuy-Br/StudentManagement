@@ -32,7 +32,7 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 // Role-based authorization
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                                                .requestMatchers("/teacher/**").hasRole("TEACHER")
+                                                .requestMatchers("/homeroom/**").hasRole("TEACHER")
                                                 .requestMatchers("/student/**").hasRole("STUDENT")
                                                 .anyRequest().authenticated())
                                 .requestCache(cache -> cache.disable())

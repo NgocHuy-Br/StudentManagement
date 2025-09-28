@@ -22,10 +22,6 @@ public class Subject {
     @ManyToMany(mappedBy = "subjects", fetch = FetchType.LAZY)
     private List<Major> majors;
 
-    // Quan hệ với TeacherSubject (1 môn có thể được nhiều giáo viên dạy)
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TeacherSubject> teacherSubjects;
-
     // Quan hệ với Score (1 môn có nhiều điểm)
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Score> scores;
@@ -69,14 +65,6 @@ public class Subject {
 
     public void setMajors(List<Major> majors) {
         this.majors = majors;
-    }
-
-    public List<TeacherSubject> getTeacherSubjects() {
-        return teacherSubjects;
-    }
-
-    public void setTeacherSubjects(List<TeacherSubject> teacherSubjects) {
-        this.teacherSubjects = teacherSubjects;
     }
 
     public List<Score> getScores() {

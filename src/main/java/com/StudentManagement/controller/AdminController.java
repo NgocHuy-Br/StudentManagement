@@ -12,8 +12,8 @@ import com.StudentManagement.repository.ScoreRepository;
 import com.StudentManagement.repository.StudentRepository;
 import com.StudentManagement.repository.SubjectRepository;
 import com.StudentManagement.repository.TeacherRepository;
-import com.StudentManagement.repository.TeacherSubjectRepository;
 import com.StudentManagement.repository.UserRepository;
+import com.StudentManagement.service.ClassroomTeacherService;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,8 +36,8 @@ public class AdminController {
     private final MajorRepository majorRepository;
     private final SubjectRepository subjectRepository;
     private final ScoreRepository scoreRepository;
-    private final TeacherSubjectRepository teacherSubjectRepository;
     private final ClassroomRepository classroomRepository;
+    private final ClassroomTeacherService classroomTeacherService;
     private final PasswordEncoder passwordEncoder;
 
     // Pattern for course year validation
@@ -49,8 +49,8 @@ public class AdminController {
             MajorRepository majorRepository,
             SubjectRepository subjectRepository,
             ScoreRepository scoreRepository,
-            TeacherSubjectRepository teacherSubjectRepository,
             ClassroomRepository classroomRepository,
+            ClassroomTeacherService classroomTeacherService,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -58,8 +58,8 @@ public class AdminController {
         this.majorRepository = majorRepository;
         this.subjectRepository = subjectRepository;
         this.scoreRepository = scoreRepository;
-        this.teacherSubjectRepository = teacherSubjectRepository;
         this.classroomRepository = classroomRepository;
+        this.classroomTeacherService = classroomTeacherService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -516,7 +516,7 @@ public class AdminController {
         svUser.setEmail(e);
         svUser.setPhone(phoneNum != null ? phoneNum.trim() : null);
         svUser.setAddress(address != null ? address.trim() : null);
-        svUser.setNationalId(nationalId != null ? nationalId.trim() : null);
+        svUser.setNationalId(nationalId != null && !nationalId.trim().isEmpty() ? nationalId.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {
@@ -680,7 +680,7 @@ public class AdminController {
         svUser.setEmail(e);
         svUser.setPhone(phoneNum != null ? phoneNum.trim() : null);
         svUser.setAddress(address != null ? address.trim() : null);
-        svUser.setNationalId(nationalId != null ? nationalId.trim() : null);
+        svUser.setNationalId(nationalId != null && !nationalId.trim().isEmpty() ? nationalId.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {
@@ -784,7 +784,7 @@ public class AdminController {
         teacherUser.setEmail(e);
         teacherUser.setPhone(phone);
         teacherUser.setAddress(address);
-        teacherUser.setNationalId(nationalId != null ? nationalId.trim() : null);
+        teacherUser.setNationalId(nationalId != null && !nationalId.trim().isEmpty() ? nationalId.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {
@@ -1133,5 +1133,31 @@ public class AdminController {
 
         ra.addFlashAttribute("success", "Đã thêm môn học vào ngành: " + subject.getSubjectCode());
         return "redirect:/admin/majors/" + majorId + "/subjects";
+    }
+
+    // ===========================
+    // CLASSROOM TEACHER MANAGEMENT
+    // ===========================
+
+    /**
+     * Xem các lớp mà giáo viên đang chủ nhiệm
+     */
+    @GetMapping("/teachers/{teacherId}/current-classes")
+    public String viewTeacherCurrentClasses(@PathVariable Long teacherId,
+            Authentication auth, Model model) {
+        addUserInfo(auth, model);
+        model.addAttribute("activeTab", "teachers");
+
+        Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
+        if (teacher == null) {
+            model.addAttribute("error", "Không tìm thấy giáo viên");
+            return "redirect:/admin/teachers";
+        }
+
+        model.addAttribute("teacher", teacher);
+        model.addAttribute("currentClasses", classroomTeacherService.getCurrentClassroomsByTeacher(teacherId));
+        model.addAttribute("teacherHistory", classroomTeacherService.getTeacherHomeRoomHistory(teacherId));
+
+        return "admin/teacher-classroom-history";
     }
 }

@@ -33,6 +33,15 @@
                             background-color: #e3f2fd;
                             border-color: #2196f3;
                         }
+
+                        /* Đảm bảo dropdown không bị che */
+                        .table-responsive {
+                            overflow: visible;
+                        }
+
+                        .dropdown-menu {
+                            z-index: 1050;
+                        }
                     </style>
                 </head>
 
@@ -175,6 +184,8 @@
                                                                                             <em>Chưa có</em>
                                                                                         </c:otherwise>
                                                                                     </c:choose>
+
+                                                                                    <!-- Hiển thị giáo viên chủ nhiệm hiện tại -->
                                                                                 </small>
                                                                             </div>
 
@@ -353,7 +364,7 @@
                                                                                                     <i
                                                                                                         class="bi bi-three-dots"></i>
                                                                                                 </button>
-                                                                                                <ul class="dropdown-menu"
+                                                                                                <ul class="dropdown-menu dropdown-menu-end"
                                                                                                     aria-labelledby="studentActions${student.id}">
                                                                                                     <li>
                                                                                                         <a class="dropdown-item view-student-detail"
@@ -365,7 +376,8 @@
                                                                                                             data-phone="${fn:escapeXml(student.user.phone)}"
                                                                                                             data-address="${fn:escapeXml(student.user.address)}"
                                                                                                             data-birthdate="${fn:escapeXml(student.user.birthDate)}"
-                                                                                                            data-nationalid="${fn:escapeXml(student.user.nationalId)}">
+                                                                                                            data-nationalid="${fn:escapeXml(student.user.nationalId)}"
+                                                                                                            data-major="${fn:escapeXml(student.major.majorName)}">
                                                                                                             <i
                                                                                                                 class="bi bi-eye me-2"></i>Xem
                                                                                                             chi tiết
@@ -1026,13 +1038,14 @@
                                     const address = link.getAttribute('data-address');
                                     const birthDate = link.getAttribute('data-birthdate');
                                     const nationalId = link.getAttribute('data-nationalid');
+                                    const major = link.getAttribute('data-major');
 
-                                    viewStudentDetail(studentId, username, fullName, email, phone, address, birthDate, nationalId);
+                                    viewStudentDetail(studentId, username, fullName, email, phone, address, birthDate, nationalId, major);
                                 }
                             });
 
                             // Function to view student detail
-                            function viewStudentDetail(id, username, fullName, email, phone, address, birthDate, nationalId) {
+                            function viewStudentDetail(id, username, fullName, email, phone, address, birthDate, nationalId, major) {
                                 document.getElementById('detailUsername').innerText = username || 'Chưa có thông tin';
                                 document.getElementById('detailFullName').innerText = fullName || 'Chưa có thông tin';
                                 document.getElementById('detailEmail').innerText = email || 'Chưa có thông tin';
@@ -1040,6 +1053,7 @@
                                 document.getElementById('detailAddress').innerText = address || 'Chưa có thông tin';
                                 document.getElementById('detailBirthDate').innerText = birthDate || 'Chưa có thông tin';
                                 document.getElementById('detailNationalId').innerText = nationalId || 'Chưa có thông tin';
+                                document.getElementById('detailMajor').innerText = major || 'Chưa có thông tin';
 
                                 // Show modal
                                 const modal = new bootstrap.Modal(document.getElementById('studentDetailModal'));
@@ -1084,9 +1098,15 @@
                                                                 sinh:</label>
                                                             <div class="border-bottom pb-1" id="detailBirthDate"></div>
                                                         </div>
-                                                        <div class="mb-0">
+                                                        <div class="mb-3">
                                                             <label class="form-label fw-bold text-muted">CCCD:</label>
                                                             <div class="border-bottom pb-1" id="detailNationalId"></div>
+                                                        </div>
+                                                        <div class="mb-0">
+                                                            <label class="form-label fw-bold text-muted">Ngành
+                                                                học:</label>
+                                                            <div class="border-bottom pb-1 text-success fw-semibold"
+                                                                id="detailMajor"></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1135,6 +1155,12 @@
                         <c:if test="${not empty error}">
                             <script>alert('Lỗi: <c:out value="${error}" />');</script>
                         </c:if>
+
+
+
+                        <script>
+                            // Classroom Management Functions
+                        </script>
                 </body>
 
                 </html>

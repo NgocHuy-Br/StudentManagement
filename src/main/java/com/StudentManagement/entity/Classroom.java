@@ -35,6 +35,10 @@ public class Classroom {
     @OneToMany(mappedBy = "classroom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Student> students;
 
+    // Quan hệ với ClassroomTeacher (1 lớp có nhiều lịch sử giáo viên chủ nhiệm)
+    @OneToMany(mappedBy = "classroom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ClassroomTeacher> classroomTeachers;
+
     // Constructors
     public Classroom() {
     }
@@ -102,9 +106,27 @@ public class Classroom {
         this.students = students;
     }
 
+    public List<ClassroomTeacher> getClassroomTeachers() {
+        return classroomTeachers;
+    }
+
+    public void setClassroomTeachers(List<ClassroomTeacher> classroomTeachers) {
+        this.classroomTeachers = classroomTeachers;
+    }
+
     // Helper method to get student count
     public int getStudentCount() {
         return students != null ? students.size() : 0;
+    }
+
+    // Helper method to get current homeroom teacher from history
+    public ClassroomTeacher getCurrentHomeRoomTeacherRecord() {
+        if (classroomTeachers == null)
+            return null;
+        return classroomTeachers.stream()
+                .filter(ct -> ct.getEndDate() == null)
+                .findFirst()
+                .orElse(null);
     }
 
     @Override

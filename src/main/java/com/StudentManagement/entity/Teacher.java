@@ -1,7 +1,9 @@
 package com.StudentManagement.entity;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "teachers")
@@ -20,9 +22,10 @@ public class Teacher {
     @Column(length = 200)
     private String department; // Bộ môn
 
-    // Quan hệ với TeacherSubject (1 giáo viên có thể dạy nhiều môn)
+    // Quan hệ với ClassroomTeacher (1 giáo viên có thể chủ nhiệm nhiều lớp trong
+    // lịch sử)
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TeacherSubject> teacherSubjects;
+    private List<ClassroomTeacher> classroomTeachers;
 
     // Getters & Setters
     public Long getId() {
@@ -57,11 +60,20 @@ public class Teacher {
         this.department = department;
     }
 
-    public List<TeacherSubject> getTeacherSubjects() {
-        return teacherSubjects;
+    public List<ClassroomTeacher> getClassroomTeachers() {
+        return classroomTeachers;
     }
 
-    public void setTeacherSubjects(List<TeacherSubject> teacherSubjects) {
-        this.teacherSubjects = teacherSubjects;
+    public void setClassroomTeachers(List<ClassroomTeacher> classroomTeachers) {
+        this.classroomTeachers = classroomTeachers;
+    }
+
+    // Helper method to get current homeroom classes
+    public List<ClassroomTeacher> getCurrentHomeRoomClasses() {
+        if (classroomTeachers == null)
+            return new ArrayList<>();
+        return classroomTeachers.stream()
+                .filter(ct -> ct.getEndDate() == null)
+                .collect(Collectors.toList());
     }
 }

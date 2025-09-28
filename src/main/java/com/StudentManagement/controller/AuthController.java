@@ -25,7 +25,7 @@ public class AuthController {
         if (isAdmin)
             return "redirect:/admin";
         if (isTeacher)
-            return "redirect:/teacher";
+            return "redirect:/homeroom";
         if (isStudent)
             return "redirect:/student";
 
