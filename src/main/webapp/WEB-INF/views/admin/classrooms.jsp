@@ -364,7 +364,8 @@
                                                                                                             data-email="${fn:escapeXml(student.user.email)}"
                                                                                                             data-phone="${fn:escapeXml(student.user.phone)}"
                                                                                                             data-address="${fn:escapeXml(student.user.address)}"
-                                                                                                            data-birthdate="${fn:escapeXml(student.user.birthDate)}">
+                                                                                                            data-birthdate="${fn:escapeXml(student.user.birthDate)}"
+                                                                                                            data-nationalid="${fn:escapeXml(student.user.nationalId)}">
                                                                                                             <i
                                                                                                                 class="bi bi-eye me-2"></i>Xem
                                                                                                             chi tiết
@@ -553,6 +554,14 @@
                                                         <div class="mb-3">
                                                             <label class="form-label">Số điện thoại</label>
                                                             <input type="text" class="form-control" name="phoneNumber">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">CCCD</label>
+                                                            <input type="text" class="form-control" name="nationalId"
+                                                                placeholder="12 chữ số" maxlength="12"
+                                                                pattern="[0-9]{12}">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1016,20 +1025,21 @@
                                     const phone = link.getAttribute('data-phone');
                                     const address = link.getAttribute('data-address');
                                     const birthDate = link.getAttribute('data-birthdate');
+                                    const nationalId = link.getAttribute('data-nationalid');
 
-                                    viewStudentDetail(studentId, username, fullName, email, phone, address, birthDate);
+                                    viewStudentDetail(studentId, username, fullName, email, phone, address, birthDate, nationalId);
                                 }
                             });
 
                             // Function to view student detail
-                            function viewStudentDetail(id, username, fullName, email, phone, address, birthDate) {
-                                document.getElementById('detailStudentId').innerText = id || 'Chưa có thông tin';
+                            function viewStudentDetail(id, username, fullName, email, phone, address, birthDate, nationalId) {
                                 document.getElementById('detailUsername').innerText = username || 'Chưa có thông tin';
                                 document.getElementById('detailFullName').innerText = fullName || 'Chưa có thông tin';
                                 document.getElementById('detailEmail').innerText = email || 'Chưa có thông tin';
                                 document.getElementById('detailPhone').innerText = phone || 'Chưa có thông tin';
                                 document.getElementById('detailAddress').innerText = address || 'Chưa có thông tin';
                                 document.getElementById('detailBirthDate').innerText = birthDate || 'Chưa có thông tin';
+                                document.getElementById('detailNationalId').innerText = nationalId || 'Chưa có thông tin';
 
                                 // Show modal
                                 const modal = new bootstrap.Modal(document.getElementById('studentDetailModal'));
@@ -1059,10 +1069,6 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="mb-3">
-                                                            <label class="form-label fw-bold text-muted">ID:</label>
-                                                            <div class="border-bottom pb-1" id="detailStudentId"></div>
-                                                        </div>
-                                                        <div class="mb-3">
                                                             <label class="form-label fw-bold text-muted">Mã sinh
                                                                 viên:</label>
                                                             <div class="border-bottom pb-1 text-primary fw-semibold"
@@ -1073,9 +1079,14 @@
                                                             <div class="border-bottom pb-1 fs-5 fw-semibold"
                                                                 id="detailFullName"></div>
                                                         </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold text-muted">Ngày
+                                                                sinh:</label>
+                                                            <div class="border-bottom pb-1" id="detailBirthDate"></div>
+                                                        </div>
                                                         <div class="mb-0">
-                                                            <label class="form-label fw-bold text-muted">Email:</label>
-                                                            <div class="border-bottom pb-1" id="detailEmail"></div>
+                                                            <label class="form-label fw-bold text-muted">CCCD:</label>
+                                                            <div class="border-bottom pb-1" id="detailNationalId"></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1088,20 +1099,19 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="mb-3">
+                                                            <label class="form-label fw-bold text-muted">Email:</label>
+                                                            <div class="border-bottom pb-1" id="detailEmail"></div>
+                                                        </div>
+                                                        <div class="mb-3">
                                                             <label class="form-label fw-bold text-muted">Số điện
                                                                 thoại:</label>
                                                             <div class="border-bottom pb-1" id="detailPhone"></div>
                                                         </div>
-                                                        <div class="mb-3">
+                                                        <div class="mb-0">
                                                             <label class="form-label fw-bold text-muted">Địa
                                                                 chỉ:</label>
                                                             <div class="border-bottom pb-1" id="detailAddress"
                                                                 style="min-height: 40px;"></div>
-                                                        </div>
-                                                        <div class="mb-0">
-                                                            <label class="form-label fw-bold text-muted">Ngày
-                                                                sinh:</label>
-                                                            <div class="border-bottom pb-1" id="detailBirthDate"></div>
                                                         </div>
                                                     </div>
                                                 </div>

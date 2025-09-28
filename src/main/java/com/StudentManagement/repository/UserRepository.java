@@ -11,26 +11,31 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-        Optional<User> findByUsername(String username);
+  Optional<User> findByUsername(String username);
 
-        boolean existsByUsername(String username);
+  boolean existsByUsername(String username);
 
-        boolean existsByEmail(String email);
+  boolean existsByEmail(String email);
 
-        Page<User> findByRole(User.Role role, Pageable pageable);
+  Optional<User> findByNationalId(String nationalId);
 
-        @Query("""
-                        select u from User u
-                        where u.role = :role
-                          and (
-                             lower(u.username) like lower(concat('%', :q, '%')) or
-                             lower(u.fname)    like lower(concat('%', :q, '%')) or
-                             lower(u.lname)    like lower(concat('%', :q, '%')) or
-                             lower(u.email)    like lower(concat('%', :q, '%')) or
-                             lower(u.phone)    like lower(concat('%', :q, '%'))
-                          )
-                        """)
-        Page<User> searchByRoleAndQuery(@Param("role") User.Role role,
-                        @Param("q") String q,
-                        Pageable pageable);
+  boolean existsByNationalId(String nationalId);
+
+  Page<User> findByRole(User.Role role, Pageable pageable);
+
+  @Query("""
+      select u from User u
+      where u.role = :role
+        and (
+           lower(u.username) like lower(concat('%', :q, '%')) or
+           lower(u.fname)    like lower(concat('%', :q, '%')) or
+           lower(u.lname)    like lower(concat('%', :q, '%')) or
+           lower(u.email)    like lower(concat('%', :q, '%')) or
+           lower(u.phone)    like lower(concat('%', :q, '%')) or
+           u.nationalId       like concat('%', :q, '%')
+        )
+      """)
+  Page<User> searchByRoleAndQuery(@Param("role") User.Role role,
+      @Param("q") String q,
+      Pageable pageable);
 }

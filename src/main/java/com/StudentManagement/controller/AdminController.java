@@ -438,6 +438,7 @@ public class AdminController {
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String phoneNumber,
             @RequestParam(required = false) String address,
+            @RequestParam(required = false) String nationalId,
             @RequestParam(required = false) String birthDate,
             RedirectAttributes ra) {
 
@@ -485,6 +486,19 @@ public class AdminController {
             return "redirect:/admin/classrooms?selectedClassId=" + classId;
         }
 
+        // Kiểm tra nationalId nếu có
+        if (nationalId != null && !nationalId.trim().isEmpty()) {
+            String nId = nationalId.trim();
+            if (nId.length() != 12 || !nId.matches("\\d+")) {
+                ra.addFlashAttribute("error", "CCCD phải có 12 chữ số");
+                return "redirect:/admin/classrooms?selectedClassId=" + classId;
+            }
+            if (userRepository.existsByNationalId(nId)) {
+                ra.addFlashAttribute("error", "CCCD đã tồn tại: " + nId);
+                return "redirect:/admin/classrooms?selectedClassId=" + classId;
+            }
+        }
+
         // Kiểm tra xem sinh viên đã thuộc lớp nào chưa (nếu username đã tồn tại)
         Student existingStudent = studentRepository.findByUserUsername(u).orElse(null);
         if (existingStudent != null && existingStudent.getClassroom() != null) {
@@ -502,6 +516,7 @@ public class AdminController {
         svUser.setEmail(e);
         svUser.setPhone(phoneNum != null ? phoneNum.trim() : null);
         svUser.setAddress(address != null ? address.trim() : null);
+        svUser.setNationalId(nationalId != null ? nationalId.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {
@@ -583,6 +598,7 @@ public class AdminController {
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String phoneNumber,
             @RequestParam(required = false) String address,
+            @RequestParam(required = false) String nationalId,
             @RequestParam(required = false) String birthDate,
             @RequestParam(required = false) String className,
             @RequestParam Long majorId,
@@ -626,6 +642,19 @@ public class AdminController {
             return "redirect:/admin/students";
         }
 
+        // Kiểm tra nationalId nếu có
+        if (nationalId != null && !nationalId.trim().isEmpty()) {
+            String nId = nationalId.trim();
+            if (nId.length() != 12 || !nId.matches("\\d+")) {
+                ra.addFlashAttribute("error", "CCCD phải có 12 chữ số");
+                return "redirect:/admin/students";
+            }
+            if (userRepository.existsByNationalId(nId)) {
+                ra.addFlashAttribute("error", "CCCD đã tồn tại: " + nId);
+                return "redirect:/admin/students";
+            }
+        }
+
         // Kiểm tra xem sinh viên đã tồn tại chưa (bằng username)
         Student existingStudent = studentRepository.findByUserUsername(u).orElse(null);
         if (existingStudent != null) {
@@ -651,6 +680,7 @@ public class AdminController {
         svUser.setEmail(e);
         svUser.setPhone(phoneNum != null ? phoneNum.trim() : null);
         svUser.setAddress(address != null ? address.trim() : null);
+        svUser.setNationalId(nationalId != null ? nationalId.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {
@@ -711,6 +741,7 @@ public class AdminController {
             @RequestParam String email,
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String address,
+            @RequestParam(required = false) String nationalId,
             @RequestParam(required = false) String birthDate,
             @RequestParam(required = false) String department,
             RedirectAttributes ra) {
@@ -731,6 +762,19 @@ public class AdminController {
             return "redirect:/admin/teachers";
         }
 
+        // Kiểm tra nationalId nếu có
+        if (nationalId != null && !nationalId.trim().isEmpty()) {
+            String nId = nationalId.trim();
+            if (nId.length() != 12 || !nId.matches("\\d+")) {
+                ra.addFlashAttribute("error", "CCCD phải có 12 chữ số");
+                return "redirect:/admin/teachers";
+            }
+            if (userRepository.existsByNationalId(nId)) {
+                ra.addFlashAttribute("error", "CCCD đã tồn tại: " + nId);
+                return "redirect:/admin/teachers";
+            }
+        }
+
         // 1) User
         User teacherUser = new User();
         teacherUser.setUsername(u);
@@ -740,6 +784,7 @@ public class AdminController {
         teacherUser.setEmail(e);
         teacherUser.setPhone(phone);
         teacherUser.setAddress(address);
+        teacherUser.setNationalId(nationalId != null ? nationalId.trim() : null);
 
         // Xử lý ngày sinh
         if (birthDate != null && !birthDate.trim().isEmpty()) {

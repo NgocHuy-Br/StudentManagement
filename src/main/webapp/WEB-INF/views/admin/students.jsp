@@ -134,6 +134,12 @@
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
+                                                    <th>CCCD
+                                                        <a class="sort-link"
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.nationalId&dir=${dir=='asc' && sort=='user.nationalId' ? 'desc' : 'asc'}">
+                                                            <i class="bi bi-arrow-down-up"></i>
+                                                        </a>
+                                                    </th>
                                                     <th>Lớp
                                                         <a class="sort-link"
                                                             href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=className&dir=${dir=='asc' && sort=='className' ? 'desc' : 'asc'}">
@@ -173,6 +179,14 @@
                                                         </td>
                                                         <td>${s.user.email}</td>
                                                         <td>${s.user.phone}</td>
+                                                        <td>
+                                                            <c:if test="${not empty s.user.nationalId}">
+                                                                ${s.user.nationalId}
+                                                            </c:if>
+                                                            <c:if test="${empty s.user.nationalId}">
+                                                                <span class="text-muted">-</span>
+                                                            </c:if>
+                                                        </td>
                                                         <td>${s.className}</td>
                                                         <td>${s.major.majorName}</td>
                                                     </tr>
@@ -240,6 +254,11 @@
                                         <div class="col-sm-4">
                                             <label class="form-label">Email</label>
                                             <input name="email" type="email" class="form-control" required>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <label class="form-label">CCCD</label>
+                                            <input name="nationalId" type="text" class="form-control"
+                                                placeholder="12 chữ số" maxlength="12" pattern="[0-9]{12}">
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label">Địa chỉ</label>

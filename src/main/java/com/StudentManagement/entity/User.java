@@ -25,6 +25,9 @@ public class User {
     @Column(unique = true, length = 200)
     private String email;
 
+    @Column(unique = true, length = 12)
+    private String nationalId; // Số căn cước công dân
+
     @Column(length = 30)
     private String phone;
 
@@ -89,6 +92,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getNationalId() {
+        return nationalId;
+    }
+
+    public void setNationalId(String nationalId) {
+        this.nationalId = nationalId;
     }
 
     public String getPhone() {
