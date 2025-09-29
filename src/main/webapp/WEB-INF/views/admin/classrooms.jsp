@@ -325,21 +325,27 @@
                                                                                 <tr>
                                                                                     <th width="60px">TT</th>
                                                                                     <th>
-                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=username-${studentSort == 'username-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}" class="sort-link">
+                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=username-${studentSort == 'username-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}"
+                                                                                            class="sort-link">
                                                                                             MSV
-                                                                                            <i class="bi bi-arrow-down-up sort-icon"></i>
+                                                                                            <i
+                                                                                                class="bi bi-arrow-down-up sort-icon"></i>
                                                                                         </a>
                                                                                     </th>
                                                                                     <th>
-                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=name-${studentSort == 'name-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}" class="sort-link">
+                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=name-${studentSort == 'name-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}"
+                                                                                            class="sort-link">
                                                                                             Họ tên
-                                                                                            <i class="bi bi-arrow-down-up sort-icon"></i>
+                                                                                            <i
+                                                                                                class="bi bi-arrow-down-up sort-icon"></i>
                                                                                         </a>
                                                                                     </th>
                                                                                     <th>
-                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=email-${studentSort == 'email-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}" class="sort-link">
+                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=email-${studentSort == 'email-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}"
+                                                                                            class="sort-link">
                                                                                             Email
-                                                                                            <i class="bi bi-arrow-down-up sort-icon"></i>
+                                                                                            <i
+                                                                                                class="bi bi-arrow-down-up sort-icon"></i>
                                                                                         </a>
                                                                                     </th>
                                                                                     <th width="100px">Thao tác</th>
