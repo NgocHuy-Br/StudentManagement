@@ -129,6 +129,7 @@
                                         <table class="table table-hover align-middle table-teachers">
                                             <thead class="table-light">
                                                 <tr>
+                                                    <th width="60px">STT</th>
                                                     <th>Mã GV
                                                         <a class="sort-link"
                                                             href="?q=${fn:escapeXml(q)}&faculty=${fn:escapeXml(param.faculty)}&size=${page.size}&sort=user.username&dir=${dir=='asc' && sort=='user.username' ? 'desc' : 'asc'}">
@@ -153,12 +154,6 @@
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
-                                                    <th>CCCD
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&faculty=${fn:escapeXml(param.faculty)}&size=${page.size}&sort=user.nationalId&dir=${dir=='asc' && sort=='user.nationalId' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
                                                     <th>Khoa
                                                         <a class="sort-link"
                                                             href="?q=${fn:escapeXml(q)}&faculty=${fn:escapeXml(param.faculty)}&size=${page.size}&sort=department&dir=${dir=='asc' && sort=='department' ? 'desc' : 'asc'}">
@@ -171,18 +166,20 @@
                                             <tbody>
                                                 <c:if test="${page.totalElements == 0}">
                                                     <tr>
-                                                        <td colspan="7" class="text-center text-muted py-4">Chưa có giáo
+                                                        <td colspan="6" class="text-center text-muted py-4">Chưa có giáo
                                                             viên nào.</td>
                                                     </tr>
                                                 </c:if>
 
-                                                <c:forEach var="t" items="${page.content}">
+                                                <c:forEach var="t" items="${page.content}" varStatus="status">
                                                     <tr>
+                                                        <td class="text-center fw-semibold text-muted">${status.index +
+                                                            1 + (page.number * page.size)}</td>
                                                         <td>${t.user.username}</td>
                                                         <td>
                                                             <span data-bs-toggle="tooltip" data-bs-placement="top"
                                                                 data-bs-title="<c:if test='${not empty t.user.address}'>Địa chỉ: ${t.user.address}</c:if><c:if test='${not empty t.user.birthDate}'><c:if test='${not empty t.user.address}'> | </c:if>Ngày sinh: ${t.user.birthDate}</c:if>">
-                                                                ${t.user.lname} ${t.user.fname}
+                                                                ${t.user.fname} ${t.user.lname}
                                                                 <c:if
                                                                     test="${not empty t.user.address or not empty t.user.birthDate}">
                                                                     <i class="bi bi-info-circle-fill text-muted ms-1"
@@ -192,14 +189,6 @@
                                                         </td>
                                                         <td>${t.user.email}</td>
                                                         <td>${t.user.phone}</td>
-                                                        <td>
-                                                            <c:if test="${not empty t.user.nationalId}">
-                                                                ${t.user.nationalId}
-                                                            </c:if>
-                                                            <c:if test="${empty t.user.nationalId}">
-                                                                <span class="text-muted">-</span>
-                                                            </c:if>
-                                                        </td>
                                                         <td>
                                                             <c:choose>
                                                                 <c:when test="${not empty t.faculty}">
@@ -342,7 +331,7 @@
                                         <div class="col-sm-6">
                                             <label class="form-label">CCCD</label>
                                             <input name="nationalId" type="text" class="form-control"
-                                                placeholder="12 chữ số" maxlength="12" pattern="[0-9]{12}">
+                                                placeholder="Nhập 12 số" maxlength="12" pattern="[0-9]{12}">
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">Ngày sinh</label>
@@ -500,7 +489,8 @@
                                             <div class="col-sm-6">
                                                 <label class="form-label">CCCD</label>
                                                 <input name="nationalId" id="editNationalId" type="text"
-                                                    class="form-control" maxlength="12" pattern="[0-9]{12}">
+                                                    class="form-control" maxlength="12" pattern="[0-9]{12}"
+                                                    placeholder="Nhập 12 số">
                                             </div>
                                             <div class="col-sm-6">
                                                 <label class="form-label">Ngày sinh</label>
@@ -911,6 +901,40 @@
                                 alert('Có lỗi xảy ra khi mở dialog xác nhận xóa: ' + error.message);
                             }
                         }
+
+                        // Auto-format CCCD input (only allow numbers)
+                        function setupCCCDFormatting() {
+                            const cccdInputs = document.querySelectorAll('input[name="nationalId"]');
+
+                            cccdInputs.forEach(input => {
+                                input.addEventListener('input', function (e) {
+                                    // Remove all non-numeric characters
+                                    let value = e.target.value.replace(/[^0-9]/g, '');
+
+                                    // Limit to 12 digits
+                                    if (value.length > 12) {
+                                        value = value.substring(0, 12);
+                                    }
+
+                                    // Update the input value
+                                    e.target.value = value;
+                                });
+
+                                input.addEventListener('paste', function (e) {
+                                    // Handle paste event
+                                    setTimeout(() => {
+                                        let value = e.target.value.replace(/[^0-9]/g, '');
+                                        if (value.length > 12) {
+                                            value = value.substring(0, 12);
+                                        }
+                                        e.target.value = value;
+                                    }, 10);
+                                });
+                            });
+                        }
+
+                        // Setup CCCD formatting when page loads
+                        setupCCCDFormatting();
 
 
                     </script>

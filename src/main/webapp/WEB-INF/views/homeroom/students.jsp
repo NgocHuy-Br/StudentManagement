@@ -10,6 +10,29 @@
                 <title>Danh sách học sinh - Lớp ${classroom.classCode}</title>
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
                 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <style>
+                    .sort-link {
+                        color: inherit;
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 5px;
+                    }
+
+                    .sort-link:hover {
+                        color: #0d6efd;
+                        text-decoration: none;
+                    }
+
+                    .sort-icon {
+                        opacity: 0.6;
+                        font-size: 0.8em;
+                    }
+
+                    .sort-link:hover .sort-icon {
+                        opacity: 1;
+                    }
+                </style>
             </head>
 
             <body class="bg-light">
@@ -88,11 +111,29 @@
                                         <thead class="table-primary">
                                             <tr>
                                                 <th scope="col">#</th>
-                                                <th scope="col">Mã sinh viên</th>
-                                                <th scope="col">Họ và tên</th>
+                                                <th scope="col">
+                                                    <a href="?classroomId=${classroom.id}&sort=studentCode&dir=${param.sort == 'studentCode' && param.dir == 'asc' ? 'desc' : 'asc'}&page=0&size=${students.size}"
+                                                        class="sort-link">
+                                                        Mã sinh viên
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </a>
+                                                </th>
+                                                <th scope="col">
+                                                    <a href="?classroomId=${classroom.id}&sort=user.fname&dir=${param.sort == 'user.fname' && param.dir == 'asc' ? 'desc' : 'asc'}&page=0&size=${students.size}"
+                                                        class="sort-link">
+                                                        Họ và tên
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </a>
+                                                </th>
                                                 <th scope="col">Ngày sinh</th>
                                                 <th scope="col">Giới tính</th>
-                                                <th scope="col">Email</th>
+                                                <th scope="col">
+                                                    <a href="?classroomId=${classroom.id}&sort=email&dir=${param.sort == 'email' && param.dir == 'asc' ? 'desc' : 'asc'}&page=0&size=${students.size}"
+                                                        class="sort-link">
+                                                        Email
+                                                        <i class="fas fa-sort sort-icon"></i>
+                                                    </a>
+                                                </th>
                                                 <th scope="col">Số điện thoại</th>
                                                 <th scope="col">Thao tác</th>
                                             </tr>
@@ -176,7 +217,7 @@
                                             <c:if test="${students.hasPrevious()}">
                                                 <li class="page-item">
                                                     <a class="page-link"
-                                                        href="?page=${students.number - 1}&size=${students.size}">
+                                                        href="?classroomId=${classroom.id}&sort=${param.sort}&dir=${param.dir}&page=${students.number - 1}&size=${students.size}">
                                                         Trước
                                                     </a>
                                                 </li>
@@ -184,7 +225,8 @@
 
                                             <c:forEach var="i" begin="0" end="${students.totalPages - 1}">
                                                 <li class="page-item ${i == students.number ? 'active' : ''}">
-                                                    <a class="page-link" href="?page=${i}&size=${students.size}">
+                                                    <a class="page-link"
+                                                        href="?classroomId=${classroom.id}&sort=${param.sort}&dir=${param.dir}&page=${i}&size=${students.size}">
                                                         ${i + 1}
                                                     </a>
                                                 </li>
@@ -193,7 +235,7 @@
                                             <c:if test="${students.hasNext()}">
                                                 <li class="page-item">
                                                     <a class="page-link"
-                                                        href="?page=${students.number + 1}&size=${students.size}">
+                                                        href="?classroomId=${classroom.id}&sort=${param.sort}&dir=${param.dir}&page=${students.number + 1}&size=${students.size}">
                                                         Sau
                                                     </a>
                                                 </li>

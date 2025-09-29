@@ -42,6 +42,28 @@
                         .dropdown-menu {
                             z-index: 1050;
                         }
+
+                        .sort-link {
+                            color: inherit;
+                            text-decoration: none;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 5px;
+                        }
+
+                        .sort-link:hover {
+                            color: #0d6efd;
+                            text-decoration: none;
+                        }
+
+                        .sort-icon {
+                            opacity: 0.6;
+                            font-size: 0.8em;
+                        }
+
+                        .sort-link:hover .sort-icon {
+                            opacity: 1;
+                        }
                     </style>
                 </head>
 
@@ -297,35 +319,29 @@
                                                             <c:otherwise>
                                                                 <!-- Student List -->
                                                                 <c:if test="${not empty classStudents}">
-                                                                    <!-- Sắp xếp dropdown -->
-                                                                    <div class="row mb-3">
-                                                                        <div class="col-md-6">
-                                                                            <label class="form-label small">Sắp xếp danh
-                                                                                sách:</label>
-                                                                            <select class="form-select form-select-sm"
-                                                                                id="sortStudents"
-                                                                                onchange="sortStudentList()">
-                                                                                <option value="username-asc"
-                                                                                    ${studentSort=='username-asc' ||
-                                                                                    empty studentSort ? 'selected' : ''
-                                                                                    }>Mã sinh
-                                                                                    viên (A-Z)</option>
-                                                                                <option value="name-asc"
-                                                                                    ${studentSort=='name-asc'
-                                                                                    ? 'selected' : '' }>Tên (A-Z)
-                                                                                </option>
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
                                                                     <div class="table-responsive">
                                                                         <table class="table table-hover">
                                                                             <thead class="table-light">
                                                                                 <tr>
                                                                                     <th width="60px">TT</th>
-                                                                                    <th>MSV</th>
-                                                                                    <th>Họ tên</th>
-                                                                                    <th>Email</th>
+                                                                                    <th>
+                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=username-${studentSort == 'username-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}" class="sort-link">
+                                                                                            MSV
+                                                                                            <i class="bi bi-arrow-down-up sort-icon"></i>
+                                                                                        </a>
+                                                                                    </th>
+                                                                                    <th>
+                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=name-${studentSort == 'name-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}" class="sort-link">
+                                                                                            Họ tên
+                                                                                            <i class="bi bi-arrow-down-up sort-icon"></i>
+                                                                                        </a>
+                                                                                    </th>
+                                                                                    <th>
+                                                                                        <a href="?search=${param.search}&majorId=${param.majorId}&selectedClassId=${selectedClass.id}&studentSort=email-${studentSort == 'email-asc' ? 'desc' : 'asc'}&page=${param.page}&size=${param.size}" class="sort-link">
+                                                                                            Email
+                                                                                            <i class="bi bi-arrow-down-up sort-icon"></i>
+                                                                                        </a>
+                                                                                    </th>
                                                                                     <th width="100px">Thao tác</th>
                                                                                 </tr>
                                                                             </thead>

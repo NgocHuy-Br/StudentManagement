@@ -88,6 +88,8 @@ public class HomeRoomTeacherController {
             @PathVariable Long classroomId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String dir,
             Authentication auth,
             Model model) {
 
@@ -108,7 +110,15 @@ public class HomeRoomTeacherController {
             return "redirect:/homeroom";
         }
 
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+        // Tạo Pageable với sắp xếp
+        Pageable pageable;
+        if (sort != null && !sort.isEmpty()) {
+            Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
+        } else {
+            pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+        }
+
         Page<Student> students = studentRepository.findByClassroomId(classroomId, pageable);
 
         model.addAttribute("classroom", classroom);

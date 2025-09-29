@@ -197,6 +197,14 @@ public class AdminController {
                 Sort studentSortBy;
                 if ("name-asc".equals(studentSort)) {
                     studentSortBy = Sort.by(Sort.Direction.ASC, "user.fname");
+                } else if ("name-desc".equals(studentSort)) {
+                    studentSortBy = Sort.by(Sort.Direction.DESC, "user.fname");
+                } else if ("username-desc".equals(studentSort)) {
+                    studentSortBy = Sort.by(Sort.Direction.DESC, "user.username");
+                } else if ("email-asc".equals(studentSort)) {
+                    studentSortBy = Sort.by(Sort.Direction.ASC, "user.email");
+                } else if ("email-desc".equals(studentSort)) {
+                    studentSortBy = Sort.by(Sort.Direction.DESC, "user.email");
                 } else { // mặc định username-asc
                     studentSortBy = Sort.by(Sort.Direction.ASC, "user.username");
                 }
