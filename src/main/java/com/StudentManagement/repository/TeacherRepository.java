@@ -79,4 +79,8 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
       )
       """)
   Page<Teacher> searchByDepartment(@Param("q") String q, @Param("department") String department, Pageable pageable);
+
+  // Đếm số giáo viên theo khoa
+  @Query("SELECT COUNT(t) FROM Teacher t WHERE t.faculty.id = :facultyId")
+  Long countByFacultyId(@Param("facultyId") Long facultyId);
 }

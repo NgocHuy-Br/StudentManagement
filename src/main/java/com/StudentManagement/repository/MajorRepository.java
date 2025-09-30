@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MajorRepository extends JpaRepository<Major, Long> {
@@ -23,4 +24,19 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
               or lower(m.description) like lower(concat('%', :q, '%'))
             """)
     Page<Major> search(@Param("q") String q, Pageable pageable);
+
+    @Query("""
+            SELECT m FROM Major m
+            WHERE lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
+               OR lower(m.majorName) LIKE lower(concat('%', :search, '%'))
+            ORDER BY m.majorCode ASC
+            """)
+    List<Major> searchByCodeOrName(@Param("search") String search);
+
+    @Query("""
+            SELECT m FROM Major m
+            LEFT JOIN m.subjects s
+            ORDER BY m.majorCode ASC
+            """)
+    List<Major> findAllWithSubjectCount();
 }

@@ -8,6 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class AuthController {
 
+    @GetMapping("/")
+    public String root(Authentication auth) {
+        return "redirect:/welcome";
+    }
+
     @GetMapping("/auth/login")
     public String loginPage() {
         return "common/login"; // /WEB-INF/views/login.jsp

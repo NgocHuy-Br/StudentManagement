@@ -1,8 +1,11 @@
 package com.StudentManagement.repository;
 
 import com.StudentManagement.entity.Faculty;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
@@ -14,9 +17,19 @@ public interface FacultyRepository extends JpaRepository<Faculty, Long> {
 
     boolean existsByName(String name);
 
+    boolean existsByNameAndIdNot(String name, Long id);
+
     @Query("SELECT f FROM Faculty f ORDER BY f.name ASC")
     List<Faculty> findAllOrderByName();
 
     @Query("SELECT DISTINCT f FROM Faculty f JOIN f.teachers t WHERE SIZE(f.teachers) > 0 ORDER BY f.name ASC")
     List<Faculty> findFacultiesWithTeachers();
+
+    @Query("""
+            SELECT f FROM Faculty f
+            WHERE lower(f.name) LIKE lower(concat('%', :q, '%'))
+               OR lower(f.description) LIKE lower(concat('%', :q, '%'))
+            ORDER BY f.name ASC
+            """)
+    Page<Faculty> search(@Param("q") String q, Pageable pageable);
 }

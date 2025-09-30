@@ -66,4 +66,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
   @EntityGraph(attributePaths = { "user", "major" })
   @Query("select s from Student s where s.classroom is null and s.major.id = :majorId")
   Page<Student> findUnassignedStudentsByMajorId(@Param("majorId") Long majorId, Pageable pageable);
+
+  // Đếm số sinh viên theo khoa (tạm thời return 0)
+  @Query("SELECT 0L")
+  Long countByFacultyId(@Param("facultyId") Long facultyId);
 }

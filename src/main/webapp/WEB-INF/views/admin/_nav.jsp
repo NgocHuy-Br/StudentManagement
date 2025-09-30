@@ -62,15 +62,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'subjects' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin/subjects">
-                        <i class="bi bi-book me-1"></i> Môn học
+                    <a class="nav-link ${activeTab == 'faculties' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/faculties/manage">
+                        <i class="bi bi-building me-1"></i> Khoa
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link ${activeTab == 'majors' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/admin/majors">
-                        <i class="bi bi-mortarboard-fill me-1"></i> Ngành học
+                        <i class="bi bi-mortarboard-fill me-1"></i> Ngành - Môn học
                     </a>
                 </li>
             </ul>

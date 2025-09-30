@@ -27,6 +27,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -1070,126 +1072,6 @@ public class AdminController {
         return "redirect:/admin/subjects";
     }
 
-    // Quản lý ngành học
-    @GetMapping("/majors")
-    public String majors(Authentication auth, Model model,
-            @RequestParam(defaultValue = "") String q,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "majorCode") String sort,
-            @RequestParam(defaultValue = "asc") String dir) {
-        addUserInfo(auth, model);
-        model.addAttribute("activeTab", "majors");
-
-        Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
-
-        Page<Major> majors = (q == null || q.isBlank())
-                ? majorRepository.findAll(pageable)
-                : majorRepository.search(q.trim(), pageable);
-
-        model.addAttribute("page", majors);
-        model.addAttribute("q", q);
-        model.addAttribute("sort", sort);
-        model.addAttribute("dir", dir);
-        return "admin/majors";
-    }
-
-    // Thêm ngành học
-    @PostMapping("/majors")
-    public String createMajor(@RequestParam String majorCode,
-            @RequestParam String majorName,
-            @RequestParam(required = false) String description,
-            RedirectAttributes ra) {
-
-        String code = majorCode.trim().toUpperCase();
-        String name = majorName.trim();
-
-        if (code.isEmpty() || name.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ mã ngành và tên ngành.");
-            return "redirect:/admin/majors";
-        }
-        if (majorRepository.existsByMajorCode(code)) {
-            ra.addFlashAttribute("error", "Mã ngành đã tồn tại: " + code);
-            return "redirect:/admin/majors";
-        }
-
-        Major major = new Major(code, name, description);
-        majorRepository.save(major);
-
-        ra.addFlashAttribute("success", "Đã tạo ngành học: " + code + " - " + name);
-        return "redirect:/admin/majors";
-    }
-
-    // Cập nhật ngành học
-    @PostMapping("/majors/edit")
-    @Transactional
-    public String editMajor(@RequestParam Long id,
-            @RequestParam String majorCode,
-            @RequestParam String majorName,
-            @RequestParam(required = false) String description,
-            RedirectAttributes ra) {
-
-        String code = majorCode.trim().toUpperCase();
-        String name = majorName.trim();
-
-        if (code.isEmpty() || name.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ mã ngành và tên ngành.");
-            return "redirect:/admin/majors";
-        }
-
-        Major existingMajor = majorRepository.findById(id).orElse(null);
-        if (existingMajor == null) {
-            ra.addFlashAttribute("error", "Không tìm thấy ngành học.");
-            return "redirect:/admin/majors";
-        }
-
-        // Kiểm tra mã ngành trùng (trừ chính nó)
-        if (!existingMajor.getMajorCode().equals(code) && majorRepository.existsByMajorCode(code)) {
-            ra.addFlashAttribute("error", "Mã ngành đã tồn tại: " + code);
-            return "redirect:/admin/majors";
-        }
-
-        existingMajor.setMajorCode(code);
-        existingMajor.setMajorName(name);
-        existingMajor.setDescription(description);
-        majorRepository.save(existingMajor);
-
-        ra.addFlashAttribute("success", "Đã cập nhật ngành học: " + code);
-        return "redirect:/admin/majors";
-    }
-
-    // Xóa ngành học
-    @PostMapping("/majors/delete")
-    @Transactional
-    public String deleteMajor(@RequestParam Long id, RedirectAttributes ra) {
-        Major major = majorRepository.findById(id).orElse(null);
-        if (major == null) {
-            ra.addFlashAttribute("error", "Không tìm thấy ngành học.");
-            return "redirect:/admin/majors";
-        }
-
-        // Kiểm tra xem có sinh viên nào thuộc ngành này không
-        long studentCount = studentRepository.countByMajorId(id);
-        if (studentCount > 0) {
-            ra.addFlashAttribute("error",
-                    "Không thể xóa ngành học vì còn " + studentCount + " sinh viên thuộc ngành này.");
-            return "redirect:/admin/majors";
-        }
-
-        // Kiểm tra xem có môn học nào thuộc ngành này không
-        long subjectCount = subjectRepository.countByMajorId(id);
-        if (subjectCount > 0) {
-            ra.addFlashAttribute("error",
-                    "Không thể xóa ngành học vì còn " + subjectCount + " môn học thuộc ngành này.");
-            return "redirect:/admin/majors";
-        }
-
-        majorRepository.delete(major);
-        ra.addFlashAttribute("success", "Đã xóa ngành học: " + major.getMajorCode());
-        return "redirect:/admin/majors";
-    }
-
     // Xem chi tiết ngành học và các môn học
     @GetMapping("/majors/{id}/subjects")
     public String majorSubjects(@PathVariable Long id, Authentication auth, Model model,
@@ -1227,51 +1109,6 @@ public class AdminController {
         return "admin/major-subjects";
     }
 
-    // Thêm môn học cho ngành
-    @PostMapping("/majors/{majorId}/subjects")
-    @Transactional
-    public String createSubjectForMajor(@PathVariable Long majorId,
-            @RequestParam String subjectCode,
-            @RequestParam String subjectName,
-            @RequestParam int credit,
-            RedirectAttributes ra) {
-
-        String code = subjectCode.trim().toUpperCase();
-        String name = subjectName.trim();
-
-        if (code.isEmpty() || name.isEmpty() || credit <= 0) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ thông tin môn học.");
-            return "redirect:/admin/majors/" + majorId + "/subjects";
-        }
-
-        if (subjectRepository.existsBySubjectCode(code)) {
-            ra.addFlashAttribute("error", "Mã môn học đã tồn tại: " + code);
-            return "redirect:/admin/majors/" + majorId + "/subjects";
-        }
-
-        Major major = majorRepository.findById(majorId).orElse(null);
-        if (major == null) {
-            ra.addFlashAttribute("error", "Ngành học không tồn tại.");
-            return "redirect:/admin/majors";
-        }
-
-        Subject subject = new Subject();
-        subject.setSubjectCode(code);
-        subject.setSubjectName(name);
-        subject.setCredit(credit);
-        subject = subjectRepository.save(subject);
-
-        // Thêm môn học vào danh sách của ngành
-        if (major.getSubjects() == null) {
-            major.setSubjects(new java.util.ArrayList<>());
-        }
-        major.getSubjects().add(subject);
-        majorRepository.save(major);
-
-        ra.addFlashAttribute("success", "Đã thêm môn học: " + code);
-        return "redirect:/admin/majors/" + majorId + "/subjects";
-    }
-
     // Xóa môn học khỏi ngành
     @PostMapping("/majors/{majorId}/subjects/delete")
     @Transactional
@@ -1298,42 +1135,6 @@ public class AdminController {
         }
 
         ra.addFlashAttribute("success", "Đã xóa môn học khỏi ngành: " + subject.getSubjectCode());
-        return "redirect:/admin/majors/" + majorId + "/subjects";
-    }
-
-    // Thêm môn học có sẵn vào ngành
-    @PostMapping("/majors/{majorId}/subjects/add-existing")
-    @Transactional
-    public String addExistingSubjectToMajor(@PathVariable Long majorId,
-            @RequestParam Long subjectId,
-            RedirectAttributes ra) {
-
-        Major major = majorRepository.findById(majorId).orElse(null);
-        if (major == null) {
-            ra.addFlashAttribute("error", "Ngành học không tồn tại.");
-            return "redirect:/admin/majors";
-        }
-
-        Subject subject = subjectRepository.findById(subjectId).orElse(null);
-        if (subject == null) {
-            ra.addFlashAttribute("error", "Môn học không tồn tại.");
-            return "redirect:/admin/majors/" + majorId + "/subjects";
-        }
-
-        // Kiểm tra xem môn học đã thuộc ngành này chưa
-        if (major.getSubjects() != null && major.getSubjects().contains(subject)) {
-            ra.addFlashAttribute("error", "Môn học đã thuộc ngành này: " + subject.getSubjectCode());
-            return "redirect:/admin/majors/" + majorId + "/subjects";
-        }
-
-        // Thêm môn học vào ngành
-        if (major.getSubjects() == null) {
-            major.setSubjects(new java.util.ArrayList<>());
-        }
-        major.getSubjects().add(subject);
-        majorRepository.save(major);
-
-        ra.addFlashAttribute("success", "Đã thêm môn học vào ngành: " + subject.getSubjectCode());
         return "redirect:/admin/majors/" + majorId + "/subjects";
     }
 
@@ -1366,148 +1167,344 @@ public class AdminController {
     // FACULTY MANAGEMENT
     // ==================
 
+    // ============= FACULTY MANAGEMENT TAB =============
+
     /**
-     * API endpoint để tạo khoa mới
+     * Tab Khoa - Hiển thị danh sách khoa với thống kê
+     */
+    @GetMapping("/faculties/manage")
+    public String manageFaculties(Authentication auth, Model model,
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sort,
+            @RequestParam(defaultValue = "asc") String dir) {
+        addUserInfo(auth, model);
+        model.addAttribute("activeTab", "faculties");
+
+        Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // Validate sort parameter to prevent errors
+        String validSort = ("name".equals(sort) || "description".equals(sort)) ? sort : "name";
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, validSort));
+
+        Page<Faculty> faculties = (q == null || q.isBlank())
+                ? facultyRepository.findAll(pageable)
+                : facultyRepository.search(q.trim(), pageable);
+
+        // Tính toán thống kê cho mỗi khoa
+        Map<Long, Map<String, Long>> facultyStats = new HashMap<>();
+        for (Faculty faculty : faculties.getContent()) {
+            Map<String, Long> stats = new HashMap<>();
+
+            // Số giáo viên thuộc khoa
+            Long teacherCount = teacherRepository.countByFacultyId(faculty.getId());
+            stats.put("teacherCount", teacherCount);
+
+            // Số ngành thuộc khoa (đơn giản hóa: đếm từ số sinh viên có ngành)
+            Long majorCount = 0L; // Tạm thời để 0, sẽ update sau
+            stats.put("majorCount", majorCount);
+
+            // Số sinh viên thuộc khoa (tạm thời để 0)
+            Long studentCount = 0L; // Tạm thời để 0 do query phức tạp
+            stats.put("studentCount", studentCount);
+
+            facultyStats.put(faculty.getId(), stats);
+        }
+
+        model.addAttribute("page", faculties);
+        model.addAttribute("facultyStats", facultyStats);
+        model.addAttribute("q", q);
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+
+        return "admin/faculties";
+    }
+
+    /**
+     * Tạo khoa mới
      */
     @PostMapping("/faculties")
-    @ResponseBody
-    public Map<String, Object> createFaculty(@RequestParam String name,
-            @RequestParam(required = false) String description) {
-        Map<String, Object> response = new HashMap<>();
+    @Transactional
+    public String createFaculty(@RequestParam String name,
+            @RequestParam(required = false) String description,
+            RedirectAttributes ra) {
 
-        try {
-            String facultyName = name.trim();
-
-            if (facultyName.isEmpty()) {
-                response.put("success", false);
-                response.put("message", "Tên khoa không được để trống");
-                return response;
-            }
-
-            if (facultyRepository.existsByName(facultyName)) {
-                response.put("success", false);
-                response.put("message", "Khoa đã tồn tại: " + facultyName);
-                return response;
-            }
-
-            Faculty faculty = new Faculty();
-            faculty.setName(facultyName);
-            faculty.setDescription(description != null ? description.trim() : null);
-
-            faculty = facultyRepository.save(faculty);
-
-            response.put("success", true);
-            response.put("message", "Đã tạo khoa: " + facultyName);
-            response.put("faculty", Map.of(
-                    "id", faculty.getId(),
-                    "name", faculty.getName(),
-                    "description", faculty.getDescription() != null ? faculty.getDescription() : ""));
-
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "Lỗi khi tạo khoa: " + e.getMessage());
+        if (facultyRepository.existsByName(name.trim())) {
+            ra.addFlashAttribute("error", "Tên khoa đã tồn tại.");
+            return "redirect:/admin/faculties/manage";
         }
 
-        return response;
+        Faculty faculty = new Faculty(name.trim(), description != null ? description.trim() : null);
+        facultyRepository.save(faculty);
+
+        ra.addFlashAttribute("success", "Thêm khoa thành công.");
+        return "redirect:/admin/faculties/manage";
     }
 
     /**
-     * API endpoint để cập nhật khoa
+     * Cập nhật khoa
      */
-    @PostMapping("/faculties/{id}/edit")
-    @ResponseBody
-    public Map<String, Object> editFaculty(@PathVariable Long id,
+    @PostMapping("/faculties/{id}")
+    @Transactional
+    public String updateFaculty(@PathVariable Long id,
             @RequestParam String name,
-            @RequestParam(required = false) String description) {
-        Map<String, Object> response = new HashMap<>();
+            @RequestParam(required = false) String description,
+            RedirectAttributes ra) {
 
-        try {
-            Faculty faculty = facultyRepository.findById(id).orElse(null);
-            if (faculty == null) {
-                response.put("success", false);
-                response.put("message", "Không tìm thấy khoa");
-                return response;
-            }
-
-            String facultyName = name.trim();
-
-            if (facultyName.isEmpty()) {
-                response.put("success", false);
-                response.put("message", "Tên khoa không được để trống");
-                return response;
-            }
-
-            // Kiểm tra trung tên (trừ khoa hiện tại)
-            Faculty existingFaculty = facultyRepository.findByName(facultyName).orElse(null);
-            if (existingFaculty != null && !existingFaculty.getId().equals(id)) {
-                response.put("success", false);
-                response.put("message", "Khoa đã tồn tại: " + facultyName);
-                return response;
-            }
-
-            faculty.setName(facultyName);
-            faculty.setDescription(description != null ? description.trim() : null);
-
-            faculty = facultyRepository.save(faculty);
-
-            response.put("success", true);
-            response.put("message", "Đã cập nhật khoa: " + facultyName);
-            response.put("faculty", Map.of(
-                    "id", faculty.getId(),
-                    "name", faculty.getName(),
-                    "description", faculty.getDescription() != null ? faculty.getDescription() : ""));
-
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "Lỗi khi cập nhật khoa: " + e.getMessage());
+        Faculty faculty = facultyRepository.findById(id).orElse(null);
+        if (faculty == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy khoa.");
+            return "redirect:/admin/faculties/manage";
         }
 
-        return response;
+        if (facultyRepository.existsByNameAndIdNot(name.trim(), id)) {
+            ra.addFlashAttribute("error", "Tên khoa đã tồn tại.");
+            return "redirect:/admin/faculties/manage";
+        }
+
+        faculty.setName(name.trim());
+        faculty.setDescription(description != null ? description.trim() : null);
+        facultyRepository.save(faculty);
+
+        ra.addFlashAttribute("success", "Cập nhật khoa thành công.");
+        return "redirect:/admin/faculties/manage";
     }
 
     /**
-     * API endpoint để xóa khoa
+     * Xóa khoa
      */
     @PostMapping("/faculties/{id}/delete")
-    @ResponseBody
-    public Map<String, Object> deleteFaculty(@PathVariable Long id) {
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            Faculty faculty = facultyRepository.findById(id).orElse(null);
-            if (faculty == null) {
-                response.put("success", false);
-                response.put("message", "Không tìm thấy khoa");
-                return response;
-            }
-
-            // Kiểm tra xem có giáo viên nào thuộc khoa này không
-            if (faculty.getTeachers() != null && !faculty.getTeachers().isEmpty()) {
-                response.put("success", false);
-                response.put("message", "Không thể xóa khoa vì còn có giáo viên thuộc khoa này");
-                return response;
-            }
-
-            String facultyName = faculty.getName();
-            facultyRepository.delete(faculty);
-
-            response.put("success", true);
-            response.put("message", "Đã xóa khoa: " + facultyName);
-
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "Lỗi khi xóa khoa: " + e.getMessage());
+    @Transactional
+    public String deleteFaculty(@PathVariable Long id, RedirectAttributes ra) {
+        Faculty faculty = facultyRepository.findById(id).orElse(null);
+        if (faculty == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy khoa.");
+            return "redirect:/admin/faculties/manage";
         }
 
-        return response;
+        // Kiểm tra xem có giáo viên thuộc khoa này không
+        Long teacherCount = teacherRepository.countByFacultyId(id);
+        if (teacherCount > 0) {
+            ra.addFlashAttribute("error",
+                    "Không thể xóa khoa vì còn có " + teacherCount + " giáo viên thuộc khoa này.");
+            return "redirect:/admin/faculties/manage";
+        }
+
+        facultyRepository.delete(faculty);
+        ra.addFlashAttribute("success", "Xóa khoa thành công.");
+        return "redirect:/admin/faculties/manage";
+    }
+
+    // ============= MAJOR-SUBJECT MANAGEMENT TAB =============
+
+    /**
+     * Tab Ngành - Môn học (Layout 2 panel)
+     */
+    @GetMapping("/majors")
+    public String majorSubjectManagement(Authentication auth, Model model,
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(required = false) Long selectedMajorId,
+            @RequestParam(defaultValue = "") String subjectSearch,
+            @RequestParam(defaultValue = "subjectCode") String subjectSort,
+            @RequestParam(defaultValue = "asc") String subjectDir) {
+        addUserInfo(auth, model);
+        model.addAttribute("activeTab", "majors");
+
+        // Lấy danh sách ngành
+        List<Major> majors;
+        if (search != null && !search.isBlank()) {
+            majors = majorRepository.searchByCodeOrName(search.trim());
+        } else {
+            majors = majorRepository.findAllWithSubjectCount();
+        }
+
+        model.addAttribute("majors", majors);
+
+        // Nếu có ngành được chọn, lấy thông tin môn học
+        if (selectedMajorId != null) {
+            Major selectedMajor = majorRepository.findById(selectedMajorId).orElse(null);
+            if (selectedMajor != null) {
+                model.addAttribute("selectedMajor", selectedMajor);
+                model.addAttribute("selectedMajorId", selectedMajorId);
+
+                // Lấy danh sách môn học với sắp xếp
+                Sort.Direction direction = "desc".equalsIgnoreCase(subjectDir) ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+                Sort sort = Sort.by(direction, subjectSort);
+
+                List<Subject> subjects;
+                if (subjectSearch != null && !subjectSearch.isBlank()) {
+                    subjects = subjectRepository.findByMajorIdAndSearchWithSort(selectedMajorId, subjectSearch.trim(),
+                            sort);
+                } else {
+                    subjects = subjectRepository.findByMajorIdWithSort(selectedMajorId, sort);
+                }
+
+                model.addAttribute("subjects", subjects);
+            }
+        }
+
+        return "admin/majors";
     }
 
     /**
-     * API endpoint để lấy danh sách các khoa
+     * Tạo môn học mới cho ngành đã chọn
      */
-    @GetMapping("/faculties")
+    @PostMapping("/majors/{majorId}/subjects")
+    @Transactional
+    public String createSubject(@PathVariable Long majorId,
+            @RequestParam String subjectCode,
+            @RequestParam String subjectName,
+            @RequestParam(defaultValue = "0") int credit,
+            RedirectAttributes ra) {
+
+        Major major = majorRepository.findById(majorId).orElse(null);
+        if (major == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy ngành.");
+            return "redirect:/admin/majors";
+        }
+
+        // Kiểm tra trùng mã môn học
+        if (subjectRepository.existsBySubjectCode(subjectCode.trim())) {
+            ra.addFlashAttribute("error", "Mã môn học đã tồn tại.");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+
+        Subject subject = new Subject();
+        subject.setSubjectCode(subjectCode.trim());
+        subject.setSubjectName(subjectName.trim());
+        subject.setCredit(credit);
+
+        // Lưu subject trước để có ID
+        subject = subjectRepository.save(subject);
+
+        // Thêm vào ngành
+        List<Subject> subjects = major.getSubjects();
+        if (subjects == null) {
+            subjects = new ArrayList<>();
+            major.setSubjects(subjects);
+        }
+        subjects.add(subject);
+        majorRepository.save(major);
+
+        ra.addFlashAttribute("success", "Thêm môn học thành công.");
+        return "redirect:/admin/majors?selectedMajorId=" + majorId;
+    }
+
+    /**
+     * Cập nhật môn học
+     */
+    @PostMapping("/subjects/{subjectId}")
+    @Transactional
+    public String updateSubject(@PathVariable Long subjectId,
+            @RequestParam Long majorId,
+            @RequestParam String subjectCode,
+            @RequestParam String subjectName,
+            @RequestParam(defaultValue = "0") int credit,
+            RedirectAttributes ra) {
+
+        Subject subject = subjectRepository.findById(subjectId).orElse(null);
+        if (subject == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy môn học.");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+
+        // Kiểm tra trùng mã môn học với các môn khác
+        Subject existingSubject = subjectRepository.findBySubjectCode(subjectCode.trim()).orElse(null);
+        if (existingSubject != null && !existingSubject.getId().equals(subjectId)) {
+            ra.addFlashAttribute("error", "Mã môn học đã tồn tại.");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+
+        subject.setSubjectCode(subjectCode.trim());
+        subject.setSubjectName(subjectName.trim());
+        subject.setCredit(credit);
+
+        subjectRepository.save(subject);
+
+        ra.addFlashAttribute("success", "Cập nhật môn học thành công.");
+        return "redirect:/admin/majors?selectedMajorId=" + majorId;
+    }
+
+    /**
+     * Xóa môn học khỏi ngành
+     */
+    @PostMapping("/majors/{majorId}/subjects/{subjectId}/remove")
+    @Transactional
+    public String removeSubjectFromMajor(@PathVariable Long majorId,
+            @PathVariable Long subjectId,
+            RedirectAttributes ra) {
+
+        Major major = majorRepository.findById(majorId).orElse(null);
+        Subject subject = subjectRepository.findById(subjectId).orElse(null);
+
+        if (major == null || subject == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy ngành hoặc môn học.");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+
+        // Kiểm tra xem có điểm số nào liên quan không
+        Long scoreCount = scoreRepository.countBySubjectId(subjectId);
+        if (scoreCount > 0) {
+            ra.addFlashAttribute("error", "Không thể xóa môn học vì còn có " + scoreCount + " điểm số liên quan.");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+
+        // Xóa môn học khỏi ngành
+        major.getSubjects().remove(subject);
+        subject.getMajors().remove(major);
+
+        majorRepository.save(major);
+
+        // Nếu môn học không còn thuộc ngành nào thì xóa hoàn toàn
+        if (subject.getMajors().isEmpty()) {
+            subjectRepository.delete(subject);
+        } else {
+            subjectRepository.save(subject);
+        }
+
+        ra.addFlashAttribute("success", "Xóa môn học khỏi ngành thành công.");
+        return "redirect:/admin/majors?selectedMajorId=" + majorId;
+    }
+
+    /**
+     * Thêm môn học có sẵn vào ngành
+     */
+    @PostMapping("/majors/{majorId}/subjects/add-existing")
+    @Transactional
+    public String addExistingSubjectToMajor(@PathVariable Long majorId,
+            @RequestParam Long existingSubjectId,
+            RedirectAttributes ra) {
+
+        Major major = majorRepository.findById(majorId).orElse(null);
+        Subject subject = subjectRepository.findById(existingSubjectId).orElse(null);
+
+        if (major == null || subject == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy ngành hoặc môn học.");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+
+        // Kiểm tra xem môn học đã thuộc ngành chưa
+        if (major.getSubjects().contains(subject)) {
+            ra.addFlashAttribute("error", "Môn học đã thuộc ngành này.");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+
+        major.getSubjects().add(subject);
+        subject.getMajors().add(major);
+
+        majorRepository.save(major);
+
+        ra.addFlashAttribute("success", "Thêm môn học vào ngành thành công.");
+        return "redirect:/admin/majors?selectedMajorId=" + majorId;
+    }
+
+    /**
+     * API lấy danh sách môn học chưa thuộc ngành để thêm vào
+     */
+    @GetMapping("/majors/{majorId}/available-subjects")
     @ResponseBody
-    public List<Faculty> getFaculties() {
-        return facultyRepository.findAllOrderByName();
+    public List<Subject> getAvailableSubjects(@PathVariable Long majorId) {
+        return subjectRepository.findSubjectsNotInMajor(majorId);
     }
 }
