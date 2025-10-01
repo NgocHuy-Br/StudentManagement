@@ -321,6 +321,9 @@
 
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                     <script>
+                        // Get context path from JSP
+                        const contextPath = '${pageContext.request.contextPath}';
+
                         document.addEventListener('DOMContentLoaded', function () {
                             // Initialize tooltips
                             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -343,7 +346,7 @@
 
                                     // Set form action
                                     const editForm = document.getElementById('editForm');
-                                    editForm.action = `${window.location.origin}/admin/faculties/${id}`;
+                                    editForm.action = contextPath + '/admin/faculties/' + id;
 
                                     // Show modal
                                     const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
@@ -364,7 +367,7 @@
 
                                     // Set form action
                                     const deleteForm = document.getElementById('deleteForm');
-                                    deleteForm.action = `${window.location.origin}/admin/faculties/${id}/delete`;
+                                    deleteForm.action = contextPath + '/admin/faculties/' + id + '/delete';
 
                                     // Show modal
                                     const modal = new bootstrap.Modal(document.getElementById('modalDelete'));
