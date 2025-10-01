@@ -219,44 +219,29 @@
                                                                                 </small>
                                                                             </div>
                                                                         </div>
-                                                                        <!-- Action Dropdown Menu -->
-                                                                        <div class="dropdown"
+                                                                        <!-- Direct Action Buttons -->
+                                                                        <div class="d-flex gap-1"
                                                                             onclick="event.stopPropagation();">
-                                                                            <button
-                                                                                class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                                                type="button" data-bs-toggle="dropdown"
-                                                                                aria-expanded="false" title="Tùy chọn"
-                                                                                onclick="event.stopPropagation();">
-                                                                                <i
-                                                                                    class="bi bi-three-dots-vertical"></i>
+                                                                            <button type="button"
+                                                                                class="btn btn-sm btn-outline-primary"
+                                                                                data-classroom-id="${classroom.id}"
+                                                                                data-class-code="${classroom.classCode}"
+                                                                                data-course-year="${classroom.courseYear}"
+                                                                                data-major-id="${classroom.major.id}"
+                                                                                data-teacher-id="${empty classroom.homeRoomTeacher ? '' : classroom.homeRoomTeacher.id}"
+                                                                                onclick="event.preventDefault(); event.stopPropagation(); editClassroomWithData(this);"
+                                                                                data-bs-toggle="tooltip"
+                                                                                data-bs-placement="top"
+                                                                                title="Chỉnh sửa thông tin lớp">
+                                                                                <i class="bi bi-pencil-square"></i>
                                                                             </button>
-                                                                            <ul class="dropdown-menu">
-                                                                                <li>
-                                                                                    <a class="dropdown-item" href="#"
-                                                                                        data-classroom-id="${classroom.id}"
-                                                                                        data-class-code="${classroom.classCode}"
-                                                                                        data-course-year="${classroom.courseYear}"
-                                                                                        data-major-id="${classroom.major.id}"
-                                                                                        data-teacher-id="${empty classroom.homeRoomTeacher ? '' : classroom.homeRoomTeacher.id}"
-                                                                                        onclick="event.preventDefault(); event.stopPropagation(); editClassroomWithData(this);">
-                                                                                        <i
-                                                                                            class="bi bi-pencil-square me-2 text-primary"></i>Chỉnh
-                                                                                        sửa thông tin lớp
-                                                                                    </a>
-                                                                                </li>
-                                                                                <li>
-                                                                                    <hr class="dropdown-divider">
-                                                                                </li>
-                                                                                <li>
-                                                                                    <a class="dropdown-item text-danger"
-                                                                                        href="#"
-                                                                                        onclick="event.preventDefault(); event.stopPropagation(); deleteClassroom('${classroom.id}', '${classroom.classCode}');">
-                                                                                        <i
-                                                                                            class="bi bi-trash me-2"></i>Xóa
-                                                                                        lớp
-                                                                                    </a>
-                                                                                </li>
-                                                                            </ul>
+                                                                            <button type="button"
+                                                                                class="btn btn-sm btn-outline-danger"
+                                                                                onclick="event.preventDefault(); event.stopPropagation(); deleteClassroom('${classroom.id}', '${classroom.classCode}');"
+                                                                                data-bs-toggle="tooltip"
+                                                                                data-bs-placement="top" title="Xóa lớp">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </button>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -348,7 +333,9 @@
                                                                                                 class="bi bi-arrow-down-up sort-icon"></i>
                                                                                         </a>
                                                                                     </th>
-                                                                                    <th width="100px">Thao tác</th>
+                                                                                    <th width="140px"
+                                                                                        class="text-center">Thao tác
+                                                                                    </th>
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
@@ -375,50 +362,35 @@
                                                                                         </td>
                                                                                         <td>${student.user.email}</td>
                                                                                         <td>
-                                                                                            <!-- Dropdown Actions -->
-                                                                                            <div class="dropdown">
-                                                                                                <button
-                                                                                                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                                                                    type="button"
-                                                                                                    id="studentActions${student.id}"
-                                                                                                    data-bs-toggle="dropdown"
-                                                                                                    aria-expanded="false">
+                                                                                            <!-- Direct Action Buttons -->
+                                                                                            <div
+                                                                                                class="d-flex gap-1 justify-content-center">
+                                                                                                <button type="button"
+                                                                                                    class="btn btn-sm btn-outline-info view-student-detail"
+                                                                                                    data-student-id="${student.id}"
+                                                                                                    data-username="${fn:escapeXml(student.user.username)}"
+                                                                                                    data-fullname="${fn:escapeXml(student.user.lname)} ${fn:escapeXml(student.user.fname)}"
+                                                                                                    data-email="${fn:escapeXml(student.user.email)}"
+                                                                                                    data-phone="${fn:escapeXml(student.user.phone)}"
+                                                                                                    data-address="${fn:escapeXml(student.user.address)}"
+                                                                                                    data-birthdate="${fn:escapeXml(student.user.birthDate)}"
+                                                                                                    data-nationalid="${fn:escapeXml(student.user.nationalId)}"
+                                                                                                    data-major="${fn:escapeXml(student.major.majorName)}"
+                                                                                                    data-bs-toggle="tooltip"
+                                                                                                    data-bs-placement="top"
+                                                                                                    title="Xem chi tiết">
                                                                                                     <i
-                                                                                                        class="bi bi-three-dots"></i>
+                                                                                                        class="bi bi-eye"></i>
                                                                                                 </button>
-                                                                                                <ul class="dropdown-menu dropdown-menu-end"
-                                                                                                    aria-labelledby="studentActions${student.id}">
-                                                                                                    <li>
-                                                                                                        <a class="dropdown-item view-student-detail"
-                                                                                                            href="#"
-                                                                                                            data-student-id="${student.id}"
-                                                                                                            data-username="${fn:escapeXml(student.user.username)}"
-                                                                                                            data-fullname="${fn:escapeXml(student.user.lname)} ${fn:escapeXml(student.user.fname)}"
-                                                                                                            data-email="${fn:escapeXml(student.user.email)}"
-                                                                                                            data-phone="${fn:escapeXml(student.user.phone)}"
-                                                                                                            data-address="${fn:escapeXml(student.user.address)}"
-                                                                                                            data-birthdate="${fn:escapeXml(student.user.birthDate)}"
-                                                                                                            data-nationalid="${fn:escapeXml(student.user.nationalId)}"
-                                                                                                            data-major="${fn:escapeXml(student.major.majorName)}">
-                                                                                                            <i
-                                                                                                                class="bi bi-eye me-2"></i>Xem
-                                                                                                            chi tiết
-                                                                                                        </a>
-                                                                                                    </li>
-                                                                                                    <li>
-                                                                                                        <hr
-                                                                                                            class="dropdown-divider">
-                                                                                                    </li>
-                                                                                                    <li>
-                                                                                                        <a class="dropdown-item text-danger"
-                                                                                                            href="#"
-                                                                                                            onclick="removeStudentFromClass('${student.id}', '${student.user.username}', '${selectedClass.id}')">
-                                                                                                            <i
-                                                                                                                class="bi bi-person-dash me-2"></i>Xóa
-                                                                                                            khỏi lớp
-                                                                                                        </a>
-                                                                                                    </li>
-                                                                                                </ul>
+                                                                                                <button type="button"
+                                                                                                    class="btn btn-sm btn-outline-danger"
+                                                                                                    onclick="removeStudentFromClass('${student.id}', '${student.user.username}', '${selectedClass.id}')"
+                                                                                                    data-bs-toggle="tooltip"
+                                                                                                    data-bs-placement="top"
+                                                                                                    title="Xóa khỏi lớp">
+                                                                                                    <i
+                                                                                                        class="bi bi-person-dash"></i>
+                                                                                                </button>
                                                                                             </div>
                                                                                         </td>
                                                                                     </tr>
@@ -979,6 +951,12 @@
 
                             // Add validation to Create Form
                             document.addEventListener('DOMContentLoaded', function () {
+                                // Initialize tooltips
+                                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                                });
+
                                 const addCourseYearInput = document.getElementById('addCourseYear');
                                 const editCourseYearInput = document.getElementById('editCourseYear');
 

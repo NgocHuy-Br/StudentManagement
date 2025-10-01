@@ -160,7 +160,7 @@
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
-                                                    <th width="100px">Thao tác</th>
+                                                    <th width="180px" class="text-center">Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -207,59 +207,48 @@
                                                             </c:choose>
                                                         </td>
                                                         <td>
-                                                            <!-- Dropdown Actions -->
-                                                            <div class="dropdown">
-                                                                <button
-                                                                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                                    type="button" id="teacherActions${t.id}"
-                                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <i class="bi bi-three-dots"></i>
+                                                            <!-- Direct Action Buttons -->
+                                                            <div class="d-flex gap-1 justify-content-center">
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-info view-teacher-detail"
+                                                                    data-teacher-id="${t.id}"
+                                                                    data-username="${fn:escapeXml(t.user.username)}"
+                                                                    data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
+                                                                    data-email="${fn:escapeXml(t.user.email)}"
+                                                                    data-phone="${fn:escapeXml(t.user.phone)}"
+                                                                    data-address="${fn:escapeXml(t.user.address)}"
+                                                                    data-birthdate="${fn:escapeXml(t.user.birthDate)}"
+                                                                    data-nationalid="${fn:escapeXml(t.user.nationalId)}"
+                                                                    data-facultyid="${t.faculty != null ? t.faculty.id : ''}"
+                                                                    data-facultyname="${t.faculty != null ? fn:escapeXml(t.faculty.name) : ''}"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Xem chi tiết">
+                                                                    <i class="bi bi-eye"></i>
                                                                 </button>
-                                                                <ul class="dropdown-menu dropdown-menu-end"
-                                                                    aria-labelledby="teacherActions${t.id}">
-                                                                    <li>
-                                                                        <a class="dropdown-item view-teacher-detail"
-                                                                            href="#" data-teacher-id="${t.id}"
-                                                                            data-username="${fn:escapeXml(t.user.username)}"
-                                                                            data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
-                                                                            data-email="${fn:escapeXml(t.user.email)}"
-                                                                            data-phone="${fn:escapeXml(t.user.phone)}"
-                                                                            data-address="${fn:escapeXml(t.user.address)}"
-                                                                            data-birthdate="${fn:escapeXml(t.user.birthDate)}"
-                                                                            data-nationalid="${fn:escapeXml(t.user.nationalId)}"
-                                                                            data-facultyid="${t.faculty != null ? t.faculty.id : ''}"
-                                                                            data-facultyname="${t.faculty != null ? fn:escapeXml(t.faculty.name) : ''}">
-                                                                            <i class="bi bi-eye me-2"></i>Xem chi tiết
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item edit-teacher" href="#"
-                                                                            data-teacher-id="${t.id}"
-                                                                            data-username="${fn:escapeXml(t.user.username)}"
-                                                                            data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
-                                                                            data-email="${fn:escapeXml(t.user.email)}"
-                                                                            data-phone="${fn:escapeXml(t.user.phone)}"
-                                                                            data-address="${fn:escapeXml(t.user.address)}"
-                                                                            data-birthdate="${fn:escapeXml(t.user.birthDate)}"
-                                                                            data-nationalid="${fn:escapeXml(t.user.nationalId)}"
-                                                                            data-facultyid="${t.faculty != null ? t.faculty.id : ''}">
-                                                                            <i
-                                                                                class="bi bi-pencil-square me-2"></i>Chỉnh
-                                                                            sửa
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <hr class="dropdown-divider">
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item text-danger delete-teacher"
-                                                                            href="#" data-teacher-id="${t.id}"
-                                                                            data-username="${fn:escapeXml(t.user.username)}"
-                                                                            data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}">
-                                                                            <i class="bi bi-trash me-2"></i>Xóa
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-primary edit-teacher"
+                                                                    data-teacher-id="${t.id}"
+                                                                    data-username="${fn:escapeXml(t.user.username)}"
+                                                                    data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
+                                                                    data-email="${fn:escapeXml(t.user.email)}"
+                                                                    data-phone="${fn:escapeXml(t.user.phone)}"
+                                                                    data-address="${fn:escapeXml(t.user.address)}"
+                                                                    data-birthdate="${fn:escapeXml(t.user.birthDate)}"
+                                                                    data-nationalid="${fn:escapeXml(t.user.nationalId)}"
+                                                                    data-facultyid="${t.faculty != null ? t.faculty.id : ''}"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Chỉnh sửa">
+                                                                    <i class="bi bi-pencil-square"></i>
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger delete-teacher"
+                                                                    data-teacher-id="${t.id}"
+                                                                    data-username="${fn:escapeXml(t.user.username)}"
+                                                                    data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Xóa">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -561,6 +550,12 @@
                     <script>
                         // Kích hoạt tooltip
                         document.addEventListener('DOMContentLoaded', function () {
+                            // Initialize tooltips
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                                return new bootstrap.Tooltip(tooltipTriggerEl);
+                            });
+
                             console.log('DOM Content Loaded - Starting teacher page initialization...');
 
                             // IMMEDIATE BASIC TEST - Enable this by removing comments

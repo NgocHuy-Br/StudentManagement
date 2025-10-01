@@ -1,5 +1,18 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+    <%@ taglib prefix="c" uri="http://java.sun.com/j                                                <th scope=" col">
+        <a href="?classroomId=${classroom.id}&sort=studentCode&dir=${param.sort == 'studentCode' && param.dir == 'asc' ? 'desc' : 'asc'}&page=0&size=${students.size}"
+            class="sort-link">
+            MSV
+            <i class="bi bi-arrow-down-up"></i>
+        </a>
+        </th>
+        <th scope="col">
+            <a href="?classroomId=${classroom.id}&sort=fname&dir=${param.sort == 'fname' && param.dir == 'asc' ? 'desc' : 'asc'}&page=0&size=${students.size}"
+                class="sort-link">
+                Họ tên
+                <i class="bi bi-arrow-down-up"></i>
+            </a>
+        </th>%>
         <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
             <!DOCTYPE html>
             <html lang="vi">
@@ -8,29 +21,57 @@
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Danh sách học sinh - Lớp ${classroom.classCode}</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+                    rel="stylesheet">
                 <style>
+                    :root {
+                        --page-x: clamp(12px, 4vw, 36px)
+                    }
+
+                    body {
+                        background: #f7f7f9
+                    }
+
+                    .main-wrap {
+                        padding-left: var(--page-x);
+                        padding-right: var(--page-x)
+                    }
+
+                    .card {
+                        border-radius: 12px;
+                        box-shadow: 0 10px 25px rgba(0, 0, 0, .06)
+                    }
+
+                    .student-toolbar .search .form-control {
+                        min-width: 260px
+                    }
+
+                    .table-students tbody tr:hover {
+                        background: #fffaf7;
+                    }
+
                     .sort-link {
-                        color: inherit;
                         text-decoration: none;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 5px;
+                        color: inherit
                     }
 
-                    .sort-link:hover {
-                        color: #0d6efd;
-                        text-decoration: none;
+                    .sort-link .bi {
+                        opacity: .5
                     }
 
-                    .sort-icon {
-                        opacity: 0.6;
-                        font-size: 0.8em;
+                    /* Đảm bảo dropdown không bị che */
+                    .table-responsive {
+                        overflow: visible;
                     }
 
-                    .sort-link:hover .sort-icon {
-                        opacity: 1;
+                    .dropdown-menu {
+                        z-index: 1050;
+                    }
+
+                    .student-badge {
+                        font-size: 0.85em;
+                        padding: 0.3em 0.6em;
                     }
                 </style>
             </head>
@@ -131,11 +172,11 @@
                                                     <a href="?classroomId=${classroom.id}&sort=email&dir=${param.sort == 'email' && param.dir == 'asc' ? 'desc' : 'asc'}&page=0&size=${students.size}"
                                                         class="sort-link">
                                                         Email
-                                                        <i class="fas fa-sort sort-icon"></i>
+                                                        <i class="bi bi-arrow-down-up"></i>
                                                     </a>
                                                 </th>
                                                 <th scope="col">Số điện thoại</th>
-                                                <th scope="col">Thao tác</th>
+                                                <th scope="col" width="120px" class="text-center">Thao tác</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -149,7 +190,7 @@
                                                     </td>
                                                     <td>
                                                         <div class="d-flex align-items-center">
-                                                            <i class="fas fa-user-graduate me-2 text-primary"></i>
+                                                            <i class="bi bi-person-badge me-2 text-primary"></i>
                                                             ${student.user.fname} ${student.user.lname}
                                                         </div>
                                                     </td>
@@ -164,13 +205,13 @@
                                                     <td>
                                                         <c:choose>
                                                             <c:when test="${student.gender == 'MALE'}">
-                                                                <span class="badge bg-primary">
-                                                                    <i class="fas fa-mars me-1"></i>Nam
+                                                                <span class="badge student-badge bg-primary">
+                                                                    <i class="bi bi-gender-male me-1"></i>Nam
                                                                 </span>
                                                             </c:when>
                                                             <c:when test="${student.gender == 'FEMALE'}">
-                                                                <span class="badge bg-info">
-                                                                    <i class="fas fa-venus me-1"></i>Nữ
+                                                                <span class="badge student-badge bg-info">
+                                                                    <i class="bi bi-gender-female me-1"></i>Nữ
                                                                 </span>
                                                             </c:when>
                                                             <c:otherwise>
@@ -198,11 +239,15 @@
                                                         </c:if>
                                                     </td>
                                                     <td>
-                                                        <a href="/homeroom/classroom/${classroom.id}/scores?studentId=${student.id}"
-                                                            class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-chart-line me-1"></i>
-                                                            Xem điểm
-                                                        </a>
+                                                        <!-- Direct Action Button -->
+                                                        <div class="d-flex gap-1 justify-content-center">
+                                                            <a href="/homeroom/classroom/${classroom.id}/scores?studentId=${student.id}"
+                                                                class="btn btn-sm btn-outline-primary"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                title="Xem điểm">
+                                                                <i class="bi bi-bar-chart-line"></i>
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             </c:forEach>
@@ -248,7 +293,16 @@
                     </div>
                 </div>
 
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Initialize tooltips
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
+                        });
+                    });
+                </script>
             </body>
 
             </html>

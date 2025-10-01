@@ -125,10 +125,10 @@
                                                         </a>
                                                     </th>
                                                     <th width="220px">Mô tả</th>
-                                                    <th width="120px">Số ngành</th>
-                                                    <th width="120px">Số giáo viên</th>
-                                                    <th width="120px">Số sinh viên</th>
-                                                    <th width="120px">Thao tác</th>
+                                                    <th width="120px" class="text-center">Số ngành</th>
+                                                    <th width="120px" class="text-center">Số giáo viên</th>
+                                                    <th width="120px" class="text-center">Số sinh viên</th>
+                                                    <th width="120px" class="text-center">Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -167,37 +167,25 @@
                                                                 class="badge faculty-badge bg-warning">${facultyStats[faculty.id]['studentCount']}</span>
                                                         </td>
                                                         <td>
-                                                            <!-- Dropdown Actions -->
-                                                            <div class="dropdown">
-                                                                <button
-                                                                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                                    type="button" id="facultyActions${faculty.id}"
-                                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <i class="bi bi-three-dots"></i>
+                                                            <!-- Direct Action Buttons -->
+                                                            <div class="d-flex gap-1 justify-content-center">
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-primary edit-faculty"
+                                                                    data-faculty-id="${faculty.id}"
+                                                                    data-name="${fn:escapeXml(faculty.name)}"
+                                                                    data-description="${fn:escapeXml(faculty.description)}"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Chỉnh sửa">
+                                                                    <i class="bi bi-pencil-square"></i>
                                                                 </button>
-                                                                <ul class="dropdown-menu dropdown-menu-end"
-                                                                    aria-labelledby="facultyActions${faculty.id}">
-                                                                    <li>
-                                                                        <a class="dropdown-item edit-faculty" href="#"
-                                                                            data-faculty-id="${faculty.id}"
-                                                                            data-name="${fn:escapeXml(faculty.name)}"
-                                                                            data-description="${fn:escapeXml(faculty.description)}">
-                                                                            <i
-                                                                                class="bi bi-pencil-square me-2"></i>Chỉnh
-                                                                            sửa
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <hr class="dropdown-divider">
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item text-danger delete-faculty"
-                                                                            href="#" data-faculty-id="${faculty.id}"
-                                                                            data-name="${fn:escapeXml(faculty.name)}">
-                                                                            <i class="bi bi-trash me-2"></i>Xóa
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger delete-faculty"
+                                                                    data-faculty-id="${faculty.id}"
+                                                                    data-name="${fn:escapeXml(faculty.name)}"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Xóa">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -334,6 +322,12 @@
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
+                            // Initialize tooltips
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                                return new bootstrap.Tooltip(tooltipTriggerEl);
+                            });
+
                             // Handle Edit Faculty
                             const editButtons = document.querySelectorAll('.edit-faculty');
                             editButtons.forEach(button => {
