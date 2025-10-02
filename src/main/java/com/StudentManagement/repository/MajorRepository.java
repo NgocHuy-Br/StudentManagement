@@ -12,31 +12,31 @@ import java.util.Optional;
 
 public interface MajorRepository extends JpaRepository<Major, Long> {
 
-    boolean existsByMajorCode(String majorCode);
+  boolean existsByMajorCode(String majorCode);
 
-    Optional<Major> findByMajorCode(String majorCode);
+  Major findByMajorCode(String majorCode);
 
-    @Query("""
-            select m from Major m
-            where
-              lower(m.majorCode) like lower(concat('%', :q, '%'))
-              or lower(m.majorName) like lower(concat('%', :q, '%'))
-              or lower(m.description) like lower(concat('%', :q, '%'))
-            """)
-    Page<Major> search(@Param("q") String q, Pageable pageable);
+  @Query("""
+      select m from Major m
+      where
+        lower(m.majorCode) like lower(concat('%', :q, '%'))
+        or lower(m.majorName) like lower(concat('%', :q, '%'))
+        or lower(m.description) like lower(concat('%', :q, '%'))
+      """)
+  Page<Major> search(@Param("q") String q, Pageable pageable);
 
-    @Query("""
-            SELECT m FROM Major m
-            WHERE lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
-               OR lower(m.majorName) LIKE lower(concat('%', :search, '%'))
-            ORDER BY m.majorCode ASC
-            """)
-    List<Major> searchByCodeOrName(@Param("search") String search);
+  @Query("""
+      SELECT m FROM Major m
+      WHERE lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
+         OR lower(m.majorName) LIKE lower(concat('%', :search, '%'))
+      ORDER BY m.majorCode ASC
+      """)
+  List<Major> searchByCodeOrName(@Param("search") String search);
 
-    @Query("""
-            SELECT m FROM Major m
-            LEFT JOIN m.subjects s
-            ORDER BY m.majorCode ASC
-            """)
-    List<Major> findAllWithSubjectCount();
+  @Query("""
+      SELECT DISTINCT m FROM Major m
+      LEFT JOIN FETCH m.subjects
+      ORDER BY m.majorCode ASC
+      """)
+  List<Major> findAllWithSubjectCount();
 }

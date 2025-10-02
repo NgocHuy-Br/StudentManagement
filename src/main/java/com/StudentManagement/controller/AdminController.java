@@ -17,6 +17,7 @@ import com.StudentManagement.repository.TeacherRepository;
 import com.StudentManagement.repository.UserRepository;
 import com.StudentManagement.service.ClassroomTeacherService;
 import org.springframework.data.domain.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -1302,7 +1303,7 @@ public class AdminController {
      */
     @GetMapping("/majors")
     public String majorSubjectManagement(Authentication auth, Model model,
-            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) Long selectedMajorId,
             @RequestParam(defaultValue = "") String subjectSearch,
             @RequestParam(defaultValue = "subjectCode") String subjectSort,
@@ -1312,13 +1313,14 @@ public class AdminController {
 
         // Lấy danh sách ngành
         List<Major> majors;
-        if (search != null && !search.isBlank()) {
-            majors = majorRepository.searchByCodeOrName(search.trim());
+        if (q != null && !q.isBlank()) {
+            majors = majorRepository.searchByCodeOrName(q.trim());
         } else {
             majors = majorRepository.findAllWithSubjectCount();
         }
 
         model.addAttribute("majors", majors);
+        model.addAttribute("q", q);
 
         // Nếu có ngành được chọn, lấy thông tin môn học
         if (selectedMajorId != null) {
@@ -1497,6 +1499,113 @@ public class AdminController {
 
         ra.addFlashAttribute("success", "Thêm môn học vào ngành thành công.");
         return "redirect:/admin/majors?selectedMajorId=" + majorId;
+    }
+
+    /**
+     * Tạo ngành học mới
+     */
+    @PostMapping("/majors")
+    public String createMajor(@RequestParam String majorCode,
+            @RequestParam String majorName,
+            @RequestParam(required = false) String description,
+            RedirectAttributes ra) {
+        try {
+            // Kiểm tra mã ngành đã tồn tại chưa
+            if (majorRepository.existsByMajorCode(majorCode)) {
+                ra.addFlashAttribute("error", "Mã ngành đã tồn tại");
+                return "redirect:/admin/majors";
+            }
+
+            // Tạo ngành mới
+            Major major = new Major();
+            major.setMajorCode(majorCode);
+            major.setMajorName(majorName);
+            major.setDescription(description);
+
+            majorRepository.save(major);
+
+            ra.addFlashAttribute("success", "Thêm ngành học thành công");
+            return "redirect:/admin/majors";
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/majors";
+        }
+    }
+
+    /**
+     * Cập nhật ngành học
+     */
+    @PostMapping("/majors/edit")
+    public String updateMajor(@RequestParam Long id,
+            @RequestParam String majorCode,
+            @RequestParam String majorName,
+            @RequestParam(required = false) String description,
+            RedirectAttributes ra) {
+        try {
+            Major major = majorRepository.findById(id).orElse(null);
+            if (major == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy ngành học");
+                return "redirect:/admin/majors";
+            }
+
+            // Kiểm tra mã ngành đã tồn tại ở ngành khác chưa
+            Major existingMajor = majorRepository.findByMajorCode(majorCode);
+            if (existingMajor != null && !existingMajor.getId().equals(id)) {
+                ra.addFlashAttribute("error", "Mã ngành đã tồn tại");
+                return "redirect:/admin/majors";
+            }
+
+            // Cập nhật thông tin ngành
+            major.setMajorCode(majorCode);
+            major.setMajorName(majorName);
+            major.setDescription(description);
+
+            majorRepository.save(major);
+
+            ra.addFlashAttribute("success", "Cập nhật ngành học thành công");
+            return "redirect:/admin/majors";
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/majors";
+        }
+    }
+
+    /**
+     * Xóa ngành học
+     */
+    @PostMapping("/majors/delete")
+    @Transactional
+    public String deleteMajor(@RequestParam Long id, RedirectAttributes ra) {
+        try {
+            Major major = majorRepository.findById(id).orElse(null);
+            if (major == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy ngành học");
+                return "redirect:/admin/majors";
+            }
+
+            // Kiểm tra xem có sinh viên nào thuộc ngành này không
+            long studentCount = studentRepository.countByMajorId(id);
+            if (studentCount > 0) {
+                ra.addFlashAttribute("error",
+                        "Không thể xóa ngành học vì có " + studentCount + " sinh viên thuộc ngành này");
+                return "redirect:/admin/majors";
+            }
+
+            // Xóa các mối quan hệ với môn học trước
+            if (major.getSubjects() != null) {
+                major.getSubjects().clear();
+                majorRepository.save(major);
+            }
+
+            // Xóa ngành học
+            majorRepository.delete(major);
+
+            ra.addFlashAttribute("success", "Xóa ngành học thành công");
+            return "redirect:/admin/majors";
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/majors";
+        }
     }
 
     /**
