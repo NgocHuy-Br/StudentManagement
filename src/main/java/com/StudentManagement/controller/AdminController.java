@@ -1069,8 +1069,9 @@ public class AdminController {
         // Không cần set major nữa vì sử dụng Many-to-Many
         subjectRepository.save(subject);
 
-        ra.addFlashAttribute("success", "Đã tạo môn học: " + code + " - " + name);
-        return "redirect:/admin/subjects";
+        ra.addFlashAttribute("success",
+                "Đã tạo môn học độc lập: " + code + " - " + name + ". Bạn có thể gán vào ngành sau.");
+        return "redirect:/admin/majors?viewAll=true";
     }
 
     // Xem chi tiết ngành học và các môn học
@@ -1307,7 +1308,8 @@ public class AdminController {
             @RequestParam(required = false) Long selectedMajorId,
             @RequestParam(defaultValue = "") String subjectSearch,
             @RequestParam(defaultValue = "subjectCode") String subjectSort,
-            @RequestParam(defaultValue = "asc") String subjectDir) {
+            @RequestParam(defaultValue = "asc") String subjectDir,
+            @RequestParam(defaultValue = "false") String viewAll) {
         addUserInfo(auth, model);
         model.addAttribute("activeTab", "majors");
 
@@ -1322,28 +1324,51 @@ public class AdminController {
         model.addAttribute("majors", majors);
         model.addAttribute("q", q);
 
-        // Nếu có ngành được chọn, lấy thông tin môn học
-        if (selectedMajorId != null) {
-            Major selectedMajor = majorRepository.findById(selectedMajorId).orElse(null);
-            if (selectedMajor != null) {
-                model.addAttribute("selectedMajor", selectedMajor);
-                model.addAttribute("selectedMajorId", selectedMajorId);
+        // Xử lý chế độ xem môn học
+        if (selectedMajorId != null || "true".equals(viewAll)) {
+            Major selectedMajor = null;
+            if (selectedMajorId != null) {
+                selectedMajor = majorRepository.findById(selectedMajorId).orElse(null);
+                if (selectedMajor != null) {
+                    model.addAttribute("selectedMajor", selectedMajor);
+                    model.addAttribute("selectedMajorId", selectedMajorId);
+                }
+            }
 
-                // Lấy danh sách môn học với sắp xếp
-                Sort.Direction direction = "desc".equalsIgnoreCase(subjectDir) ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
-                Sort sort = Sort.by(direction, subjectSort);
+            // Lấy danh sách môn học với sắp xếp
+            Sort.Direction direction = "desc".equalsIgnoreCase(subjectDir) ? Sort.Direction.DESC
+                    : Sort.Direction.ASC;
+            Sort sort = Sort.by(direction, subjectSort);
 
-                List<Subject> subjects;
+            List<Subject> subjects;
+
+            // Kiểm tra chế độ xem: theo ngành hoặc tất cả môn học
+            if ("true".equals(viewAll)) {
+                // Chế độ xem tất cả môn học
                 if (subjectSearch != null && !subjectSearch.isBlank()) {
-                    subjects = subjectRepository.findByMajorIdAndSearchWithSort(selectedMajorId, subjectSearch.trim(),
-                            sort);
+                    subjects = subjectRepository.findAllBySearchWithSort(subjectSearch.trim(), sort);
+                } else {
+                    subjects = subjectRepository.findAll(sort);
+                }
+            } else if (selectedMajor != null) {
+                // Chế độ xem theo ngành đã chọn
+                if (subjectSearch != null && !subjectSearch.isBlank()) {
+                    subjects = subjectRepository.findByMajorIdAndSearchWithSort(selectedMajorId,
+                            subjectSearch.trim(), sort);
                 } else {
                     subjects = subjectRepository.findByMajorIdWithSort(selectedMajorId, sort);
                 }
-
-                model.addAttribute("subjects", subjects);
+            } else {
+                // Trường hợp không có ngành được chọn
+                subjects = new ArrayList<>();
             }
+
+            model.addAttribute("subjects", subjects);
+            model.addAttribute("viewAll", viewAll);
+
+            // Debug log
+            System.out.println("DEBUG: viewAll=" + viewAll + ", selectedMajorId=" + selectedMajorId + ", subjects.size="
+                    + subjects.size());
         }
 
         return "admin/majors";

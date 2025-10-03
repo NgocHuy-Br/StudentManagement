@@ -83,4 +83,13 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
       ORDER BY s.subjectCode ASC
       """)
   List<Subject> findSubjectsNotInMajor(@Param("majorId") Long majorId);
+
+  // Tìm kiếm tất cả môn học (không phụ thuộc ngành)
+  @EntityGraph(attributePaths = { "majors" })
+  @Query("""
+      select distinct s from Subject s
+      where lower(s.subjectCode) like lower(concat('%', :q, '%'))
+         or lower(s.subjectName) like lower(concat('%', :q, '%'))
+      """)
+  List<Subject> findAllBySearchWithSort(@Param("q") String q, org.springframework.data.domain.Sort sort);
 }

@@ -8,10 +8,7 @@
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Edit major button clicked!', this.dataset); <title>Quản lý Ngành - Môn học</title>
+                    <title>Quản lý Ngành - Môn học</title>
                     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
                         rel="stylesheet">
                     <link rel="stylesheet"
@@ -173,12 +170,12 @@
                                     <div class="col-lg-7">
                                         <div class="card shadow-sm h-100">
                                             <c:choose>
-                                                <c:when test="${not empty selectedMajor}">
+                                                <c:when test="${not empty selectedMajor or param.viewAll eq 'true'}">
                                                     <div
                                                         class="card-header d-flex justify-content-between align-items-center">
                                                         <h6 class="mb-0">
                                                             <i class="bi bi-book me-2"></i>
-                                                            Môn học - ${selectedMajor.majorName}
+                                                            <span id="subjectsTitle">Môn học</span>
                                                         </h6>
                                                         <button type="button" class="btn btn-primary btn-sm"
                                                             data-bs-toggle="modal" data-bs-target="#addSubjectModal">
@@ -186,6 +183,44 @@
                                                         </button>
                                                     </div>
                                                     <div class="card-body">
+                                                        <!-- Major Selection Dropdown -->
+                                                        <div
+                                                            class="mb-3 d-flex justify-content-between align-items-center">
+                                                            <div class="d-flex align-items-center">
+                                                                <label for="majorSelect"
+                                                                    class="form-label me-2 mb-0 fw-medium">
+                                                                    <i class="bi bi-filter me-1"></i>Xem môn học của:
+                                                                </label>
+                                                                <select class="form-select form-select-sm"
+                                                                    id="majorSelect" style="min-width: 200px;">
+                                                                    <option value="all" ${param.viewAll eq 'true' or
+                                                                        empty selectedMajorId ? 'selected' : '' }>
+                                                                        📚 Tất cả ngành
+                                                                    </option>
+                                                                    <c:forEach items="${majors}" var="major">
+                                                                        <option value="${major.id}" ${selectedMajorId eq
+                                                                            major.id and param.viewAll ne 'true'
+                                                                            ? 'selected' : '' }>
+                                                                            🎓 ${major.majorCode} - ${major.majorName}
+                                                                        </option>
+                                                                    </c:forEach>
+                                                                </select>
+                                                            </div>
+                                                            <small class="text-muted" id="subjectCount">
+                                                                <c:choose>
+                                                                    <c:when
+                                                                        test="${param.viewAll eq 'true' or empty selectedMajorId}">
+                                                                        Tổng: ${fn:length(subjects)} môn học (tất cả
+                                                                        ngành)
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        Tổng: ${fn:length(subjects)} môn học
+                                                                        (${selectedMajor.majorName})
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </small>
+                                                        </div>
+
                                                         <!-- Search for Subjects -->
                                                         <div class="mb-3">
                                                             <form method="get" class="d-flex">
@@ -201,7 +236,10 @@
                                                                         type="submit">Tìm</button>
                                                                 </div>
                                                                 <input type="hidden" name="selectedMajorId"
+                                                                    id="selectedMajorIdInput"
                                                                     value="${selectedMajorId}">
+                                                                <input type="hidden" name="viewAll" id="viewAllInput"
+                                                                    value="${param.viewAll eq 'true' ? 'true' : 'false'}">
                                                                 <c:if test="${not empty q}">
                                                                     <input type="hidden" name="q" value="${q}">
                                                                 </c:if>
@@ -216,6 +254,9 @@
                                                                     <tr>
                                                                         <th>Mã môn</th>
                                                                         <th>Tên môn học</th>
+                                                                        <c:if test="${param.viewAll eq 'true'}">
+                                                                            <th>Các ngành</th>
+                                                                        </c:if>
                                                                         <th>Tín chỉ</th>
                                                                         <th>Thao tác</th>
                                                                     </tr>
@@ -224,7 +265,7 @@
                                                                     <c:choose>
                                                                         <c:when test="${empty subjects}">
                                                                             <tr>
-                                                                                <td colspan="4"
+                                                                                <td colspan="${param.viewAll eq 'true' ? '5' : '4'}"
                                                                                     class="text-center py-4 text-muted">
                                                                                     <i
                                                                                         class="bi bi-journals display-6 d-block mb-2"></i>
@@ -241,6 +282,24 @@
                                                                                         ${subject.subjectCode}</td>
                                                                                     <td class="fw-medium">
                                                                                         ${subject.subjectName}</td>
+                                                                                    <c:if
+                                                                                        test="${param.viewAll eq 'true'}">
+                                                                                        <td>
+                                                                                            <c:forEach
+                                                                                                items="${subject.majors}"
+                                                                                                var="major"
+                                                                                                varStatus="status">
+                                                                                                <span
+                                                                                                    class="badge bg-info me-1 mb-1">${major.majorCode}</span>
+                                                                                            </c:forEach>
+                                                                                            <c:if
+                                                                                                test="${empty subject.majors}">
+                                                                                                <small
+                                                                                                    class="text-muted">Chưa
+                                                                                                    gán ngành</small>
+                                                                                            </c:if>
+                                                                                        </td>
+                                                                                    </c:if>
                                                                                     <td class="text-center">
                                                                                         <span
                                                                                             class="badge bg-secondary">${subject.credit}</span>
@@ -281,8 +340,8 @@
                                                         <div class="text-center text-muted">
                                                             <i class="bi bi-arrow-left-circle display-1 mb-3"></i>
                                                             <h5>Chọn một ngành học</h5>
-                                                            <p>Chọn ngành từ danh sách bên trái để xem các môn học tương
-                                                                ứng</p>
+                                                            <p>Chọn ngành từ danh sách bên trái hoặc dropdown phía trên
+                                                                để xem các môn học</p>
                                                         </div>
                                                     </div>
                                                 </c:otherwise>
@@ -413,8 +472,8 @@
                                 <div class="modal fade" id="addSubjectModal" tabindex="-1">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
-                                            <form method="post"
-                                                action="${pageContext.request.contextPath}/admin/majors/${selectedMajorId}/subjects">
+                                            <form method="post" id="addSubjectForm"
+                                                action="${pageContext.request.contextPath}/admin/subjects">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title">Thêm môn học mới</h5>
                                                     <button type="button" class="btn-close"
@@ -436,6 +495,20 @@
                                                         <input type="number" class="form-control" name="credit" min="1"
                                                             max="10" value="3" required>
                                                     </div>
+                                                    <c:if test="${param.viewAll ne 'true' and not empty selectedMajor}">
+                                                        <div class="alert alert-info">
+                                                            <i class="fas fa-info-circle"></i>
+                                                            Môn học sẽ được tự động gán vào ngành:
+                                                            <strong>${selectedMajor.majorName}</strong>
+                                                        </div>
+                                                    </c:if>
+                                                    <c:if test="${param.viewAll eq 'true' or empty selectedMajor}">
+                                                        <div class="alert alert-warning">
+                                                            <i class="fas fa-exclamation-triangle"></i>
+                                                            Môn học sẽ được tạo độc lập, chưa gán vào ngành nào. Bạn có
+                                                            thể gán vào ngành sau.
+                                                        </div>
+                                                    </c:if>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary"
@@ -566,9 +639,40 @@
 
                                         // Select Major Function (global scope needed for onclick)
                                         window.selectMajor = function (majorId) {
+                                            // Cập nhật dropdown khi click ngành từ danh sách bên trái
+                                            const majorSelect = document.getElementById('majorSelect');
+                                            if (majorSelect) {
+                                                majorSelect.value = majorId;
+                                            }
+
                                             const url = new URL(window.location);
                                             url.searchParams.set('selectedMajorId', majorId);
+                                            url.searchParams.delete('viewAll'); // Xóa viewAll khi chọn ngành cụ thể
                                             window.location.href = url.toString();
+                                        }
+
+                                        // Major Selection Dropdown Handler
+                                        const majorSelect = document.getElementById('majorSelect');
+                                        if (majorSelect) {
+                                            majorSelect.addEventListener('change', function () {
+                                                const url = new URL(window.location);
+                                                const selectedValue = this.value;
+
+                                                if (selectedValue === 'all') {
+                                                    // Chuyển sang chế độ xem tất cả môn học
+                                                    url.searchParams.set('viewAll', 'true');
+                                                    url.searchParams.delete('selectedMajorId');
+                                                } else {
+                                                    // Chuyển về chế độ xem theo ngành cụ thể
+                                                    url.searchParams.set('selectedMajorId', selectedValue);
+                                                    url.searchParams.delete('viewAll');
+                                                }
+
+                                                // Xóa search để tránh conflict
+                                                url.searchParams.delete('subjectSearch');
+
+                                                window.location.href = url.toString();
+                                            });
                                         }
 
 
@@ -679,6 +783,26 @@
                                                 }
                                             });
                                         });
+
+                                        // Handle add subject modal
+                                        const addSubjectModal = document.getElementById('addSubjectModal');
+                                        if (addSubjectModal) {
+                                            addSubjectModal.addEventListener('show.bs.modal', function () {
+                                                const form = document.getElementById('addSubjectForm');
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                const viewAll = urlParams.get('viewAll');
+                                                const selectedMajorId = urlParams.get('selectedMajorId');
+
+                                                // Update form action based on current state
+                                                if (viewAll === 'true' || !selectedMajorId) {
+                                                    // Create independent subject
+                                                    form.action = '${pageContext.request.contextPath}/admin/subjects';
+                                                } else {
+                                                    // Create subject and assign to major
+                                                    form.action = '${pageContext.request.contextPath}/admin/majors/' + selectedMajorId + '/subjects';
+                                                }
+                                            });
+                                        }
                                     });
                                 </script>
                 </body>
