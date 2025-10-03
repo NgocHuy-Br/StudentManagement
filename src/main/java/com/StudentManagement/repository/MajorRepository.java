@@ -21,6 +21,7 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
       where
         lower(m.majorCode) like lower(concat('%', :q, '%'))
         or lower(m.majorName) like lower(concat('%', :q, '%'))
+        or lower(m.courseYear) like lower(concat('%', :q, '%'))
         or lower(m.description) like lower(concat('%', :q, '%'))
       """)
   Page<Major> search(@Param("q") String q, Pageable pageable);
@@ -29,14 +30,15 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
       SELECT m FROM Major m
       WHERE lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
          OR lower(m.majorName) LIKE lower(concat('%', :search, '%'))
-      ORDER BY m.majorCode ASC
+         OR lower(m.courseYear) LIKE lower(concat('%', :search, '%'))
+      ORDER BY m.courseYear DESC, m.majorCode ASC
       """)
   List<Major> searchByCodeOrName(@Param("search") String search);
 
   @Query("""
       SELECT DISTINCT m FROM Major m
       LEFT JOIN FETCH m.subjects
-      ORDER BY m.majorCode ASC
+      ORDER BY m.courseYear DESC, m.majorCode ASC
       """)
   List<Major> findAllWithSubjectCount();
 }

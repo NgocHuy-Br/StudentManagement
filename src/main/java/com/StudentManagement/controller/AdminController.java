@@ -1507,12 +1507,23 @@ public class AdminController {
     @PostMapping("/majors")
     public String createMajor(@RequestParam String majorCode,
             @RequestParam String majorName,
+            @RequestParam String courseYear,
             @RequestParam(required = false) String description,
             RedirectAttributes ra) {
         try {
-            // Kiểm tra mã ngành đã tồn tại chưa
-            if (majorRepository.existsByMajorCode(majorCode)) {
-                ra.addFlashAttribute("error", "Mã ngành đã tồn tại");
+            // Validate course year format
+            if (!isValidCourseYearFormat(courseYear)) {
+                ra.addFlashAttribute("error", "Khóa học phải có định dạng YYYY-YYYY (ví dụ: 2023-2027)");
+                return "redirect:/admin/majors";
+            }
+
+            // Kiểm tra mã ngành + khóa học đã tồn tại chưa
+            List<Major> existingMajors = majorRepository.findAll();
+            boolean exists = existingMajors.stream()
+                    .anyMatch(m -> m.getMajorCode().equals(majorCode) && m.getCourseYear().equals(courseYear));
+
+            if (exists) {
+                ra.addFlashAttribute("error", "Ngành " + majorCode + " khóa " + courseYear + " đã tồn tại");
                 return "redirect:/admin/majors";
             }
 
@@ -1520,6 +1531,7 @@ public class AdminController {
             Major major = new Major();
             major.setMajorCode(majorCode);
             major.setMajorName(majorName);
+            major.setCourseYear(courseYear);
             major.setDescription(description);
 
             majorRepository.save(major);
@@ -1539,25 +1551,38 @@ public class AdminController {
     public String updateMajor(@RequestParam Long id,
             @RequestParam String majorCode,
             @RequestParam String majorName,
+            @RequestParam String courseYear,
             @RequestParam(required = false) String description,
             RedirectAttributes ra) {
         try {
+            // Validate course year format
+            if (!isValidCourseYearFormat(courseYear)) {
+                ra.addFlashAttribute("error", "Khóa học phải có định dạng YYYY-YYYY (ví dụ: 2023-2027)");
+                return "redirect:/admin/majors";
+            }
+
             Major major = majorRepository.findById(id).orElse(null);
             if (major == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy ngành học");
                 return "redirect:/admin/majors";
             }
 
-            // Kiểm tra mã ngành đã tồn tại ở ngành khác chưa
-            Major existingMajor = majorRepository.findByMajorCode(majorCode);
-            if (existingMajor != null && !existingMajor.getId().equals(id)) {
-                ra.addFlashAttribute("error", "Mã ngành đã tồn tại");
+            // Kiểm tra mã ngành + khóa học đã tồn tại ở ngành khác chưa
+            List<Major> existingMajors = majorRepository.findAll();
+            boolean exists = existingMajors.stream()
+                    .anyMatch(m -> m.getMajorCode().equals(majorCode)
+                            && m.getCourseYear().equals(courseYear)
+                            && !m.getId().equals(id));
+
+            if (exists) {
+                ra.addFlashAttribute("error", "Ngành " + majorCode + " khóa " + courseYear + " đã tồn tại");
                 return "redirect:/admin/majors";
             }
 
             // Cập nhật thông tin ngành
             major.setMajorCode(majorCode);
             major.setMajorName(majorName);
+            major.setCourseYear(courseYear);
             major.setDescription(description);
 
             majorRepository.save(major);
@@ -1605,6 +1630,124 @@ public class AdminController {
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/admin/majors";
+        }
+    }
+
+    /**
+     * Cập nhật môn học
+     */
+    @PostMapping("/subjects/edit")
+    @Transactional
+    public String editSubject(@RequestParam Long id,
+            @RequestParam Long majorId,
+            @RequestParam String subjectCode,
+            @RequestParam String subjectName,
+            @RequestParam int credit,
+            RedirectAttributes ra) {
+        try {
+            Subject subject = subjectRepository.findById(id).orElse(null);
+            if (subject == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy môn học");
+                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            }
+
+            // Kiểm tra mã môn học đã tồn tại ở môn khác chưa
+            Subject existingSubject = subjectRepository.findBySubjectCode(subjectCode).orElse(null);
+            if (existingSubject != null && !existingSubject.getId().equals(id)) {
+                ra.addFlashAttribute("error", "Mã môn học đã tồn tại");
+                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            }
+
+            // Cập nhật thông tin môn học
+            subject.setSubjectCode(subjectCode);
+            subject.setSubjectName(subjectName);
+            subject.setCredit(credit);
+
+            subjectRepository.save(subject);
+
+            ra.addFlashAttribute("success", "Cập nhật môn học thành công");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+    }
+
+    /**
+     * Xóa môn học
+     */
+    @PostMapping("/subjects/delete")
+    @Transactional
+    public String deleteSubject(@RequestParam Long id,
+            @RequestParam Long majorId,
+            RedirectAttributes ra) {
+        try {
+            Subject subject = subjectRepository.findById(id).orElse(null);
+            if (subject == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy môn học");
+                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            }
+
+            // Kiểm tra xem có điểm số nào liên quan không
+            long scoreCount = scoreRepository.countBySubjectId(id);
+            if (scoreCount > 0) {
+                ra.addFlashAttribute("error", "Không thể xóa môn học vì có " + scoreCount + " điểm số liên quan");
+                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            }
+
+            // Xóa môn học khỏi tất cả ngành
+            List<Major> majors = majorRepository.findAll();
+            for (Major major : majors) {
+                if (major.getSubjects() != null) {
+                    major.getSubjects().removeIf(s -> s.getId().equals(id));
+                }
+            }
+
+            // Xóa môn học
+            subjectRepository.delete(subject);
+
+            ra.addFlashAttribute("success", "Xóa môn học thành công");
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        }
+    }
+
+    /**
+     * Validate course year format YYYY-YYYY
+     */
+    private boolean isValidCourseYearFormat(String courseYear) {
+        if (courseYear == null || courseYear.trim().isEmpty()) {
+            return false;
+        }
+
+        // Pattern: YYYY-YYYY (e.g., 2023-2027)
+        String pattern = "^\\d{4}-\\d{4}$";
+        if (!courseYear.matches(pattern)) {
+            return false;
+        }
+
+        // Extract start and end years
+        String[] years = courseYear.split("-");
+        try {
+            int startYear = Integer.parseInt(years[0]);
+            int endYear = Integer.parseInt(years[1]);
+
+            // Validate logical years (end year should be after start year)
+            if (endYear <= startYear) {
+                return false;
+            }
+
+            // Validate reasonable year range (current year ± 20 years)
+            int currentYear = java.time.Year.now().getValue();
+            if (startYear < currentYear - 20 || startYear > currentYear + 20) {
+                return false;
+            }
+
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
