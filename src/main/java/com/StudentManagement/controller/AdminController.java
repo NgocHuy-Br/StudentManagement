@@ -30,13 +30,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-
-import java.util.List;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
@@ -1826,14 +1829,5 @@ public class AdminController {
         } catch (NumberFormatException e) {
             return false;
         }
-    }
-
-    /**
-     * API lấy danh sách môn học chưa thuộc ngành để thêm vào
-     */
-    @GetMapping("/majors/{majorId}/available-subjects")
-    @ResponseBody
-    public List<Subject> getAvailableSubjects(@PathVariable Long majorId) {
-        return subjectRepository.findSubjectsNotInMajor(majorId);
     }
 }

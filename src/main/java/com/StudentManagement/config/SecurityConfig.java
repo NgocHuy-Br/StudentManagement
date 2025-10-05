@@ -40,21 +40,21 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 // Role-based authorization
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                                                .requestMatchers("/homeroom/**").hasRole("TEACHER")
+                                                .requestMatchers("/teacher/**").hasRole("TEACHER")
                                                 .requestMatchers("/student/**").hasRole("STUDENT")
                                                 .anyRequest().authenticated())
                                 .requestCache(cache -> cache.disable())
                                 .formLogin(form -> form
-                                                .loginPage("/auth/login")
-                                                .loginProcessingUrl("/auth/perform-login")
+                                                .loginPage("/login")
+                                                .loginProcessingUrl("/perform-login")
                                                 .usernameParameter("username")
                                                 .passwordParameter("password")
                                                 .defaultSuccessUrl("/welcome")
-                                                .failureUrl("/auth/login?error=true")
+                                                .failureUrl("/login?error=true")
                                                 .permitAll())
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/auth/login?logout=true")
+                                                .logoutSuccessUrl("/login?logout=true")
                                                 .permitAll());
                 return http.build();
         }

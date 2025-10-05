@@ -13,15 +13,20 @@ public class AuthController {
         return "redirect:/welcome";
     }
 
-    @GetMapping("/auth/login")
+    @GetMapping("/login")
     public String loginPage() {
-        return "common/login"; // /WEB-INF/views/login.jsp
+        return "common/login"; // /WEB-INF/views/common/login.jsp
+    }
+
+    @GetMapping("/auth/login")
+    public String authLoginPage() {
+        return "redirect:/login";
     }
 
     @GetMapping("/welcome")
     public String welcome(Authentication auth, Model model) {
         if (auth == null)
-            return "redirect:/auth/login";
+            return "redirect:/login";
 
         boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         boolean isTeacher = auth.getAuthorities().stream().anyMatch(a -> "ROLE_TEACHER".equals(a.getAuthority()));
@@ -30,11 +35,11 @@ public class AuthController {
         if (isAdmin)
             return "redirect:/admin";
         if (isTeacher)
-            return "redirect:/homeroom";
+            return "redirect:/teacher";
         if (isStudent)
             return "redirect:/student";
 
         // Fallback: redirect to login if no valid role
-        return "redirect:/auth/login";
+        return "redirect:/login";
     }
 }

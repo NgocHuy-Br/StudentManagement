@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/homeroom")
+@RequestMapping("/teacher")
 public class HomeRoomTeacherController {
 
     private final UserRepository userRepository;
@@ -76,8 +76,11 @@ public class HomeRoomTeacherController {
 
         model.addAttribute("teacher", teacher);
         model.addAttribute("classrooms", currentClassrooms);
+        model.addAttribute("activeTab", "dashboard");
+        model.addAttribute("firstName", teacher.getUser().getFname());
+        model.addAttribute("roleDisplay", "Giáo viên");
 
-        return "homeroom/dashboard";
+        return "teacher/dashboard_clean";
     }
 
     /**
@@ -125,7 +128,7 @@ public class HomeRoomTeacherController {
         model.addAttribute("students", students);
         model.addAttribute("teacher", teacher);
 
-        return "homeroom/students";
+        return "teacher/students";
     }
 
     /**
@@ -191,7 +194,7 @@ public class HomeRoomTeacherController {
         model.addAttribute("selectedSemester", semester);
         model.addAttribute("teacher", teacher);
 
-        return "homeroom/scores";
+        return "teacher/scores";
     }
 
     /**

@@ -130,7 +130,7 @@
                             <div class="alert alert-danger py-2 mb-3">Sai tài khoản hoặc mật khẩu.</div>
                         </c:if>
 
-                        <form method="post" action="<c:url value='/auth/perform-login'/>" autocomplete="on">
+                        <form method="post" action="<c:url value='/perform-login'/>" autocomplete="on">
                             <div class="mb-3">
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-person"></i></span>
