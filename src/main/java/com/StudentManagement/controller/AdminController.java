@@ -1419,6 +1419,58 @@ public class AdminController {
     }
 
     /**
+     * Get available subjects that are not in the specified major
+     */
+    @GetMapping("/majors/{majorId}/available-subjects")
+    @ResponseBody
+    public List<Subject> getAvailableSubjects(@PathVariable Long majorId) {
+        try {
+            // Get all subjects that are not in this major
+            return subjectRepository.findSubjectsNotInMajor(majorId);
+        } catch (Exception e) {
+            logger.error("Error getting available subjects for major {}: {}", majorId, e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Add existing subjects to a major
+     */
+    @PostMapping("/majors/{majorId}/add-subjects")
+    @Transactional
+    public String addSubjectsToMajor(@PathVariable Long majorId,
+            @RequestParam List<Long> subjectIds,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Major major = majorRepository.findById(majorId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy ngành học"));
+
+            List<Subject> subjects = subjectRepository.findAllById(subjectIds);
+            int addedCount = 0;
+
+            for (Subject subject : subjects) {
+                if (subject.getMajors() == null) {
+                    subject.setMajors(new ArrayList<>());
+                }
+                if (!subject.getMajors().contains(major)) {
+                    subject.getMajors().add(major);
+                    subjectRepository.save(subject);
+                    addedCount++;
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Đã thêm " + addedCount + " môn học vào ngành " + major.getMajorName());
+
+        } catch (Exception e) {
+            logger.error("Error adding subjects to major {}: {}", majorId, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi thêm môn học: " + e.getMessage());
+        }
+
+        return "redirect:/admin/majors?selectedMajorId=" + majorId;
+    }
+
+    /**
      * Cập nhật môn học
      */
     @PostMapping("/subjects/{subjectId}")

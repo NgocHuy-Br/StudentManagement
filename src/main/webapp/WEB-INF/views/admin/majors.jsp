@@ -25,6 +25,27 @@
                         .major-row.table-primary {
                             background-color: #cce7ff !important;
                         }
+
+                        /* Sortable table headers */
+                        .sortable {
+                            cursor: pointer;
+                            user-select: none;
+                            position: relative;
+                        }
+
+                        .sortable:hover {
+                            background-color: #e2e6ea !important;
+                        }
+
+                        .sort-icon {
+                            font-size: 11px;
+                            color: #6c757d;
+                            margin-left: 4px;
+                        }
+
+                        .sortable:hover .sort-icon {
+                            color: #495057;
+                        }
                     </style>
                 </head>
 
@@ -95,10 +116,14 @@
                                                     <table class="table table-hover table-sm mb-0">
                                                         <thead class="table-light sticky-top">
                                                             <tr>
-                                                                <th>Mã ngành</th>
-                                                                <th>Tên ngành</th>
-                                                                <th>Khóa học</th>
-                                                                <th>Môn học</th>
+                                                                <th class="sortable" data-sort="majorCode">Mã ngành <i
+                                                                        class="bi bi-arrow-down-up sort-icon"></i></th>
+                                                                <th class="sortable" data-sort="majorName">Tên ngành <i
+                                                                        class="bi bi-arrow-down-up sort-icon"></i></th>
+                                                                <th class="sortable" data-sort="academicYear">Khóa học
+                                                                    <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                                                <th class="sortable" data-sort="subjectCount">Môn học <i
+                                                                        class="bi bi-arrow-down-up sort-icon"></i></th>
                                                                 <th>Thao tác</th>
                                                             </tr>
                                                         </thead>
@@ -171,16 +196,11 @@
                                         <div class="card shadow-sm h-100">
                                             <c:choose>
                                                 <c:when test="${not empty selectedMajor or param.viewAll eq 'true'}">
-                                                    <div
-                                                        class="card-header d-flex justify-content-between align-items-center">
+                                                    <div class="card-header">
                                                         <h6 class="mb-0">
                                                             <i class="bi bi-book me-2"></i>
                                                             <span id="subjectsTitle">Môn học</span>
                                                         </h6>
-                                                        <button type="button" class="btn btn-primary btn-sm"
-                                                            data-bs-toggle="modal" data-bs-target="#addSubjectModal">
-                                                            <i class="bi bi-plus-lg me-1"></i>Thêm môn học
-                                                        </button>
                                                     </div>
                                                     <div class="card-body">
                                                         <!-- Major Selection Dropdown -->
@@ -221,6 +241,30 @@
                                                             </small>
                                                         </div>
 
+                                                        <!-- Action Buttons -->
+                                                        <div class="mb-3 d-flex justify-content-end">
+                                                            <div class="btn-group" role="group">
+                                                                <!-- Always show "Add New Subject" button -->
+                                                                <button type="button" class="btn btn-primary btn-sm"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#addSubjectModal">
+                                                                    <i class="bi bi-plus-lg me-1"></i>Thêm môn học
+                                                                </button>
+
+                                                                <!-- Show "Add Existing Subject" only when specific major is selected -->
+                                                                <c:if
+                                                                    test="${param.viewAll ne 'true' and not empty selectedMajor}">
+                                                                    <button type="button"
+                                                                        class="btn btn-success btn-sm ms-2"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#addExistingSubjectModal">
+                                                                        <i class="bi bi-plus-square me-1"></i>Thêm môn
+                                                                        có sẵn
+                                                                    </button>
+                                                                </c:if>
+                                                            </div>
+                                                        </div>
+
                                                         <!-- Search for Subjects -->
                                                         <div class="mb-3">
                                                             <form method="get" class="d-flex">
@@ -248,16 +292,28 @@
 
                                                         <!-- Subjects Table -->
                                                         <div class="table-responsive"
-                                                            style="max-height: 450px; overflow-y: auto;">
+                                                            style="max-height: 350px; overflow-y: auto;">
                                                             <table class="table table-hover table-sm mb-0">
                                                                 <thead class="table-light sticky-top">
                                                                     <tr>
-                                                                        <th>Mã môn</th>
-                                                                        <th>Tên môn học</th>
+                                                                        <th class="sortable" data-sort="subjectCode">
+                                                                            Mã môn <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
+                                                                        <th class="sortable" data-sort="subjectName">
+                                                                            Tên môn học <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
                                                                         <c:if test="${param.viewAll eq 'true'}">
-                                                                            <th>Các ngành</th>
+                                                                            <th class="sortable" data-sort="majors">
+                                                                                Các ngành <i
+                                                                                    class="bi bi-arrow-down-up sort-icon"></i>
+                                                                            </th>
                                                                         </c:if>
-                                                                        <th>Tín chỉ</th>
+                                                                        <th class="sortable" data-sort="credit">
+                                                                            Tín chỉ <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
                                                                         <th>Thao tác</th>
                                                                     </tr>
                                                                 </thead>
@@ -328,7 +384,8 @@
                                                             </table>
                                                         </div>
 
-                                                        <div class="mt-2 text-center">
+                                                        <!-- Summary Info -->
+                                                        <div class="mt-3 text-center">
                                                             <small class="text-muted">Tổng: ${fn:length(subjects)} môn
                                                                 học</small>
                                                         </div>
@@ -588,6 +645,63 @@
                                     </div>
                                 </div>
 
+                                <!-- Add Existing Subject to Major Modal -->
+                                <div class="modal fade" id="addExistingSubjectModal" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-plus-square me-2"></i>
+                                                    Thêm môn học có sẵn vào ngành: <span
+                                                        class="text-primary">${selectedMajor.majorName}</span>
+                                                </h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tìm kiếm môn học:</label>
+                                                    <input type="text" class="form-control" id="searchExistingSubject"
+                                                        placeholder="Nhập mã môn hoặc tên môn học...">
+                                                </div>
+
+                                                <div class="table-responsive"
+                                                    style="max-height: 400px; overflow-y: auto;">
+                                                    <table class="table table-hover table-sm">
+                                                        <thead class="table-light sticky-top">
+                                                            <tr>
+                                                                <th width="60px">Chọn</th>
+                                                                <th>Mã môn</th>
+                                                                <th>Tên môn học</th>
+                                                                <th>Tín chỉ</th>
+                                                                <th>Trạng thái</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="existingSubjectsTable">
+                                                            <!-- Will be populated by JavaScript -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <div class="mt-3">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-info-circle me-1"></i>
+                                                        Chỉ hiển thị các môn học chưa có trong ngành này
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Đóng</button>
+                                                <button type="button" class="btn btn-success" id="addSelectedSubjects"
+                                                    disabled>
+                                                    <i class="bi bi-check-lg me-1"></i>Thêm môn học đã chọn
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <script
                                     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                                 <script>
@@ -803,6 +917,192 @@
                                                 }
                                             });
                                         }
+
+                                        // Handle Add Existing Subject Modal
+                                        const addExistingModal = document.getElementById('addExistingSubjectModal');
+                                        if (addExistingModal) {
+                                            addExistingModal.addEventListener('show.bs.modal', function () {
+                                                loadAvailableSubjects();
+                                            });
+                                        }
+
+                                        // Load available subjects for current major
+                                        function loadAvailableSubjects() {
+                                            const selectedMajorId = new URLSearchParams(window.location.search).get('selectedMajorId');
+                                            if (!selectedMajorId) return;
+
+                                            fetch(window.location.origin + '/admin/majors/' + selectedMajorId + '/available-subjects')
+                                                .then(response => response.json())
+                                                .then(subjects => {
+                                                    renderAvailableSubjects(subjects);
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error loading available subjects:', error);
+                                                    document.getElementById('existingSubjectsTable').innerHTML =
+                                                        '<tr><td colspan="5" class="text-center text-muted">Lỗi khi tải dữ liệu</td></tr>';
+                                                });
+                                        }
+
+                                        // Render available subjects table
+                                        function renderAvailableSubjects(subjects) {
+                                            const tbody = document.getElementById('existingSubjectsTable');
+
+                                            if (subjects.length === 0) {
+                                                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Không có môn học nào khả dụng</td></tr>';
+                                                return;
+                                            }
+
+                                            tbody.innerHTML = subjects.map(subject => {
+                                                const statusBadge = subject.majors && subject.majors.length > 0
+                                                    ? '<span class="badge bg-info">' + subject.majors.map(m => m.majorCode).join(', ') + '</span>'
+                                                    : '<span class="badge bg-secondary">Chưa gán ngành</span>';
+
+                                                return '<tr>' +
+                                                    '<td class="text-center">' +
+                                                    '<input type="checkbox" class="form-check-input subject-checkbox" ' +
+                                                    'value="' + subject.id + '" data-code="' + subject.subjectCode + '">' +
+                                                    '</td>' +
+                                                    '<td class="fw-semibold text-success">' + subject.subjectCode + '</td>' +
+                                                    '<td>' + subject.subjectName + '</td>' +
+                                                    '<td class="text-center"><span class="badge bg-secondary">' + subject.credit + '</span></td>' +
+                                                    '<td>' + statusBadge + '</td>' +
+                                                    '</tr>';
+                                            }).join('');
+
+                                            // Add event listeners to checkboxes
+                                            document.querySelectorAll('.subject-checkbox').forEach(checkbox => {
+                                                checkbox.addEventListener('change', updateAddButton);
+                                            });
+                                        }
+
+                                        // Update add button state
+                                        function updateAddButton() {
+                                            const selectedCheckboxes = document.querySelectorAll('.subject-checkbox:checked');
+                                            const addButton = document.getElementById('addSelectedSubjects');
+
+                                            addButton.disabled = selectedCheckboxes.length === 0;
+                                            addButton.innerHTML = selectedCheckboxes.length > 0
+                                                ? '<i class="bi bi-check-lg me-1"></i>Thêm ' + selectedCheckboxes.length + ' môn học'
+                                                : '<i class="bi bi-check-lg me-1"></i>Thêm môn học đã chọn';
+                                        }
+
+                                        // Handle adding selected subjects
+                                        document.getElementById('addSelectedSubjects')?.addEventListener('click', function () {
+                                            const selectedIds = Array.from(document.querySelectorAll('.subject-checkbox:checked'))
+                                                .map(cb => cb.value);
+
+                                            if (selectedIds.length === 0) return;
+
+                                            const selectedMajorId = new URLSearchParams(window.location.search).get('selectedMajorId');
+
+                                            // Send POST request to add subjects to major
+                                            const form = document.createElement('form');
+                                            form.method = 'POST';
+                                            form.action = window.location.origin + '/admin/majors/' + selectedMajorId + '/add-subjects';
+
+                                            selectedIds.forEach(id => {
+                                                const input = document.createElement('input');
+                                                input.type = 'hidden';
+                                                input.name = 'subjectIds';
+                                                input.value = id;
+                                                form.appendChild(input);
+                                            });
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        });
+
+                                        // Search functionality for existing subjects
+                                        document.getElementById('searchExistingSubject')?.addEventListener('input', function () {
+                                            const searchTerm = this.value.toLowerCase();
+                                            const rows = document.querySelectorAll('#existingSubjectsTable tr');
+
+                                            rows.forEach(row => {
+                                                const text = row.textContent.toLowerCase();
+                                                row.style.display = text.includes(searchTerm) ? '' : 'none';
+                                            });
+                                        });
+
+                                        // Table sorting functionality
+                                        const sortableHeaders = document.querySelectorAll('.sortable');
+                                        let currentSort = { column: null, direction: 'asc' };
+
+                                        sortableHeaders.forEach(header => {
+                                            header.addEventListener('click', function () {
+                                                const sortField = this.dataset.sort;
+                                                const table = this.closest('table');
+                                                const tbody = table.querySelector('tbody');
+                                                const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                                                // Skip if no data rows
+                                                if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length === 1)) {
+                                                    return;
+                                                }
+
+                                                // Determine sort direction
+                                                if (currentSort.column === sortField) {
+                                                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                                                } else {
+                                                    currentSort.direction = 'asc';
+                                                }
+                                                currentSort.column = sortField;
+
+                                                // Update header styles (no icon changes)
+                                                const tableHeaders = table.querySelectorAll('.sortable');
+                                                tableHeaders.forEach(h => {
+                                                    h.classList.remove('asc', 'desc');
+                                                });
+                                                this.classList.add(currentSort.direction);
+
+                                                // Sort rows
+                                                rows.sort((a, b) => {
+                                                    let aValue, bValue;
+
+                                                    // For subjects table
+                                                    if (sortField === 'subjectCode') {
+                                                        aValue = a.cells[0].textContent.trim();
+                                                        bValue = b.cells[0].textContent.trim();
+                                                    } else if (sortField === 'subjectName') {
+                                                        aValue = a.cells[1].textContent.trim();
+                                                        bValue = b.cells[1].textContent.trim();
+                                                    } else if (sortField === 'credit') {
+                                                        // Handle both regular and "all majors" view
+                                                        const creditColIndex = document.querySelector('[data-sort="credit"]').cellIndex;
+                                                        aValue = parseInt(a.cells[creditColIndex].textContent.trim()) || 0;
+                                                        bValue = parseInt(b.cells[creditColIndex].textContent.trim()) || 0;
+                                                    }
+                                                    // For majors table
+                                                    else if (sortField === 'majorCode') {
+                                                        aValue = a.cells[0].textContent.trim();
+                                                        bValue = b.cells[0].textContent.trim();
+                                                    } else if (sortField === 'majorName') {
+                                                        aValue = a.cells[1].textContent.trim();
+                                                        bValue = b.cells[1].textContent.trim();
+                                                    } else if (sortField === 'academicYear') {
+                                                        aValue = a.cells[2].textContent.trim();
+                                                        bValue = b.cells[2].textContent.trim();
+                                                    } else if (sortField === 'subjectCount') {
+                                                        aValue = parseInt(a.cells[3].textContent.trim()) || 0;
+                                                        bValue = parseInt(b.cells[3].textContent.trim()) || 0;
+                                                    }
+
+                                                    // Sort numeric fields
+                                                    if (sortField === 'credit' || sortField === 'subjectCount') {
+                                                        return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
+                                                    } else {
+                                                        // Sort text fields
+                                                        if (currentSort.direction === 'asc') {
+                                                            return aValue.localeCompare(bValue, 'vi', { numeric: true });
+                                                        } else {
+                                                            return bValue.localeCompare(aValue, 'vi', { numeric: true });
+                                                        }
+                                                    }
+                                                });
+
+                                                // Re-append sorted rows
+                                                rows.forEach(row => tbody.appendChild(row));
+                                            });
+                                        });
                                     });
                                 </script>
                 </body>
