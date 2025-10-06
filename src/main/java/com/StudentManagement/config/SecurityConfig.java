@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 import com.StudentManagement.service.CustomUserDetailsService;
 
-@Configuration
+@Configuration //thử với Huy//
 @EnableWebSecurity
 public class SecurityConfig {
 
