@@ -2,6 +2,7 @@ package com.StudentManagement.repository;
 
 import com.StudentManagement.entity.Classroom;
 import com.StudentManagement.entity.Major;
+import com.StudentManagement.entity.Teacher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -75,4 +76,8 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Long> {
       """)
   Page<Classroom> searchByClassCodeAndMajor(@Param("search") String search, @Param("majorId") Long majorId,
       Pageable pageable);
+
+  // Find classrooms by homeroom teacher
+  @EntityGraph(attributePaths = { "major", "homeRoomTeacher", "homeRoomTeacher.user", "students" })
+  List<Classroom> findByHomeRoomTeacher(Teacher teacher);
 }

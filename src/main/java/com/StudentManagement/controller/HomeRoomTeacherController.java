@@ -2,8 +2,6 @@ package com.StudentManagement.controller;
 
 import com.StudentManagement.entity.*;
 import com.StudentManagement.repository.*;
-import com.StudentManagement.entity.ClassroomTeacher;
-import com.StudentManagement.service.ClassroomTeacherService;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -12,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/teacher")
@@ -21,7 +19,6 @@ public class HomeRoomTeacherController {
     private final UserRepository userRepository;
     private final TeacherRepository teacherRepository;
     private final ClassroomRepository classroomRepository;
-    private final ClassroomTeacherService classroomTeacherService;
     private final StudentRepository studentRepository;
     private final ScoreRepository scoreRepository;
     private final SubjectRepository subjectRepository;
@@ -30,14 +27,12 @@ public class HomeRoomTeacherController {
             UserRepository userRepository,
             TeacherRepository teacherRepository,
             ClassroomRepository classroomRepository,
-            ClassroomTeacherService classroomTeacherService,
             StudentRepository studentRepository,
             ScoreRepository scoreRepository,
             SubjectRepository subjectRepository) {
         this.userRepository = userRepository;
         this.teacherRepository = teacherRepository;
         this.classroomRepository = classroomRepository;
-        this.classroomTeacherService = classroomTeacherService;
         this.studentRepository = studentRepository;
         this.scoreRepository = scoreRepository;
         this.subjectRepository = subjectRepository;
@@ -67,12 +62,8 @@ public class HomeRoomTeacherController {
             return "redirect:/auth/login";
         }
 
-        // Lấy các lớp mà giáo viên đang chủ nhiệm
-        List<ClassroomTeacher> currentAssignments = classroomTeacherService
-                .getCurrentClassroomsByTeacher(teacher.getId());
-        List<Classroom> currentClassrooms = currentAssignments.stream()
-                .map(ClassroomTeacher::getClassroom)
-                .collect(Collectors.toList());
+        // Lấy các lớp mà giáo viên đang chủ nhiệm (dùng direct reference)
+        List<Classroom> currentClassrooms = classroomRepository.findByHomeRoomTeacher(teacher);
 
         model.addAttribute("teacher", teacher);
         model.addAttribute("classrooms", currentClassrooms);
@@ -81,6 +72,50 @@ public class HomeRoomTeacherController {
         model.addAttribute("roleDisplay", "Giáo viên");
 
         return "teacher/dashboard_clean";
+    }
+
+    /**
+     * Hiển thị tất cả lớp sinh viên mà giáo viên làm chủ nhiệm
+     */
+    @GetMapping("/classes")
+    public String viewAllClasses(Authentication auth, Model model) {
+        Teacher teacher = getCurrentTeacher(auth);
+        if (teacher == null) {
+            return "redirect:/auth/login";
+        }
+
+        System.out.println("=== DEBUG INFO ===");
+        System.out.println("Teacher ID: " + teacher.getId());
+        System.out.println("Teacher Code: " + teacher.getTeacherCode());
+        System.out.println("Username: " + auth.getName());
+
+        // Lấy các lớp mà giáo viên đang chủ nhiệm (dùng direct reference thay vì
+        // ClassroomTeacher table)
+        List<Classroom> currentClassrooms = classroomRepository.findByHomeRoomTeacher(teacher);
+
+        System.out.println("Current classrooms count: " + currentClassrooms.size());
+        for (Classroom classroom : currentClassrooms) {
+            System.out.println("Classroom: " + classroom.getClassCode() +
+                    " - Teacher ID: "
+                    + (classroom.getHomeRoomTeacher() != null ? classroom.getHomeRoomTeacher().getId() : "null"));
+        }
+
+        // Lấy tất cả sinh viên của các lớp này
+        List<Student> allStudents = new ArrayList<>();
+        for (Classroom classroom : currentClassrooms) {
+            List<Student> studentsInClass = studentRepository.findByClassroomId(classroom.getId());
+            allStudents.addAll(studentsInClass);
+            System.out.println("Class " + classroom.getClassCode() + " has " + studentsInClass.size() + " students");
+        }
+
+        model.addAttribute("teacher", teacher);
+        model.addAttribute("classrooms", currentClassrooms);
+        model.addAttribute("allStudents", allStudents);
+        model.addAttribute("activeTab", "classes");
+        model.addAttribute("firstName", teacher.getUser().getFname());
+        model.addAttribute("roleDisplay", "Giáo viên");
+
+        return "teacher/classes";
     }
 
     /**
@@ -107,8 +142,8 @@ public class HomeRoomTeacherController {
         }
 
         // Kiểm tra xem giáo viên có phải chủ nhiệm lớp này không
-        boolean isHomeRoomTeacher = classroomTeacherService.getCurrentClassroomsByTeacher(teacher.getId())
-                .stream().anyMatch(ct -> ct.getClassroom().getId().equals(classroomId));
+        boolean isHomeRoomTeacher = classroomRepository.findByHomeRoomTeacher(teacher)
+                .stream().anyMatch(c -> c.getId().equals(classroomId));
         if (!isHomeRoomTeacher) {
             return "redirect:/homeroom";
         }
@@ -155,8 +190,8 @@ public class HomeRoomTeacherController {
         }
 
         // Kiểm tra xem giáo viên có phải chủ nhiệm lớp này không
-        boolean isHomeRoomTeacher = classroomTeacherService.getCurrentClassroomsByTeacher(teacher.getId())
-                .stream().anyMatch(ct -> ct.getClassroom().getId().equals(classroomId));
+        boolean isHomeRoomTeacher = classroomRepository.findByHomeRoomTeacher(teacher)
+                .stream().anyMatch(c -> c.getId().equals(classroomId));
         if (!isHomeRoomTeacher) {
             return "redirect:/homeroom";
         }
@@ -223,8 +258,8 @@ public class HomeRoomTeacherController {
         // Kiểm tra quyền chỉnh sửa - giáo viên phải là chủ nhiệm của lớp có học sinh
         // này
         Student student = score.getStudent();
-        boolean isHomeRoomTeacher = classroomTeacherService.getCurrentClassroomsByTeacher(teacher.getId())
-                .stream().anyMatch(ct -> ct.getClassroom().getId().equals(student.getClassroom().getId()));
+        boolean isHomeRoomTeacher = classroomRepository.findByHomeRoomTeacher(teacher)
+                .stream().anyMatch(c -> c.getId().equals(student.getClassroom().getId()));
         if (!isHomeRoomTeacher) {
             ra.addFlashAttribute("error", "Bạn không có quyền sửa điểm của học sinh này.");
             return "redirect:/homeroom";
@@ -241,5 +276,36 @@ public class HomeRoomTeacherController {
 
         ra.addFlashAttribute("success", "Cập nhật điểm thành công.");
         return "redirect:/homeroom/classroom/" + student.getClassroom().getId() + "/scores";
+    }
+
+    /**
+     * Xem chi tiết sinh viên (MVC approach)
+     */
+    @GetMapping("/student/{studentId}/detail")
+    public String viewStudentDetail(@PathVariable Long studentId, Authentication auth, Model model) {
+        Teacher teacher = getCurrentTeacher(auth);
+        if (teacher == null) {
+            return "redirect:/login";
+        }
+
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            return "redirect:/teacher/classes";
+        }
+
+        // Kiểm tra quyền truy cập
+        boolean isHomeRoomTeacher = classroomRepository.findByHomeRoomTeacher(teacher)
+                .stream().anyMatch(c -> c.getId().equals(student.getClassroom().getId()));
+
+        if (!isHomeRoomTeacher) {
+            return "redirect:/teacher/classes";
+        }
+
+        model.addAttribute("student", student);
+        model.addAttribute("teacher", teacher);
+        model.addAttribute("activeTab", "classes");
+        addUserInfo(auth, model);
+
+        return "teacher/student-detail";
     }
 }

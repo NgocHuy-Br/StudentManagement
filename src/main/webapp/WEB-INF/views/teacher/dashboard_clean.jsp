@@ -150,9 +150,9 @@
                                                     <c:forEach items="${classrooms}" var="classroom">
                                                         <div class="classroom-item">
                                                             <div>
-                                                                <div class="classroom-name">${classroom.className}</div>
+                                                                <div class="classroom-name">${classroom.classCode}</div>
                                                                 <small class="text-muted">Lớp
-                                                                    ${classroom.className}</small>
+                                                                    ${classroom.classCode}</small>
                                                             </div>
                                                             <span
                                                                 class="classroom-count">${classroom.currentSize}/${classroom.maxSize}</span>

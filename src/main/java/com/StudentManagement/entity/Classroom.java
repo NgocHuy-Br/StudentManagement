@@ -119,6 +119,16 @@ public class Classroom {
         return students != null ? students.size() : 0;
     }
 
+    // Helper method to get current size (number of students)
+    public int getCurrentSize() {
+        return students != null ? students.size() : 0;
+    }
+
+    // Helper method to get max size (default 40 students per class)
+    public int getMaxSize() {
+        return 40; // Default max students per class
+    }
+
     // Helper method to get current homeroom teacher from history
     public ClassroomTeacher getCurrentHomeRoomTeacherRecord() {
         if (classroomTeachers == null)

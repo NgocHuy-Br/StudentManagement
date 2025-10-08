@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface StudentRepository extends JpaRepository<Student, Long> {
@@ -48,6 +49,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
   // Lấy sinh viên theo lớp học
   @EntityGraph(attributePaths = { "user", "major", "classroom" })
   Page<Student> findByClassroomId(Long classroomId, Pageable pageable);
+
+  // Lấy tất cả sinh viên theo lớp học (không phân trang)
+  @EntityGraph(attributePaths = { "user", "major", "classroom" })
+  List<Student> findByClassroomId(Long classroomId);
 
   // Tìm kiếm sinh viên trong lớp cụ thể
   @EntityGraph(attributePaths = { "user", "major", "classroom" })
