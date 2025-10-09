@@ -309,4 +309,156 @@ public class HomeRoomTeacherController {
 
         return "teacher/student-detail";
     }
+
+    /**
+     * Tab Điểm sinh viên - Quản lý điểm
+     */
+    @GetMapping("/scores")
+    public String manageScores(Authentication auth, Model model,
+            @RequestParam(required = false) Long classroomId,
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) String semester) {
+
+        Teacher teacher = getCurrentTeacher(auth);
+        if (teacher == null) {
+            return "redirect:/auth/login";
+        }
+
+        // Lấy các lớp mà giáo viên chủ nhiệm
+        List<Classroom> assignedClasses = classroomRepository.findByHomeRoomTeacher(teacher);
+
+        // Lấy tất cả môn học
+        List<Subject> subjects = subjectRepository.findAll();
+
+        // Nếu có chọn lớp cụ thể
+        List<Student> students = new ArrayList<>();
+        List<Score> scores = new ArrayList<>();
+
+        if (classroomId != null) {
+            // Kiểm tra quyền truy cập lớp
+            boolean hasAccess = assignedClasses.stream()
+                    .anyMatch(c -> c.getId().equals(classroomId));
+
+            if (hasAccess) {
+                students = studentRepository.findByClassroomId(classroomId);
+
+                if (subjectId != null && !semester.isEmpty()) {
+                    // Lọc điểm theo môn và học kỳ
+                    scores = scoreRepository.findByStudentClassroomIdAndSubjectIdAndSemester(
+                            classroomId, subjectId, semester);
+                }
+            }
+        }
+
+        model.addAttribute("teacher", teacher);
+        model.addAttribute("assignedClasses", assignedClasses);
+        model.addAttribute("subjects", subjects);
+        model.addAttribute("students", students);
+        model.addAttribute("scores", scores);
+        model.addAttribute("selectedClassroomId", classroomId);
+        model.addAttribute("selectedSubjectId", subjectId);
+        model.addAttribute("selectedSemester", semester);
+        model.addAttribute("activeTab", "scores");
+        model.addAttribute("firstName", teacher.getUser().getFname());
+        model.addAttribute("roleDisplay", "Giáo viên");
+
+        return "teacher/scores";
+    }
+
+    /**
+     * Cập nhật điểm sinh viên
+     */
+    @PostMapping("/scores/update")
+    public String updateScore(@RequestParam Long studentId,
+            @RequestParam Long subjectId,
+            @RequestParam String semester,
+            @RequestParam(required = false) Double midtermScore,
+            @RequestParam(required = false) Double finalScore,
+            @RequestParam(required = false) String notes,
+            Authentication auth,
+            RedirectAttributes ra) {
+
+        Teacher teacher = getCurrentTeacher(auth);
+        if (teacher == null) {
+            return "redirect:/auth/login";
+        }
+
+        Student student = studentRepository.findById(studentId).orElse(null);
+        Subject subject = subjectRepository.findById(subjectId).orElse(null);
+
+        if (student == null || subject == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy sinh viên hoặc môn học.");
+            return "redirect:/teacher/scores";
+        }
+
+        // Kiểm tra quyền truy cập
+        boolean hasAccess = classroomRepository.findByHomeRoomTeacher(teacher)
+                .stream().anyMatch(c -> c.getId().equals(student.getClassroom().getId()));
+
+        if (!hasAccess) {
+            ra.addFlashAttribute("error", "Bạn không có quyền cập nhật điểm cho sinh viên này.");
+            return "redirect:/teacher/scores";
+        }
+
+        // Tìm hoặc tạo điểm
+        Score score = scoreRepository.findByStudentAndSubjectAndSemester(student, subject, semester)
+                .orElse(new Score());
+
+        if (score.getId() == null) {
+            score.setStudent(student);
+            score.setSubject(subject);
+            score.setSemester(semester);
+        }
+
+        // Cập nhật điểm
+        score.setMidtermScore(midtermScore);
+        score.setFinalScore(finalScore);
+        score.setNotes(notes);
+
+        // Tính điểm trung bình (40% giữa kỳ + 60% cuối kỳ)
+        if (midtermScore != null && finalScore != null) {
+            double avgScore = midtermScore * 0.4 + finalScore * 0.6;
+            score.setAvgScore(avgScore);
+        }
+
+        scoreRepository.save(score);
+
+        ra.addFlashAttribute("success", "Cập nhật điểm thành công.");
+        return "redirect:/teacher/scores?classroomId=" + student.getClassroom().getId()
+                + "&subjectId=" + subjectId + "&semester=" + semester;
+    }
+
+    /**
+     * Xóa điểm sinh viên
+     */
+    @PostMapping("/scores/delete")
+    public String deleteScore(@RequestParam Long scoreId,
+            Authentication auth,
+            RedirectAttributes ra) {
+
+        Teacher teacher = getCurrentTeacher(auth);
+        if (teacher == null) {
+            return "redirect:/auth/login";
+        }
+
+        Score score = scoreRepository.findById(scoreId).orElse(null);
+        if (score == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy điểm để xóa.");
+            return "redirect:/teacher/scores";
+        }
+
+        // Kiểm tra quyền truy cập
+        boolean hasAccess = classroomRepository.findByHomeRoomTeacher(teacher)
+                .stream().anyMatch(c -> c.getId().equals(score.getStudent().getClassroom().getId()));
+
+        if (!hasAccess) {
+            ra.addFlashAttribute("error", "Bạn không có quyền xóa điểm này.");
+            return "redirect:/teacher/scores";
+        }
+
+        scoreRepository.delete(score);
+        ra.addFlashAttribute("success", "Xóa điểm thành công.");
+
+        return "redirect:/teacher/scores";
+    }
 }

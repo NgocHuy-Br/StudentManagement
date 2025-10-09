@@ -73,4 +73,10 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
   @Query("select sc from Score sc join sc.student st where st.classroom.id = :classroomId and sc.semester = :semester")
   Page<Score> findByClassroomIdAndSemester(@Param("classroomId") Long classroomId, @Param("semester") String semester,
       Pageable pageable);
+
+  // Lấy điểm theo lớp, môn học và học kỳ
+  @EntityGraph(attributePaths = { "student", "student.user", "subject" })
+  @Query("select sc from Score sc join sc.student st where st.classroom.id = :classroomId and sc.subject.id = :subjectId and sc.semester = :semester")
+  List<Score> findByStudentClassroomIdAndSubjectIdAndSemester(@Param("classroomId") Long classroomId,
+      @Param("subjectId") Long subjectId, @Param("semester") String semester);
 }

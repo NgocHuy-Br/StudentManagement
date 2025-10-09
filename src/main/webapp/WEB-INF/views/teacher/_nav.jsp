@@ -70,7 +70,7 @@
                 <li class="nav-item">
                     <a class="nav-link ${activeTab == 'scores' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/teacher/scores">
-                        <i class="bi bi-journal-text me-1"></i> Nhập điểm
+                        <i class="bi bi-journal-text me-1"></i> Điểm sinh viên
                     </a>
                 </li>
                 <li class="nav-item">
