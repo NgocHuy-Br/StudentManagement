@@ -204,12 +204,6 @@
                                                                                 <i class="bi bi-building me-1"></i>
                                                                                 ${subject.major.majorCode}
                                                                             </small>
-                                                                            <c:if test="${hasScore}">
-                                                                                <small class="text-muted">
-                                                                                    <i class="bi bi-calendar3 me-1"></i>
-                                                                                    HK ${latestScore.semester}
-                                                                                </small>
-                                                                            </c:if>
                                                                         </div>
                                                                     </div>
                                                                 </div>

@@ -150,18 +150,6 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label for="semester" class="form-label">Học kỳ</label>
-                                            <select class="form-select" id="semester" name="semester">
-                                                <option value="">-- Tất cả học kỳ --</option>
-                                                <option value="1" ${selectedSemester=='1' ? 'selected' : '' }>Học kỳ 1
-                                                </option>
-                                                <option value="2" ${selectedSemester=='2' ? 'selected' : '' }>Học kỳ 2
-                                                </option>
-                                                <option value="3" ${selectedSemester=='3' ? 'selected' : '' }>Học kỳ 3
-                                                </option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
                                             <button type="submit" class="btn btn-light">
                                                 <i class="fas fa-search me-1"></i>
                                                 Lọc
@@ -185,7 +173,7 @@
                                         <h5 class="card-title mb-0">
                                             <i class="fas fa-table me-2"></i>
                                             Bảng điểm
-                                            <c:if test="${not empty selectedSubjectId or not empty selectedSemester}">
+                                            <c:if test="${not empty selectedSubjectId}">
                                                 <small class="text-muted">
                                                     (Đã lọc)
                                                 </small>
@@ -205,10 +193,10 @@
                                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">Không có dữ liệu điểm</h5>
                                         <p class="text-muted">
-                                            <c:if test="${not empty selectedSubjectId or not empty selectedSemester}">
+                                            <c:if test="${not empty selectedSubjectId}">
                                                 Thử thay đổi bộ lọc để xem kết quả khác.
                                             </c:if>
-                                            <c:if test="${empty selectedSubjectId and empty selectedSemester}">
+                                            <c:if test="${empty selectedSubjectId}">
                                                 Chưa có điểm nào được nhập cho lớp này.
                                             </c:if>
                                         </p>
@@ -259,8 +247,6 @@
                                                         </td>
                                                         <td>
                                                             <span class="badge bg-secondary">
-                                                                HK ${score.semester}
-                                                            </span>
                                                         </td>
                                                         <td>
                                                             <c:choose>
@@ -334,7 +320,7 @@
                                                     <c:if test="${scores.hasPrevious()}">
                                                         <li class="page-item">
                                                             <a class="page-link"
-                                                                href="?page=${scores.number - 1}&size=${scores.size}&subjectId=${selectedSubjectId}&semester=${selectedSemester}">
+                                                                href="?page=${scores.number - 1}&size=${scores.size}&subjectId=${selectedSubjectId}">
                                                                 <i class="fas fa-chevron-left"></i> Trước
                                                             </a>
                                                         </li>
@@ -348,7 +334,7 @@
                                                     <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                                         <li class="page-item ${i == scores.number ? 'active' : ''}">
                                                             <a class="page-link"
-                                                                href="?page=${i}&size=${scores.size}&subjectId=${selectedSubjectId}&semester=${selectedSemester}">
+                                                                href="?page=${i}&size=${scores.size}&subjectId=${selectedSubjectId}">
                                                                 ${i + 1}
                                                             </a>
                                                         </li>
@@ -357,7 +343,7 @@
                                                     <c:if test="${scores.hasNext()}">
                                                         <li class="page-item">
                                                             <a class="page-link"
-                                                                href="?page=${scores.number + 1}&size=${scores.size}&subjectId=${selectedSubjectId}&semester=${selectedSemester}">
+                                                                href="?page=${scores.number + 1}&size=${scores.size}&subjectId=${selectedSubjectId}">
                                                                 Sau <i class="fas fa-chevron-right"></i>
                                                             </a>
                                                         </li>

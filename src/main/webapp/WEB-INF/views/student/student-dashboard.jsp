@@ -43,10 +43,6 @@
                         background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
                     }
 
-                    .semester-card {
-                        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-                    }
-
                     .stats-card .card-body {
                         position: relative;
                         overflow: hidden;
@@ -156,19 +152,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 col-lg-3 mb-3">
-                                    <div class="card stats-card semester-card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="text-white-50 mb-1">Học kỳ</h6>
-                                                    <h5 class="mb-0">2024-2</h5>
-                                                </div>
-                                                <i class="bi bi-calendar-week fs-1 text-white-50"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <!-- Recent Scores -->
@@ -191,7 +174,6 @@
                                                         <thead>
                                                             <tr>
                                                                 <th>Môn học</th>
-                                                                <th>Học kỳ</th>
                                                                 <th>Điểm</th>
                                                                 <th>Ghi chú</th>
                                                             </tr>
@@ -203,9 +185,6 @@
                                                                         <strong>${score.subject.subjectCode}</strong>
                                                                         <br><small
                                                                             class="text-muted">${score.subject.subjectName}</small>
-                                                                    </td>
-                                                                    <td><span
-                                                                            class="badge bg-secondary">${score.semester}</span>
                                                                     </td>
                                                                     <td>
                                                                         <c:choose>
@@ -268,10 +247,6 @@
                                                     class="btn btn-outline-success">
                                                     <i class="bi bi-bar-chart me-2"></i>Kết quả học tập
                                                 </a>
-                                                <a href="${pageContext.request.contextPath}/student/scores/semester/2024-2"
-                                                    class="btn btn-outline-info">
-                                                    <i class="bi bi-calendar-week me-2"></i>Điểm học kỳ hiện tại
-                                                </a>
                                             </div>
 
                                             <hr class="my-3">
@@ -281,7 +256,6 @@
                                                 <li class="mb-2"><i class="bi bi-dot"></i>Xem điểm các môn học trong
                                                     ngành</li>
                                                 <li class="mb-2"><i class="bi bi-dot"></i>Theo dõi GPA tích lũy</li>
-                                                <li class="mb-2"><i class="bi bi-dot"></i>Xem kết quả từng học kỳ</li>
                                             </ul>
                                         </div>
                                     </div>

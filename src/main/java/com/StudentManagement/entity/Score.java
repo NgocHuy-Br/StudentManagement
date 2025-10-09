@@ -4,7 +4,7 @@ package com.StudentManagement.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "scores", uniqueConstraints = @UniqueConstraint(columnNames = { "student_id", "subject_id", "semester" }))
+@Table(name = "scores", uniqueConstraints = @UniqueConstraint(columnNames = { "student_id", "subject_id" }))
 public class Score {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,9 +30,6 @@ public class Score {
     @Column(name = "avg_score")
     private Float avgScore; // Điểm trung bình môn (tự động tính hoặc lưu sẵn)
 
-    @Column(length = 20, nullable = false)
-    private String semester; // Học kỳ: 2024-1, 2024-2, etc.
-
     @Column(length = 500)
     private String notes; // Ghi chú (nếu cần)
 
@@ -40,14 +37,12 @@ public class Score {
     public Score() {
     }
 
-    public Score(Student student, Subject subject, Float attendanceScore, Float midtermScore, Float finalScore,
-            String semester) {
+    public Score(Student student, Subject subject, Float attendanceScore, Float midtermScore, Float finalScore) {
         this.student = student;
         this.subject = subject;
         this.attendanceScore = attendanceScore;
         this.midtermScore = midtermScore;
         this.finalScore = finalScore;
-        this.semester = semester;
         this.avgScore = calculateAvgScore(); // Tự động tính điểm TB
     }
 
@@ -109,14 +104,6 @@ public class Score {
 
     public void setAvgScore(Float avgScore) {
         this.avgScore = avgScore;
-    }
-
-    public String getSemester() {
-        return semester;
-    }
-
-    public void setSemester(String semester) {
-        this.semester = semester;
     }
 
     public String getNotes() {

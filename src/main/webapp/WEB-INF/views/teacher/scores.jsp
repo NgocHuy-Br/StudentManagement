@@ -55,15 +55,6 @@
                             font-size: 12px;
                         }
 
-                        .semester-badge {
-                            background: var(--primary-light);
-                            color: var(--primary-color);
-                            padding: 0.25rem 0.75rem;
-                            border-radius: 20px;
-                            font-size: 0.875rem;
-                            font-weight: 600;
-                        }
-
                         .avg-score {
                             font-weight: 700;
                             font-size: 1.1rem;
@@ -166,25 +157,7 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-md-3">
-                                            <label for="semesterSelect" class="form-label fw-semibold">
-                                                <i class="bi bi-calendar3"></i> Học kỳ
-                                            </label>
-                                            <select class="form-select" id="semesterSelect" name="semester"
-                                                onchange="this.form.submit()">
-                                                <option value="">-- Chọn học kỳ --</option>
-                                                <option value="2024-2025-1" ${selectedSemester=='2024-2025-1'
-                                                    ? 'selected' : '' }>Học kỳ 1 (2024-2025)</option>
-                                                <option value="2024-2025-2" ${selectedSemester=='2024-2025-2'
-                                                    ? 'selected' : '' }>Học kỳ 2 (2024-2025)</option>
-                                                <option value="2025-2026-1" ${selectedSemester=='2025-2026-1'
-                                                    ? 'selected' : '' }>Học kỳ 1 (2025-2026)</option>
-                                                <option value="2025-2026-2" ${selectedSemester=='2025-2026-2'
-                                                    ? 'selected' : '' }>Học kỳ 2 (2025-2026)</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label fw-semibold text-transparent">.</label>
                                             <div>
                                                 <button type="submit" class="btn btn-primary">
@@ -200,7 +173,7 @@
                                 </div>
 
                                 <c:if
-                                    test="${not empty students and not empty selectedClassroomId and not empty selectedSubjectId and not empty selectedSemester}">
+                                    test="${not empty students and not empty selectedClassroomId and not empty selectedSubjectId}">
                                     <!-- Quick Stats -->
                                     <div class="quick-stats">
                                         <div class="row">
@@ -256,12 +229,13 @@
                                                     <thead class="bg-light">
                                                         <tr>
                                                             <th style="width: 50px;">TT</th>
+                                                            <th style="width: 100px;">MSSV</th>
                                                             <th>Sinh viên</th>
                                                             <th style="width: 100px;">Điểm chuyên cần</th>
                                                             <th style="width: 100px;">Điểm giữa kỳ</th>
                                                             <th style="width: 100px;">Điểm cuối kỳ</th>
                                                             <th style="width: 100px;">Điểm TB</th>
-                                                            <th style="width: 120px;">Xếp loại</th>
+                                                            <th style="width: 120px;">Kết quả</th>
                                                             <th>Ghi chú</th>
                                                             <th style="width: 120px;">Thao tác</th>
                                                         </tr>
@@ -278,6 +252,10 @@
                                                             <tr>
                                                                 <td>${status.index + 1}</td>
                                                                 <td>
+                                                                    <span
+                                                                        class="fw-semibold text-primary">${student.user.username}</span>
+                                                                </td>
+                                                                <td>
                                                                     <div class="d-flex align-items-center">
                                                                         <div class="student-avatar me-2">
                                                                             ${fn:substring(student.user.fname, 0,
@@ -288,7 +266,7 @@
                                                                                 ${student.user.fname}
                                                                                 ${student.user.lname}</div>
                                                                             <small
-                                                                                class="text-muted">${student.user.username}</small>
+                                                                                class="text-muted">${student.user.email}</small>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -379,23 +357,18 @@
                                                                             test="${studentScore != null and studentScore.avgScore != null}">
                                                                             <c:choose>
                                                                                 <c:when
-                                                                                    test="${studentScore.avgScore >= 8.5}">
-                                                                                    <span class="badge bg-success">Xuất
-                                                                                        sắc</span>
-                                                                                </c:when>
-                                                                                <c:when
-                                                                                    test="${studentScore.avgScore >= 7.0}">
-                                                                                    <span
-                                                                                        class="badge bg-info">Khá</span>
-                                                                                </c:when>
-                                                                                <c:when
-                                                                                    test="${studentScore.avgScore >= 5.5}">
-                                                                                    <span class="badge bg-warning">Trung
-                                                                                        bình</span>
+                                                                                    test="${studentScore.avgScore >= 5.0}">
+                                                                                    <span class="badge bg-success fs-6">
+                                                                                        <i
+                                                                                            class="bi bi-check-circle"></i>
+                                                                                        Đạt
+                                                                                    </span>
                                                                                 </c:when>
                                                                                 <c:otherwise>
-                                                                                    <span
-                                                                                        class="badge bg-danger">Yếu</span>
+                                                                                    <span class="badge bg-danger fs-6">
+                                                                                        <i class="bi bi-x-circle"></i>
+                                                                                        Không đạt
+                                                                                    </span>
                                                                                 </c:otherwise>
                                                                             </c:choose>
                                                                         </c:when>
@@ -424,11 +397,12 @@
                                                                                 data-score-id="${studentScore.id}"
                                                                                 data-student-id="${student.id}"
                                                                                 data-student-name="${student.user.fname} ${student.user.lname}"
+                                                                                data-attendance-score="${studentScore.attendanceScore}"
                                                                                 data-midterm-score="${studentScore.midtermScore}"
                                                                                 data-final-score="${studentScore.finalScore}"
                                                                                 data-notes="${studentScore.notes}"
-                                                                                title="Chỉnh sửa">
-                                                                                <i class="bi bi-pencil"></i>
+                                                                                title="Chỉnh sửa điểm">
+                                                                                <i class="bi bi-pencil-square"></i>
                                                                             </button>
                                                                             <button type="button"
                                                                                 class="btn btn-outline-danger btn-sm delete-score-btn"
@@ -443,8 +417,8 @@
                                                                                 class="btn btn-outline-success btn-sm add-score-btn"
                                                                                 data-student-id="${student.id}"
                                                                                 data-student-name="${student.user.fname} ${student.user.lname}"
-                                                                                title="Thêm điểm">
-                                                                                <i class="bi bi-plus"></i>
+                                                                                title="Nhập điểm mới">
+                                                                                <i class="bi bi-plus-square"></i>
                                                                             </button>
                                                                         </c:otherwise>
                                                                     </c:choose>
@@ -458,12 +432,11 @@
                                     </div>
                                 </c:if>
 
-                                <c:if
-                                    test="${empty selectedClassroomId or empty selectedSubjectId or empty selectedSemester}">
+                                <c:if test="${empty selectedClassroomId or empty selectedSubjectId}">
                                     <div class="text-center py-5">
                                         <i class="bi bi-journal-text text-muted" style="font-size: 4rem;"></i>
                                         <h4 class="text-muted mt-3">Chọn điều kiện để quản lý điểm</h4>
-                                        <p class="text-muted">Vui lòng chọn lớp học, môn học và học kỳ để bắt đầu quản
+                                        <p class="text-muted">Vui lòng chọn lớp học và môn học để bắt đầu quản
                                             lý điểm sinh viên.</p>
                                     </div>
                                 </c:if>
@@ -481,7 +454,6 @@
                                         <div class="modal-body">
                                             <input type="hidden" name="studentId" id="studentId">
                                             <input type="hidden" name="subjectId" value="${selectedSubjectId}">
-                                            <input type="hidden" name="semester" value="${selectedSemester}">
 
                                             <div class="mb-3">
                                                 <label class="form-label fw-semibold">Sinh viên</label>
@@ -583,10 +555,11 @@
                                         const scoreId = btn.dataset.scoreId;
                                         const studentId = btn.dataset.studentId;
                                         const studentName = btn.dataset.studentName;
+                                        const attendanceScore = btn.dataset.attendanceScore === 'null' || btn.dataset.attendanceScore === '' ? null : parseFloat(btn.dataset.attendanceScore);
                                         const midtermScore = btn.dataset.midtermScore === 'null' || btn.dataset.midtermScore === '' ? null : parseFloat(btn.dataset.midtermScore);
                                         const finalScore = btn.dataset.finalScore === 'null' || btn.dataset.finalScore === '' ? null : parseFloat(btn.dataset.finalScore);
                                         const notes = btn.dataset.notes === 'null' ? '' : btn.dataset.notes;
-                                        editScore(scoreId, studentId, studentName, midtermScore, finalScore, notes);
+                                        editScore(scoreId, studentId, studentName, attendanceScore, midtermScore, finalScore, notes);
                                     }
                                 });
 

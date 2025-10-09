@@ -172,7 +172,6 @@ public class HomeRoomTeacherController {
     @GetMapping("/classroom/{classroomId}/scores")
     public String viewScores(
             @PathVariable Long classroomId,
-            @RequestParam(required = false) String semester,
             @RequestParam(required = false) Long subjectId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -199,34 +198,28 @@ public class HomeRoomTeacherController {
         // Lấy danh sách môn học
         List<Subject> subjects = subjectRepository.findAll();
 
+        // Lấy danh sách sinh viên trong lớp
+        List<Student> students = studentRepository.findByClassroomId(classroomId);
+
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
         Page<Score> scores;
 
-        if (subjectId != null && !semester.isEmpty()) {
-            Subject subject = subjectRepository.findById(subjectId).orElse(null);
-            if (subject != null) {
-                scores = scoreRepository.findBySubjectAndSemester(subject, semester, pageable);
-            } else {
-                scores = scoreRepository.findByClassroomId(classroomId, pageable);
-            }
-        } else if (subjectId != null) {
+        if (subjectId != null) {
             Subject subject = subjectRepository.findById(subjectId).orElse(null);
             if (subject != null) {
                 scores = scoreRepository.findBySubject(subject, pageable);
             } else {
                 scores = scoreRepository.findByClassroomId(classroomId, pageable);
             }
-        } else if (!semester.isEmpty()) {
-            scores = scoreRepository.findByClassroomIdAndSemester(classroomId, semester, pageable);
         } else {
             scores = scoreRepository.findByClassroomId(classroomId, pageable);
         }
 
         model.addAttribute("classroom", classroom);
+        model.addAttribute("students", students);
         model.addAttribute("scores", scores);
         model.addAttribute("subjects", subjects);
         model.addAttribute("selectedSubjectId", subjectId);
-        model.addAttribute("selectedSemester", semester);
         model.addAttribute("teacher", teacher);
 
         return "teacher/scores";
@@ -316,8 +309,7 @@ public class HomeRoomTeacherController {
     @GetMapping("/scores")
     public String manageScores(Authentication auth, Model model,
             @RequestParam(required = false) Long classroomId,
-            @RequestParam(required = false) Long subjectId,
-            @RequestParam(required = false) String semester) {
+            @RequestParam(required = false) Long subjectId) {
 
         Teacher teacher = getCurrentTeacher(auth);
         if (teacher == null) {
@@ -342,10 +334,9 @@ public class HomeRoomTeacherController {
             if (hasAccess) {
                 students = studentRepository.findByClassroomId(classroomId);
 
-                if (subjectId != null && !semester.isEmpty()) {
-                    // Lọc điểm theo môn và học kỳ
-                    scores = scoreRepository.findByStudentClassroomIdAndSubjectIdAndSemester(
-                            classroomId, subjectId, semester);
+                if (subjectId != null) {
+                    // Lọc điểm theo môn học
+                    scores = scoreRepository.findByStudentClassroomIdAndSubjectId(classroomId, subjectId);
                 }
             }
         }
@@ -357,7 +348,6 @@ public class HomeRoomTeacherController {
         model.addAttribute("scores", scores);
         model.addAttribute("selectedClassroomId", classroomId);
         model.addAttribute("selectedSubjectId", subjectId);
-        model.addAttribute("selectedSemester", semester);
         model.addAttribute("activeTab", "scores");
         model.addAttribute("firstName", teacher.getUser().getFname());
         model.addAttribute("roleDisplay", "Giáo viên");
@@ -371,7 +361,7 @@ public class HomeRoomTeacherController {
     @PostMapping("/scores/update")
     public String updateScore(@RequestParam Long studentId,
             @RequestParam Long subjectId,
-            @RequestParam String semester,
+            @RequestParam(required = false) Double attendanceScore,
             @RequestParam(required = false) Double midtermScore,
             @RequestParam(required = false) Double finalScore,
             @RequestParam(required = false) String notes,
@@ -401,31 +391,45 @@ public class HomeRoomTeacherController {
         }
 
         // Tìm hoặc tạo điểm
-        Score score = scoreRepository.findByStudentAndSubjectAndSemester(student, subject, semester)
+        Score score = scoreRepository.findByStudentAndSubject(student, subject)
                 .orElse(new Score());
 
         if (score.getId() == null) {
             score.setStudent(student);
             score.setSubject(subject);
-            score.setSemester(semester);
         }
 
         // Cập nhật điểm
-        score.setMidtermScore(midtermScore);
-        score.setFinalScore(finalScore);
+        if (attendanceScore != null) {
+            score.setAttendanceScore(attendanceScore.floatValue());
+        }
+        if (midtermScore != null) {
+            score.setMidtermScore(midtermScore.floatValue());
+        }
+        if (finalScore != null) {
+            score.setFinalScore(finalScore.floatValue());
+        }
         score.setNotes(notes);
 
-        // Tính điểm trung bình (40% giữa kỳ + 60% cuối kỳ)
-        if (midtermScore != null && finalScore != null) {
-            double avgScore = midtermScore * 0.4 + finalScore * 0.6;
-            score.setAvgScore(avgScore);
+        // Tính điểm trung bình (10% chuyên cần + 30% giữa kỳ + 60% cuối kỳ)
+        Float attendance = score.getAttendanceScore();
+        Float midterm = score.getMidtermScore();
+        Float finalS = score.getFinalScore();
+
+        if (attendance != null && midterm != null && finalS != null) {
+            double avgScore = attendance * 0.1 + midterm * 0.3 + finalS * 0.6;
+            score.setAvgScore((float) avgScore);
+        } else if (midterm != null && finalS != null) {
+            // Nếu chưa có điểm chuyên cần, tính theo công thức cũ
+            double avgScore = midterm * 0.4 + finalS * 0.6;
+            score.setAvgScore((float) avgScore);
         }
 
         scoreRepository.save(score);
 
         ra.addFlashAttribute("success", "Cập nhật điểm thành công.");
         return "redirect:/teacher/scores?classroomId=" + student.getClassroom().getId()
-                + "&subjectId=" + subjectId + "&semester=" + semester;
+                + "&subjectId=" + subjectId;
     }
 
     /**
