@@ -109,7 +109,7 @@ public class HomeRoomTeacherController {
         }
 
         model.addAttribute("teacher", teacher);
-        model.addAttribute("classrooms", currentClassrooms);
+        model.addAttribute("assignedClasses", currentClassrooms); // Đổi từ "classrooms" thành "assignedClasses"
         model.addAttribute("allStudents", allStudents);
         model.addAttribute("activeTab", "classes");
         model.addAttribute("firstName", teacher.getUser().getFname());
@@ -304,7 +304,8 @@ public class HomeRoomTeacherController {
         model.addAttribute("student", student);
         model.addAttribute("teacher", teacher);
         model.addAttribute("activeTab", "classes");
-        addUserInfo(auth, model);
+        model.addAttribute("firstName", teacher.getUser().getFname());
+        model.addAttribute("roleDisplay", "Giáo viên");
 
         return "teacher/student-detail";
     }

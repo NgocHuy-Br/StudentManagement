@@ -118,7 +118,7 @@
                                                 <i class="bi bi-search"></i> Tìm kiếm sinh viên
                                             </label>
                                             <input type="text" class="form-control" id="searchInput"
-                                                placeholder="Tìm theo MSSV, tên, email..." onkeyup="searchStudents()">
+                                                placeholder="Tìm theo MSSV hoặc tên..." onkeyup="searchStudents()">
                                         </div>
                                         <div class="col-md-4">
                                             <div class="class-info-badge mt-4">
@@ -141,7 +141,7 @@
                                             <table class="table table-students mb-0">
                                                 <thead class="bg-light">
                                                     <tr>
-                                                        <th style="width: 60px;">#</th>
+                                                        <th style="width: 60px;">TT</th>
                                                         <th>MSSV</th>
                                                         <th>Họ và tên</th>
                                                         <th>Email</th>
@@ -158,9 +158,10 @@
                                                             data-email="${student.user.email}"
                                                             data-phone="${student.user.phone}">
                                                             <td>
-                                                                <div class="student-avatar">
-                                                                    ${fn:substring(student.user.fname, 0,
-                                                                    1)}${fn:substring(student.user.lname, 0, 1)}
+                                                                <div
+                                                                    class="d-flex align-items-center justify-content-center">
+                                                                    <strong class="text-primary">${status.index +
+                                                                        1}</strong>
                                                                 </div>
                                                             </td>
                                                             <td>
@@ -224,6 +225,9 @@
                         <script
                             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                         <script>
+                            // Cache buster v2.0 - Search only by MSSV and Name, NOT email
+                            console.log('JavaScript loaded - Search function updated');
+
                             // Filter by class
                             function filterByClass() {
                                 const classId = document.getElementById('classSelect').value;
@@ -242,7 +246,7 @@
                                 document.getElementById('studentCount').textContent = visibleCount;
                             }
 
-                            // Search students
+                            // Search students (only by MSSV and name)
                             function searchStudents() {
                                 const searchTerm = document.getElementById('searchInput').value.toLowerCase();
                                 const rows = document.querySelectorAll('.student-row');
@@ -251,9 +255,9 @@
                                 rows.forEach(row => {
                                     const mssv = row.dataset.mssv.toLowerCase();
                                     const name = row.dataset.name.toLowerCase();
-                                    const email = row.dataset.email.toLowerCase();
+                                    // CHỈ tìm theo MSSV và tên đầy đủ, KHÔNG tìm theo email
 
-                                    if (mssv.includes(searchTerm) || name.includes(searchTerm) || email.includes(searchTerm)) {
+                                    if (mssv.includes(searchTerm) || name.includes(searchTerm)) {
                                         // Also check class filter
                                         const classId = document.getElementById('classSelect').value;
                                         if (classId === '' || row.dataset.classId === classId) {
