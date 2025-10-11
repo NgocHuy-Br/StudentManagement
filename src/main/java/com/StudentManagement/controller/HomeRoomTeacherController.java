@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/teacher")
@@ -309,7 +310,8 @@ public class HomeRoomTeacherController {
     @GetMapping("/scores")
     public String manageScores(Authentication auth, Model model,
             @RequestParam(required = false) Long classroomId,
-            @RequestParam(required = false) Long subjectId) {
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) String search) {
 
         Teacher teacher = getCurrentTeacher(auth);
         if (teacher == null) {
@@ -359,6 +361,25 @@ public class HomeRoomTeacherController {
             }
         }
 
+        // Lọc sinh viên theo tìm kiếm nếu có
+        if (search != null && !search.trim().isEmpty()) {
+            String searchTerm = search.trim().toLowerCase();
+            students = students.stream()
+                    .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
+                            (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
+                                    .contains(searchTerm))
+                    .collect(Collectors.toList());
+
+            // Lọc điểm tương ứng với sinh viên đã lọc
+            List<Long> filteredStudentIds = students.stream()
+                    .map(Student::getId)
+                    .collect(Collectors.toList());
+
+            scores = scores.stream()
+                    .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
+                    .collect(Collectors.toList());
+        }
+
         model.addAttribute("teacher", teacher);
         model.addAttribute("assignedClasses", assignedClasses);
         model.addAttribute("subjects", subjects);
@@ -366,6 +387,7 @@ public class HomeRoomTeacherController {
         model.addAttribute("scores", scores);
         model.addAttribute("selectedClassroomId", classroomId);
         model.addAttribute("selectedSubjectId", subjectId);
+        model.addAttribute("search", search);
         model.addAttribute("activeTab", "scores");
         model.addAttribute("firstName", teacher.getUser().getFname());
         model.addAttribute("roleDisplay", "Giáo viên");

@@ -79,24 +79,30 @@
                         .quick-stats {
                             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                             color: white;
-                            border-radius: 12px;
-                            padding: 1rem;
+                            border-radius: 10px;
+                            padding: 0.8rem 1.2rem;
                             margin-bottom: 1.5rem;
                         }
 
                         .stat-item {
                             text-align: center;
-                        }
-
-                        .stat-number {
-                            font-size: 2rem;
-                            font-weight: 700;
-                            display: block;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.4rem;
                         }
 
                         .stat-label {
-                            font-size: 0.875rem;
-                            opacity: 0.9;
+                            font-size: 1.1rem;
+                            opacity: 0.95;
+                            display: inline;
+                            font-weight: 600;
+                        }
+
+                        .stat-number {
+                            font-size: 1.1rem;
+                            font-weight: 700;
+                            display: inline;
                         }
                     </style>
                 </head>
@@ -157,15 +163,20 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-semibold text-transparent">.</label>
-                                            <div>
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="bi bi-search"></i> Lọc kết quả
-                                                </button>
+                                        <!-- Khoảng trống giữa các phần -->
+                                        <div class="col-md-1"></div>
+
+                                        <div class="col-md-5">
+                                            <label for="searchInput" class="form-label fw-semibold">
+                                                <i class="bi bi-funnel"></i> Lọc sinh viên
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="searchInput" name="search"
+                                                    placeholder="Nhập MSSV hoặc họ tên..." value="${param.search}"
+                                                    onkeypress="if(event.key==='Enter') this.form.submit()">
                                                 <button type="button" class="btn btn-outline-secondary"
-                                                    onclick="clearFilters()">
-                                                    <i class="bi bi-arrow-clockwise"></i> Đặt lại
+                                                    onclick="clearSearch()" title="Xóa bộ lọc">
+                                                    <i class="bi bi-x-lg"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -178,25 +189,26 @@
                                         <div class="row">
                                             <div class="col-md-3">
                                                 <div class="stat-item">
+                                                    <span class="stat-label">Tổng sinh viên:</span>
                                                     <span class="stat-number">${fn:length(students)}</span>
-                                                    <span class="stat-label">Tổng sinh viên</span>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="stat-item">
+                                                    <span class="stat-label">Đã có điểm:</span>
                                                     <span class="stat-number">${fn:length(scores)}</span>
-                                                    <span class="stat-label">Đã có điểm</span>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="stat-item">
+                                                    <span class="stat-label">Chưa có điểm:</span>
                                                     <span class="stat-number">${fn:length(students) -
                                                         fn:length(scores)}</span>
-                                                    <span class="stat-label">Chưa có điểm</span>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="stat-item">
+                                                    <span class="stat-label">Tiến độ:</span>
                                                     <span class="stat-number">
                                                         <c:if test="${fn:length(students) > 0}">
                                                             <fmt:formatNumber
@@ -205,7 +217,6 @@
                                                         </c:if>
                                                         <c:if test="${fn:length(students) == 0}">0%</c:if>
                                                     </span>
-                                                    <span class="stat-label">Tiến độ</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -213,15 +224,6 @@
 
                                     <!-- Scores Management Table -->
                                     <div class="card">
-                                        <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h5 class="card-title mb-0">
-                                                <i class="bi bi-journal-text"></i> Quản lý điểm sinh viên
-                                            </h5>
-                                            <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                                                data-bs-target="#addScoreModal">
-                                                <i class="bi bi-plus-circle"></i> Thêm điểm mới
-                                            </button>
-                                        </div>
                                         <div class="card-body p-0">
                                             <div class="table-responsive">
                                                 <table class="table table-hover mb-0">
@@ -433,13 +435,6 @@
                                                                                         <i
                                                                                             class="bi bi-pencil-square"></i>
                                                                                     </button>
-                                                                                    <button type="button"
-                                                                                        class="btn btn-outline-danger btn-sm delete-score-btn"
-                                                                                        data-score-id="${studentScore.id}"
-                                                                                        data-student-name="${student.user.fname} ${student.user.lname}"
-                                                                                        title="Xóa điểm">
-                                                                                        <i class="bi bi-trash"></i>
-                                                                                    </button>
                                                                                 </c:when>
                                                                                 <c:otherwise>
                                                                                     <button type="button"
@@ -616,7 +611,7 @@
                                                                         </td>
                                                                         <td>
                                                                             <button type="button"
-                                                                                class="btn btn-outline-primary btn-sm me-1 edit-score-btn"
+                                                                                class="btn btn-outline-primary btn-sm edit-score-btn"
                                                                                 data-score-id="${score.id}"
                                                                                 data-student-id="${score.student.id}"
                                                                                 data-student-name="${score.student.user.fname} ${score.student.user.lname}"
@@ -626,13 +621,6 @@
                                                                                 data-notes="${score.notes}"
                                                                                 title="Chỉnh sửa điểm">
                                                                                 <i class="bi bi-pencil-square"></i>
-                                                                            </button>
-                                                                            <button type="button"
-                                                                                class="btn btn-outline-danger btn-sm delete-score-btn"
-                                                                                data-score-id="${score.id}"
-                                                                                data-student-name="${score.student.user.fname} ${score.student.user.lname}"
-                                                                                title="Xóa điểm">
-                                                                                <i class="bi bi-trash"></i>
                                                                             </button>
                                                                         </td>
                                                                     </tr>
@@ -722,32 +710,6 @@
                             </div>
                         </div>
 
-                        <!-- Delete Confirmation Modal -->
-                        <div class="modal fade" id="deleteModal" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Xác nhận xóa điểm</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Bạn có chắc chắn muốn xóa điểm của sinh viên <strong
-                                                id="deleteStudentName"></strong>?</p>
-                                        <p class="text-muted">Hành động này không thể hoàn tác.</p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <form id="deleteForm" method="POST" action="/teacher/scores/delete"
-                                            style="display: inline;">
-                                            <input type="hidden" name="scoreId" id="deleteScoreId">
-                                            <button type="submit" class="btn btn-danger">Xóa điểm</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <script
                             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                         <script>
@@ -777,20 +739,17 @@
                                         editScore(scoreId, studentId, studentName, attendanceScore, midtermScore, finalScore, notes);
                                     }
                                 });
-
-                                // Delete score button handler
-                                document.addEventListener('click', function (e) {
-                                    if (e.target.closest('.delete-score-btn')) {
-                                        const btn = e.target.closest('.delete-score-btn');
-                                        const scoreId = btn.dataset.scoreId;
-                                        const studentName = btn.dataset.studentName;
-                                        deleteScore(scoreId, studentName);
-                                    }
-                                });
                             });
 
-                            function clearFilters() {
-                                window.location.href = '/teacher/scores';
+                            function clearSearch() {
+                                document.getElementById('searchInput').value = '';
+                                // Giữ nguyên các filter khác và chỉ xóa search
+                                const form = document.querySelector('form');
+                                const searchInput = document.querySelector('input[name="search"]');
+                                if (searchInput) {
+                                    searchInput.remove();
+                                }
+                                form.submit();
                             }
 
                             function addScore(studentId, studentName) {
@@ -815,13 +774,6 @@
                                 document.getElementById('notes').value = notes || '';
 
                                 new bootstrap.Modal(document.getElementById('scoreModal')).show();
-                            }
-
-                            function deleteScore(scoreId, studentName) {
-                                document.getElementById('deleteScoreId').value = scoreId;
-                                document.getElementById('deleteStudentName').textContent = studentName;
-
-                                new bootstrap.Modal(document.getElementById('deleteModal')).show();
                             }
                         </script>
                 </body>

@@ -56,12 +56,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'profile' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/teacher/profile">
-                        <i class="bi bi-person-fill me-1"></i> Thông tin cá nhân
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link ${activeTab == 'classes' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/teacher/classes">
                         <i class="bi bi-people-fill me-1"></i> Lớp sinh viên
@@ -71,12 +65,6 @@
                     <a class="nav-link ${activeTab == 'scores' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/teacher/scores">
                         <i class="bi bi-journal-text me-1"></i> Điểm sinh viên
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'schedule' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/teacher/schedule">
-                        <i class="bi bi-calendar3 me-1"></i> Lịch giảng dạy
                     </a>
                 </li>
             </ul>
