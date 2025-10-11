@@ -335,8 +335,26 @@ public class HomeRoomTeacherController {
                 students = studentRepository.findByClassroomId(classroomId);
 
                 if (subjectId != null) {
-                    // Lọc điểm theo môn học
+                    // Lọc điểm theo môn học cụ thể
                     scores = scoreRepository.findByStudentClassroomIdAndSubjectId(classroomId, subjectId);
+                } else {
+                    // Lấy tất cả điểm của lớp (tất cả môn học)
+                    Page<Score> scorePages = scoreRepository.findByClassroomId(classroomId, Pageable.unpaged());
+                    scores = scorePages.getContent();
+                }
+            }
+        } else {
+            // Tất cả lớp - lấy tất cả sinh viên và điểm của các lớp mà giáo viên chủ nhiệm
+            for (Classroom classroom : assignedClasses) {
+                students.addAll(studentRepository.findByClassroomId(classroom.getId()));
+
+                if (subjectId != null) {
+                    // Lọc điểm theo môn học cụ thể cho tất cả lớp
+                    scores.addAll(scoreRepository.findByStudentClassroomIdAndSubjectId(classroom.getId(), subjectId));
+                } else {
+                    // Lấy tất cả điểm của tất cả lớp
+                    Page<Score> scorePages = scoreRepository.findByClassroomId(classroom.getId(), Pageable.unpaged());
+                    scores.addAll(scorePages.getContent());
                 }
             }
         }
