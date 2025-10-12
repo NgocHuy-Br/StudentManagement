@@ -142,9 +142,8 @@ public class AdminController {
 
     @GetMapping
     public String index(Authentication auth, Model model) {
-        addUserInfo(auth, model);
-        model.addAttribute("activeTab", "notice");
-        return "admin/admin-dashboard";
+        // Redirect to classrooms since we removed notifications
+        return "redirect:/admin/classrooms";
     }
 
     // Danh sách lớp học: giao diện 2 panel - trái: quản lý lớp, phải: sinh viên

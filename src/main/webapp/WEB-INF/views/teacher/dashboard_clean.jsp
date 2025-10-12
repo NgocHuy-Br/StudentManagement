@@ -214,16 +214,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="card text-center border-warning">
-                                            <div class="card-body">
-                                                <i class="bi bi-exclamation-triangle-fill text-warning"
-                                                    style="font-size: 2rem;"></i>
-                                                <h4 class="card-title mt-2">0</h4>
-                                                <p class="card-text text-muted">Thông báo mới</p>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                         </div>
 

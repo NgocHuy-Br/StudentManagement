@@ -50,12 +50,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'notifications' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/teacher/notifications">
-                        <i class="bi bi-bell-fill me-1"></i> Thông báo
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link ${activeTab == 'classes' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/teacher/classes">
                         <i class="bi bi-people-fill me-1"></i> Lớp sinh viên

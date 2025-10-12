@@ -95,7 +95,7 @@
                                     <div class="tab-content" id="subjectTabContent">
                                         <!-- Tab môn học -->
                                         <div class="tab-pane fade show active" id="subjects-pane" role="tabpanel">
-                                            <!-- Thông báo -->
+                                            <!-- Error messages -->
                                             <c:if test="${not empty error}">
                                                 <div class="alert alert-danger alert-dismissible">
                                                     <i class="bi bi-exclamation-triangle me-2"></i>${error}

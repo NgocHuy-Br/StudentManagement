@@ -44,12 +44,6 @@
         <div class="tabs-bar">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'notice' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin">
-                        <i class="bi bi-megaphone-fill me-1"></i> Thông báo
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link ${activeTab == 'classrooms' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/admin/classrooms">
                         <i class="bi bi-collection-fill me-1"></i> Lớp sinh viên
