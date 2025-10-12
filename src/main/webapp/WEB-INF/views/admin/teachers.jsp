@@ -20,11 +20,6 @@
                         background: #f7f7f9
                     }
 
-                    .main-wrap {
-                        padding-left: var(--page-x);
-                        padding-right: var(--page-x)
-                    }
-
                     .card {
                         border-radius: 12px;
                         box-shadow: 0 10px 25px rgba(0, 0, 0, .06)
@@ -64,8 +59,10 @@
             </head>
 
             <body>
-                <%@ include file="../common/header.jsp" %>
-                    <main class="container-fluid main-wrap py-3">
+                <div class="container-fluid" style="padding: 0 clamp(12px, 4vw, 36px);">
+                    <%@ include file="../common/header.jsp" %>
+
+                        <c:set var="activeTab" value="teachers" scope="request" />
                         <%@ include file="_nav.jsp" %>
 
                             <div class="card mt-3">
@@ -295,55 +292,211 @@
                                     </c:if>
                                 </div>
                             </div>
-                    </main>
+                </div>
+                </div>
 
-                    <!-- Modal: Thêm giáo viên -->
-                    <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <form class="modal-content" method="post"
-                                action="${pageContext.request.contextPath}/admin/teachers">
-                                <div class="modal-header bg-primary text-white">
-                                    <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Thêm giáo viên</h5>
-                                    <button type="button" class="btn-close btn-close-white"
-                                        data-bs-dismiss="modal"></button>
+                <!-- Modal: Thêm giáo viên -->
+                <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <form class="modal-content" method="post"
+                            action="${pageContext.request.contextPath}/admin/teachers">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Thêm giáo viên</h5>
+                                <button type="button" class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label">Mã GV (Username) <span
+                                                class="text-danger">*</span></label>
+                                        <input name="username" class="form-control" required placeholder="VD: GV001">
+                                        <div class="form-text text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>Mật khẩu mặc định sẽ giống với mã
+                                            giáo viên
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label">Họ Tên <span class="text-danger">*</span></label>
+                                        <input name="fullName" class="form-control" required
+                                            placeholder="VD: Nguyễn Văn An">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                                        <input name="email" type="email" class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label">SĐT</label>
+                                        <input name="phone" class="form-control">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label">CCCD</label>
+                                        <input name="nationalId" type="text" class="form-control"
+                                            placeholder="Nhập 12 số" maxlength="12" pattern="[0-9]{12}">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label">Ngày sinh</label>
+                                        <input name="birthDate" type="date" class="form-control">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label">Khoa</label>
+                                        <select name="facultyId" class="form-select">
+                                            <option value="">Chọn khoa...</option>
+                                            <c:forEach var="f" items="${faculties}">
+                                                <option value="${f.id}">${f.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Địa chỉ</label>
+                                        <input name="address" class="form-control" placeholder="Nhập địa chỉ">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <c:if test="${not empty _csrf}">
+                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                </c:if>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-save2 me-1"></i>Lưu
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button"
+                                    data-bs-dismiss="modal">Hủy</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Teacher Detail Modal -->
+                <div class="modal fade" id="teacherDetailModal" tabindex="-1" aria-labelledby="teacherDetailModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="teacherDetailModalLabel">
+                                    <i class="bi bi-person-circle me-2"></i>Chi tiết giáo viên
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0"><i class="bi bi-person-badge me-2"></i>Thông tin cơ
+                                                    bản</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold text-muted">Mã giáo
+                                                        viên:</label>
+                                                    <div class="border-bottom pb-1 text-primary fw-semibold"
+                                                        id="detailTeacherUsername"></div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold text-muted">Họ tên:</label>
+                                                    <div class="border-bottom pb-1 fs-5 fw-semibold"
+                                                        id="detailTeacherFullName"></div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold text-muted">Ngày sinh:</label>
+                                                    <div class="border-bottom pb-1" id="detailTeacherBirthDate">
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold text-muted">CCCD:</label>
+                                                    <div class="border-bottom pb-1" id="detailTeacherNationalId">
+                                                    </div>
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label class="form-label fw-bold text-muted">Khoa:</label>
+                                                    <div class="border-bottom pb-1 text-success fw-semibold"
+                                                        id="detailTeacherDepartment"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Thông tin liên hệ
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold text-muted">Email:</label>
+                                                    <div class="border-bottom pb-1" id="detailTeacherEmail"></div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold text-muted">Số điện
+                                                        thoại:</label>
+                                                    <div class="border-bottom pb-1" id="detailTeacherPhone"></div>
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label class="form-label fw-bold text-muted">Địa chỉ:</label>
+                                                    <div class="border-bottom pb-1" id="detailTeacherAddress"
+                                                        style="min-height: 40px;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Teacher Modal -->
+                <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-labelledby="editTeacherModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <form id="editTeacherForm" method="post">
+                                <div class="modal-header bg-warning text-dark">
+                                    <h5 class="modal-title" id="editTeacherModalLabel">
+                                        <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa giáo viên
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
                                     <div class="row g-3">
                                         <div class="col-sm-6">
                                             <label class="form-label">Mã GV (Username) <span
                                                     class="text-danger">*</span></label>
-                                            <input name="username" class="form-control" required
-                                                placeholder="VD: GV001">
-                                            <div class="form-text text-muted">
-                                                <i class="bi bi-info-circle me-1"></i>Mật khẩu mặc định sẽ giống với mã
-                                                giáo viên
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <label class="form-label">Họ Tên <span class="text-danger">*</span></label>
-                                            <input name="fullName" class="form-control" required
-                                                placeholder="VD: Nguyễn Văn An">
+                                            <input name="username" id="editUsername" class="form-control" readonly>
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">Email <span class="text-danger">*</span></label>
-                                            <input name="email" type="email" class="form-control" required>
+                                            <input name="email" id="editEmail" type="email" class="form-control"
+                                                required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="form-label">Họ Tên <span class="text-danger">*</span></label>
+                                            <input name="fullName" id="editFullName" class="form-control" required
+                                                placeholder="VD: Nguyễn Văn An">
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">SĐT</label>
-                                            <input name="phone" class="form-control">
+                                            <input name="phone" id="editPhone" class="form-control">
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">CCCD</label>
-                                            <input name="nationalId" type="text" class="form-control"
-                                                placeholder="Nhập 12 số" maxlength="12" pattern="[0-9]{12}">
+                                            <input name="nationalId" id="editNationalId" type="text"
+                                                class="form-control" maxlength="12" pattern="[0-9]{12}"
+                                                placeholder="Nhập 12 số">
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">Ngày sinh</label>
-                                            <input name="birthDate" type="date" class="form-control">
+                                            <input name="birthDate" id="editBirthDate" type="date" class="form-control">
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">Khoa</label>
-                                            <select name="facultyId" class="form-select">
+                                            <select name="facultyId" id="editFacultyId" class="form-select">
                                                 <option value="">Chọn khoa...</option>
                                                 <c:forEach var="f" items="${faculties}">
                                                     <option value="${f.id}">${f.name}</option>
@@ -352,7 +505,7 @@
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label">Địa chỉ</label>
-                                            <input name="address" class="form-control" placeholder="Nhập địa chỉ">
+                                            <input name="address" id="editAddress" class="form-control">
                                         </div>
                                     </div>
                                 </div>
@@ -360,594 +513,433 @@
                                     <c:if test="${not empty _csrf}">
                                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                     </c:if>
-                                    <button class="btn btn-primary" type="submit">
-                                        <i class="bi bi-save2 me-1"></i>Lưu
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="bi bi-save me-2"></i>Cập nhật
                                     </button>
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        data-bs-dismiss="modal">Hủy</button>
                                 </div>
                             </form>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Teacher Detail Modal -->
-                    <div class="modal fade" id="teacherDetailModal" tabindex="-1"
-                        aria-labelledby="teacherDetailModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header bg-primary text-white">
-                                    <h5 class="modal-title" id="teacherDetailModalLabel">
-                                        <i class="bi bi-person-circle me-2"></i>Chi tiết giáo viên
-                                    </h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteTeacherModal" tabindex="-1" aria-labelledby="deleteTeacherModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="deleteTeacherModalLabel">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Bạn có chắc chắn muốn xóa giáo viên <strong id="deleteTeacherName"></strong>
+                                    không?</p>
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Hành động này không thể hoàn tác!
                                 </div>
-                                <div class="modal-body">
-                                    <div class="row g-4">
-                                        <div class="col-md-6">
-                                            <div class="card h-100 border-0 shadow-sm">
-                                                <div class="card-header bg-light">
-                                                    <h6 class="mb-0"><i class="bi bi-person-badge me-2"></i>Thông tin cơ
-                                                        bản</h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-muted">Mã giáo
-                                                            viên:</label>
-                                                        <div class="border-bottom pb-1 text-primary fw-semibold"
-                                                            id="detailTeacherUsername"></div>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-muted">Họ tên:</label>
-                                                        <div class="border-bottom pb-1 fs-5 fw-semibold"
-                                                            id="detailTeacherFullName"></div>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-muted">Ngày sinh:</label>
-                                                        <div class="border-bottom pb-1" id="detailTeacherBirthDate">
-                                                        </div>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-muted">CCCD:</label>
-                                                        <div class="border-bottom pb-1" id="detailTeacherNationalId">
-                                                        </div>
-                                                    </div>
-                                                    <div class="mb-0">
-                                                        <label class="form-label fw-bold text-muted">Khoa:</label>
-                                                        <div class="border-bottom pb-1 text-success fw-semibold"
-                                                            id="detailTeacherDepartment"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="card h-100 border-0 shadow-sm">
-                                                <div class="card-header bg-light">
-                                                    <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Thông tin liên hệ
-                                                    </h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-muted">Email:</label>
-                                                        <div class="border-bottom pb-1" id="detailTeacherEmail"></div>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold text-muted">Số điện
-                                                            thoại:</label>
-                                                        <div class="border-bottom pb-1" id="detailTeacherPhone"></div>
-                                                    </div>
-                                                    <div class="mb-0">
-                                                        <label class="form-label fw-bold text-muted">Địa chỉ:</label>
-                                                        <div class="border-bottom pb-1" id="detailTeacherAddress"
-                                                            style="min-height: 40px;"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-bs-dismiss="modal">Đóng</button>
-                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="button" class="btn btn-danger" id="confirmDeleteTeacher">
+                                    <i class="bi bi-trash me-2"></i>Xóa
+                                </button>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Edit Teacher Modal -->
-                    <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-labelledby="editTeacherModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <form id="editTeacherForm" method="post">
-                                    <div class="modal-header bg-warning text-dark">
-                                        <h5 class="modal-title" id="editTeacherModalLabel">
-                                            <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa giáo viên
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row g-3">
-                                            <div class="col-sm-6">
-                                                <label class="form-label">Mã GV (Username) <span
-                                                        class="text-danger">*</span></label>
-                                                <input name="username" id="editUsername" class="form-control" readonly>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label class="form-label">Email <span
-                                                        class="text-danger">*</span></label>
-                                                <input name="email" id="editEmail" type="email" class="form-control"
-                                                    required>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label class="form-label">Họ Tên <span
-                                                        class="text-danger">*</span></label>
-                                                <input name="fullName" id="editFullName" class="form-control" required
-                                                    placeholder="VD: Nguyễn Văn An">
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label class="form-label">SĐT</label>
-                                                <input name="phone" id="editPhone" class="form-control">
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label class="form-label">CCCD</label>
-                                                <input name="nationalId" id="editNationalId" type="text"
-                                                    class="form-control" maxlength="12" pattern="[0-9]{12}"
-                                                    placeholder="Nhập 12 số">
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label class="form-label">Ngày sinh</label>
-                                                <input name="birthDate" id="editBirthDate" type="date"
-                                                    class="form-control">
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label class="form-label">Khoa</label>
-                                                <select name="facultyId" id="editFacultyId" class="form-select">
-                                                    <option value="">Chọn khoa...</option>
-                                                    <c:forEach var="f" items="${faculties}">
-                                                        <option value="${f.id}">${f.name}</option>
-                                                    </c:forEach>
-                                                </select>
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="form-label">Địa chỉ</label>
-                                                <input name="address" id="editAddress" class="form-control">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <c:if test="${not empty _csrf}">
-                                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                                        </c:if>
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="submit" class="btn btn-warning">
-                                            <i class="bi bi-save me-2"></i>Cập nhật
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Delete Confirmation Modal -->
-                    <div class="modal fade" id="deleteTeacherModal" tabindex="-1"
-                        aria-labelledby="deleteTeacherModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-danger text-white">
-                                    <h5 class="modal-title" id="deleteTeacherModalLabel">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
-                                    </h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Bạn có chắc chắn muốn xóa giáo viên <strong id="deleteTeacherName"></strong>
-                                        không?</p>
-                                    <div class="alert alert-warning">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                        Hành động này không thể hoàn tác!
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <button type="button" class="btn btn-danger" id="confirmDeleteTeacher">
-                                        <i class="bi bi-trash me-2"></i>Xóa
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-                    <script>
-                        // Kích hoạt tooltip
-                        document.addEventListener('DOMContentLoaded', function () {
-                            // Initialize tooltips
-                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                                return new bootstrap.Tooltip(tooltipTriggerEl);
-                            });
-
-                            console.log('DOM Content Loaded - Starting teacher page initialization...');
-
-                            // IMMEDIATE BASIC TEST - Enable this by removing comments
-                            setTimeout(function () {
-                                // alert('JavaScript is working! Check console for more details.'); 
-                                console.log('=== BASIC TEST ===');
-                                console.log('Current URL:', window.location.href);
-                                console.log('Document ready state:', document.readyState);
-                                console.log('Total dropdown buttons:', document.querySelectorAll('.dropdown-toggle').length);
-                                console.log('Total view elements:', document.querySelectorAll('.view-teacher-detail').length);
-
-                                // TEST: Add simple onclick directly to ALL elements
-                                const viewElements = document.querySelectorAll('.view-teacher-detail');
-                                const editElements = document.querySelectorAll('.edit-teacher');
-                                const deleteElements = document.querySelectorAll('.delete-teacher');
-
-                                console.log('Adding direct onclick to all elements...');
-                                console.log('Elements found:', {
-                                    view: viewElements.length,
-                                    edit: editElements.length,
-                                    delete: deleteElements.length
-                                });
-
-                                // Add onclick to view elements
-                                viewElements.forEach(function (element, index) {
-                                    element.onclick = function (e) {
-                                        e.preventDefault();
-                                        const teacherId = this.getAttribute('data-teacher-id');
-                                        const username = this.getAttribute('data-username');
-                                        const fullName = this.getAttribute('data-fullname');
-
-
-                                        console.log('View onclick triggered!', { teacherId, username, fullName });
-
-                                        // Call the actual function
-                                        viewTeacherDetail(teacherId, username, fullName,
-                                            this.getAttribute('data-email'),
-                                            this.getAttribute('data-phone'),
-                                            this.getAttribute('data-address'),
-                                            this.getAttribute('data-birthdate'),
-                                            this.getAttribute('data-nationalid'),
-                                            this.getAttribute('data-facultyname'));
-                                        return false;
-                                    };
-                                });
-
-                                // Add onclick to edit elements
-                                editElements.forEach(function (element, index) {
-                                    element.onclick = function (e) {
-                                        e.preventDefault();
-                                        const teacherId = this.getAttribute('data-teacher-id');
-                                        const username = this.getAttribute('data-username');
-                                        const fullName = this.getAttribute('data-fullname');
-
-
-                                        console.log('Edit onclick triggered!', { teacherId, username, fullName });
-
-                                        // Call the actual function
-                                        editTeacher(teacherId, username, fullName,
-                                            this.getAttribute('data-email'),
-                                            this.getAttribute('data-phone'),
-                                            this.getAttribute('data-address'),
-                                            this.getAttribute('data-birthdate'),
-                                            this.getAttribute('data-nationalid'),
-                                            this.getAttribute('data-facultyid'));
-                                        return false;
-                                    };
-                                });
-
-                                // Add onclick to delete elements
-                                deleteElements.forEach(function (element, index) {
-                                    element.onclick = function (e) {
-                                        e.preventDefault();
-                                        const teacherId = this.getAttribute('data-teacher-id');
-                                        const fullName = this.getAttribute('data-fullname');
-
-
-                                        console.log('Delete onclick triggered!', { teacherId, fullName });
-
-                                        // Call the actual function
-                                        deleteTeacher(teacherId, fullName);
-                                        return false;
-                                    };
-                                });
-
-                                console.log('All onclick handlers added successfully!');
-                                console.log('=== END BASIC TEST ===');
-                            }, 500);
-
-                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                                return new bootstrap.Tooltip(tooltipTriggerEl, {
-                                    html: true
-                                });
-                            });
-
-                            // Initialize teacher action handlers
-                            console.log('About to initialize teacher actions...');
-                            initTeacherActions();
-
-                            console.log('Teacher page initialization completed.');
-
-                            // Test if elements exist
-                            setTimeout(function () {
-                                const viewElements = document.querySelectorAll('.view-teacher-detail');
-                                const editElements = document.querySelectorAll('.edit-teacher');
-                                const deleteElements = document.querySelectorAll('.delete-teacher');
-
-                                console.log('Elements found after initialization:', {
-                                    'view elements': viewElements.length,
-                                    'edit elements': editElements.length,
-                                    'delete elements': deleteElements.length
-                                });
-
-                                if (viewElements.length > 0) {
-                                    console.log('First view element:', viewElements[0]);
-                                    console.log('First view element data:', {
-                                        id: viewElements[0].getAttribute('data-teacher-id'),
-                                        username: viewElements[0].getAttribute('data-username'),
-                                        fullname: viewElements[0].getAttribute('data-fullname')
-                                    });
-                                }
-                            }, 100);
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script>
+                    // Kích hoạt tooltip
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Initialize tooltips
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
                         });
 
-                        function initTeacherActions() {
-                            console.log('Initializing teacher actions...');
+                        console.log('DOM Content Loaded - Starting teacher page initialization...');
 
-                            // Try direct approach without event delegation
-                            setTimeout(function () {
-                                console.log('Adding direct event listeners...');
+                        // IMMEDIATE BASIC TEST - Enable this by removing comments
+                        setTimeout(function () {
+                            // alert('JavaScript is working! Check console for more details.'); 
+                            console.log('=== BASIC TEST ===');
+                            console.log('Current URL:', window.location.href);
+                            console.log('Document ready state:', document.readyState);
+                            console.log('Total dropdown buttons:', document.querySelectorAll('.dropdown-toggle').length);
+                            console.log('Total view elements:', document.querySelectorAll('.view-teacher-detail').length);
 
-                                // Direct listeners for view buttons
-                                document.querySelectorAll('.view-teacher-detail').forEach(function (element, index) {
-                                    console.log('Adding listener to view element', index, element);
+                            // TEST: Add simple onclick directly to ALL elements
+                            const viewElements = document.querySelectorAll('.view-teacher-detail');
+                            const editElements = document.querySelectorAll('.edit-teacher');
+                            const deleteElements = document.querySelectorAll('.delete-teacher');
 
-                                    // Remove existing listeners if any
-                                    element.onclick = null;
-
-                                    element.addEventListener('click', function (e) {
-                                        e.preventDefault();
-                                        console.log('DIRECT: View clicked for element:', this);
-
-                                        const teacherId = this.getAttribute('data-teacher-id');
-                                        const username = this.getAttribute('data-username') || '';
-                                        const fullName = this.getAttribute('data-fullname') || '';
-                                        const email = this.getAttribute('data-email') || '';
-                                        const phone = this.getAttribute('data-phone') || '';
-                                        const address = this.getAttribute('data-address') || '';
-                                        const birthDate = this.getAttribute('data-birthdate') || '';
-                                        const nationalId = this.getAttribute('data-nationalid') || '';
-                                        const facultyName = this.getAttribute('data-facultyname') || '';
-
-                                        console.log('DIRECT: View teacher data:', { teacherId, username, fullName, email });
-                                        viewTeacherDetail(teacherId, username, fullName, email, phone, address, birthDate, nationalId, facultyName);
-                                    });
-                                });
-
-                                // Direct listeners for edit buttons
-                                document.querySelectorAll('.edit-teacher').forEach(function (element, index) {
-                                    console.log('Adding listener to edit element', index, element);
-
-                                    element.onclick = null;
-
-                                    element.addEventListener('click', function (e) {
-                                        e.preventDefault();
-                                        console.log('DIRECT: Edit clicked for element:', this);
-
-                                        const teacherId = this.getAttribute('data-teacher-id');
-                                        const username = this.getAttribute('data-username') || '';
-                                        const fullName = this.getAttribute('data-fullname') || '';
-                                        const email = this.getAttribute('data-email') || '';
-                                        const phone = this.getAttribute('data-phone') || '';
-                                        const address = this.getAttribute('data-address') || '';
-                                        const birthDate = this.getAttribute('data-birthdate') || '';
-                                        const nationalId = this.getAttribute('data-nationalid') || '';
-                                        const facultyId = this.getAttribute('data-facultyid') || '';
-
-                                        console.log('DIRECT: Edit teacher data:', { teacherId, username, fullName, email });
-                                        editTeacher(teacherId, username, fullName, email, phone, address, birthDate, nationalId, facultyId);
-                                    });
-                                });
-
-                                // Direct listeners for delete buttons
-                                document.querySelectorAll('.delete-teacher').forEach(function (element, index) {
-                                    console.log('Adding listener to delete element', index, element);
-
-                                    element.onclick = null;
-
-                                    element.addEventListener('click', function (e) {
-                                        e.preventDefault();
-                                        console.log('DIRECT: Delete clicked for element:', this);
-
-                                        const teacherId = this.getAttribute('data-teacher-id');
-                                        const fullName = this.getAttribute('data-fullname') || '';
-
-                                        console.log('DIRECT: Delete teacher data:', { teacherId, fullName });
-                                        deleteTeacher(teacherId, fullName);
-                                    });
-                                });
-                            }, 200);
-
-                            console.log('Teacher actions initialized successfully!');
-                            console.log('Found elements:', {
-                                view: document.querySelectorAll('.view-teacher-detail').length,
-                                edit: document.querySelectorAll('.edit-teacher').length,
-                                delete: document.querySelectorAll('.delete-teacher').length
+                            console.log('Adding direct onclick to all elements...');
+                            console.log('Elements found:', {
+                                view: viewElements.length,
+                                edit: editElements.length,
+                                delete: deleteElements.length
                             });
-                        }
 
-                        // Function to view teacher detail
-                        function viewTeacherDetail(id, username, fullName, email, phone, address, birthDate, nationalId, facultyName) {
-                            try {
-                                console.log('viewTeacherDetail called', { id, username, fullName });
+                            // Add onclick to view elements
+                            viewElements.forEach(function (element, index) {
+                                element.onclick = function (e) {
+                                    e.preventDefault();
+                                    const teacherId = this.getAttribute('data-teacher-id');
+                                    const username = this.getAttribute('data-username');
+                                    const fullName = this.getAttribute('data-fullname');
 
-                                document.getElementById('detailTeacherUsername').innerText = username || 'Chưa có thông tin';
-                                document.getElementById('detailTeacherFullName').innerText = fullName || 'Chưa có thông tin';
-                                document.getElementById('detailTeacherEmail').innerText = email || 'Chưa có thông tin';
-                                document.getElementById('detailTeacherPhone').innerText = phone || 'Chưa có thông tin';
-                                document.getElementById('detailTeacherAddress').innerText = address || 'Chưa có thông tin';
-                                document.getElementById('detailTeacherBirthDate').innerText = birthDate || 'Chưa có thông tin';
-                                document.getElementById('detailTeacherNationalId').innerText = nationalId || 'Chưa có thông tin';
 
-                                const facultyText = facultyName || 'Chưa phân khoa';
-                                document.getElementById('detailTeacherDepartment').innerText = facultyText;
+                                    console.log('View onclick triggered!', { teacherId, username, fullName });
 
-                                // Show modal
-                                const modalElement = document.getElementById('teacherDetailModal');
-                                if (modalElement) {
-                                    const modal = new bootstrap.Modal(modalElement);
-                                    modal.show();
-                                } else {
-                                    alert('Không tìm thấy modal xem chi tiết');
-                                }
-                            } catch (error) {
-                                console.error('Error in viewTeacherDetail:', error);
-                                alert('Có lỗi xảy ra khi hiển thị thông tin giáo viên: ' + error.message);
+                                    // Call the actual function
+                                    viewTeacherDetail(teacherId, username, fullName,
+                                        this.getAttribute('data-email'),
+                                        this.getAttribute('data-phone'),
+                                        this.getAttribute('data-address'),
+                                        this.getAttribute('data-birthdate'),
+                                        this.getAttribute('data-nationalid'),
+                                        this.getAttribute('data-facultyname'));
+                                    return false;
+                                };
+                            });
+
+                            // Add onclick to edit elements
+                            editElements.forEach(function (element, index) {
+                                element.onclick = function (e) {
+                                    e.preventDefault();
+                                    const teacherId = this.getAttribute('data-teacher-id');
+                                    const username = this.getAttribute('data-username');
+                                    const fullName = this.getAttribute('data-fullname');
+
+
+                                    console.log('Edit onclick triggered!', { teacherId, username, fullName });
+
+                                    // Call the actual function
+                                    editTeacher(teacherId, username, fullName,
+                                        this.getAttribute('data-email'),
+                                        this.getAttribute('data-phone'),
+                                        this.getAttribute('data-address'),
+                                        this.getAttribute('data-birthdate'),
+                                        this.getAttribute('data-nationalid'),
+                                        this.getAttribute('data-facultyid'));
+                                    return false;
+                                };
+                            });
+
+                            // Add onclick to delete elements
+                            deleteElements.forEach(function (element, index) {
+                                element.onclick = function (e) {
+                                    e.preventDefault();
+                                    const teacherId = this.getAttribute('data-teacher-id');
+                                    const fullName = this.getAttribute('data-fullname');
+
+
+                                    console.log('Delete onclick triggered!', { teacherId, fullName });
+
+                                    // Call the actual function
+                                    deleteTeacher(teacherId, fullName);
+                                    return false;
+                                };
+                            });
+
+                            console.log('All onclick handlers added successfully!');
+                            console.log('=== END BASIC TEST ===');
+                        }, 500);
+
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                html: true
+                            });
+                        });
+
+                        // Initialize teacher action handlers
+                        console.log('About to initialize teacher actions...');
+                        initTeacherActions();
+
+                        console.log('Teacher page initialization completed.');
+
+                        // Test if elements exist
+                        setTimeout(function () {
+                            const viewElements = document.querySelectorAll('.view-teacher-detail');
+                            const editElements = document.querySelectorAll('.edit-teacher');
+                            const deleteElements = document.querySelectorAll('.delete-teacher');
+
+                            console.log('Elements found after initialization:', {
+                                'view elements': viewElements.length,
+                                'edit elements': editElements.length,
+                                'delete elements': deleteElements.length
+                            });
+
+                            if (viewElements.length > 0) {
+                                console.log('First view element:', viewElements[0]);
+                                console.log('First view element data:', {
+                                    id: viewElements[0].getAttribute('data-teacher-id'),
+                                    username: viewElements[0].getAttribute('data-username'),
+                                    fullname: viewElements[0].getAttribute('data-fullname')
+                                });
                             }
-                        }
+                        }, 100);
+                    });
 
-                        // Function to edit teacher
-                        function editTeacher(id, username, fullName, email, phone, address, birthDate, nationalId, facultyId) {
-                            try {
-                                console.log('editTeacher called', { id, username, fullName });
+                    function initTeacherActions() {
+                        console.log('Initializing teacher actions...');
 
-                                document.getElementById('editUsername').value = username || '';
-                                document.getElementById('editEmail').value = email || '';
-                                document.getElementById('editFullName').value = fullName || '';
-                                document.getElementById('editPhone').value = phone || '';
-                                document.getElementById('editAddress').value = address || '';
-                                document.getElementById('editBirthDate').value = birthDate || '';
-                                document.getElementById('editNationalId').value = nationalId || '';
+                        // Try direct approach without event delegation
+                        setTimeout(function () {
+                            console.log('Adding direct event listeners...');
 
-                                // Set faculty dropdown
-                                const facultySelect = document.getElementById('editFacultyId');
-                                if (facultySelect) {
-                                    facultySelect.value = facultyId || '';
-                                }
+                            // Direct listeners for view buttons
+                            document.querySelectorAll('.view-teacher-detail').forEach(function (element, index) {
+                                console.log('Adding listener to view element', index, element);
 
-                                // Set form action
-                                const form = document.getElementById('editTeacherForm');
-                                form.action = '${pageContext.request.contextPath}/admin/teachers/' + id + '/edit';
+                                // Remove existing listeners if any
+                                element.onclick = null;
 
-                                // Show modal
-                                const modalElement = document.getElementById('editTeacherModal');
-                                if (modalElement) {
-                                    const modal = new bootstrap.Modal(modalElement);
-                                    modal.show();
-                                } else {
-                                    alert('Không tìm thấy modal chỉnh sửa');
-                                }
-                            } catch (error) {
-                                console.error('Error in editTeacher:', error);
-                                alert('Có lỗi xảy ra khi mở form chỉnh sửa: ' + error.message);
+                                element.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    console.log('DIRECT: View clicked for element:', this);
+
+                                    const teacherId = this.getAttribute('data-teacher-id');
+                                    const username = this.getAttribute('data-username') || '';
+                                    const fullName = this.getAttribute('data-fullname') || '';
+                                    const email = this.getAttribute('data-email') || '';
+                                    const phone = this.getAttribute('data-phone') || '';
+                                    const address = this.getAttribute('data-address') || '';
+                                    const birthDate = this.getAttribute('data-birthdate') || '';
+                                    const nationalId = this.getAttribute('data-nationalid') || '';
+                                    const facultyName = this.getAttribute('data-facultyname') || '';
+
+                                    console.log('DIRECT: View teacher data:', { teacherId, username, fullName, email });
+                                    viewTeacherDetail(teacherId, username, fullName, email, phone, address, birthDate, nationalId, facultyName);
+                                });
+                            });
+
+                            // Direct listeners for edit buttons
+                            document.querySelectorAll('.edit-teacher').forEach(function (element, index) {
+                                console.log('Adding listener to edit element', index, element);
+
+                                element.onclick = null;
+
+                                element.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    console.log('DIRECT: Edit clicked for element:', this);
+
+                                    const teacherId = this.getAttribute('data-teacher-id');
+                                    const username = this.getAttribute('data-username') || '';
+                                    const fullName = this.getAttribute('data-fullname') || '';
+                                    const email = this.getAttribute('data-email') || '';
+                                    const phone = this.getAttribute('data-phone') || '';
+                                    const address = this.getAttribute('data-address') || '';
+                                    const birthDate = this.getAttribute('data-birthdate') || '';
+                                    const nationalId = this.getAttribute('data-nationalid') || '';
+                                    const facultyId = this.getAttribute('data-facultyid') || '';
+
+                                    console.log('DIRECT: Edit teacher data:', { teacherId, username, fullName, email });
+                                    editTeacher(teacherId, username, fullName, email, phone, address, birthDate, nationalId, facultyId);
+                                });
+                            });
+
+                            // Direct listeners for delete buttons
+                            document.querySelectorAll('.delete-teacher').forEach(function (element, index) {
+                                console.log('Adding listener to delete element', index, element);
+
+                                element.onclick = null;
+
+                                element.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    console.log('DIRECT: Delete clicked for element:', this);
+
+                                    const teacherId = this.getAttribute('data-teacher-id');
+                                    const fullName = this.getAttribute('data-fullname') || '';
+
+                                    console.log('DIRECT: Delete teacher data:', { teacherId, fullName });
+                                    deleteTeacher(teacherId, fullName);
+                                });
+                            });
+                        }, 200);
+
+                        console.log('Teacher actions initialized successfully!');
+                        console.log('Found elements:', {
+                            view: document.querySelectorAll('.view-teacher-detail').length,
+                            edit: document.querySelectorAll('.edit-teacher').length,
+                            delete: document.querySelectorAll('.delete-teacher').length
+                        });
+                    }
+
+                    // Function to view teacher detail
+                    function viewTeacherDetail(id, username, fullName, email, phone, address, birthDate, nationalId, facultyName) {
+                        try {
+                            console.log('viewTeacherDetail called', { id, username, fullName });
+
+                            document.getElementById('detailTeacherUsername').innerText = username || 'Chưa có thông tin';
+                            document.getElementById('detailTeacherFullName').innerText = fullName || 'Chưa có thông tin';
+                            document.getElementById('detailTeacherEmail').innerText = email || 'Chưa có thông tin';
+                            document.getElementById('detailTeacherPhone').innerText = phone || 'Chưa có thông tin';
+                            document.getElementById('detailTeacherAddress').innerText = address || 'Chưa có thông tin';
+                            document.getElementById('detailTeacherBirthDate').innerText = birthDate || 'Chưa có thông tin';
+                            document.getElementById('detailTeacherNationalId').innerText = nationalId || 'Chưa có thông tin';
+
+                            const facultyText = facultyName || 'Chưa phân khoa';
+                            document.getElementById('detailTeacherDepartment').innerText = facultyText;
+
+                            // Show modal
+                            const modalElement = document.getElementById('teacherDetailModal');
+                            if (modalElement) {
+                                const modal = new bootstrap.Modal(modalElement);
+                                modal.show();
+                            } else {
+                                alert('Không tìm thấy modal xem chi tiết');
                             }
+                        } catch (error) {
+                            console.error('Error in viewTeacherDetail:', error);
+                            alert('Có lỗi xảy ra khi hiển thị thông tin giáo viên: ' + error.message);
                         }
+                    }
 
-                        // Function to delete teacher
-                        function deleteTeacher(id, fullName) {
-                            try {
-                                console.log('deleteTeacher called', { id, fullName });
+                    // Function to edit teacher
+                    function editTeacher(id, username, fullName, email, phone, address, birthDate, nationalId, facultyId) {
+                        try {
+                            console.log('editTeacher called', { id, username, fullName });
 
-                                document.getElementById('deleteTeacherName').innerText = fullName;
+                            document.getElementById('editUsername').value = username || '';
+                            document.getElementById('editEmail').value = email || '';
+                            document.getElementById('editFullName').value = fullName || '';
+                            document.getElementById('editPhone').value = phone || '';
+                            document.getElementById('editAddress').value = address || '';
+                            document.getElementById('editBirthDate').value = birthDate || '';
+                            document.getElementById('editNationalId').value = nationalId || '';
 
-                                // Set up confirm button
-                                const confirmBtn = document.getElementById('confirmDeleteTeacher');
-                                confirmBtn.onclick = function () {
-                                    // Check if teacher is homeroom teacher first
-                                    fetch('${pageContext.request.contextPath}/admin/teachers/' + id + '/can-delete', {
-                                        method: 'GET',
-                                        headers: {
-                                            'X-Requested-With': 'XMLHttpRequest'
+                            // Set faculty dropdown
+                            const facultySelect = document.getElementById('editFacultyId');
+                            if (facultySelect) {
+                                facultySelect.value = facultyId || '';
+                            }
+
+                            // Set form action
+                            const form = document.getElementById('editTeacherForm');
+                            form.action = '${pageContext.request.contextPath}/admin/teachers/' + id + '/edit';
+
+                            // Show modal
+                            const modalElement = document.getElementById('editTeacherModal');
+                            if (modalElement) {
+                                const modal = new bootstrap.Modal(modalElement);
+                                modal.show();
+                            } else {
+                                alert('Không tìm thấy modal chỉnh sửa');
+                            }
+                        } catch (error) {
+                            console.error('Error in editTeacher:', error);
+                            alert('Có lỗi xảy ra khi mở form chỉnh sửa: ' + error.message);
+                        }
+                    }
+
+                    // Function to delete teacher
+                    function deleteTeacher(id, fullName) {
+                        try {
+                            console.log('deleteTeacher called', { id, fullName });
+
+                            document.getElementById('deleteTeacherName').innerText = fullName;
+
+                            // Set up confirm button
+                            const confirmBtn = document.getElementById('confirmDeleteTeacher');
+                            confirmBtn.onclick = function () {
+                                // Check if teacher is homeroom teacher first
+                                fetch('${pageContext.request.contextPath}/admin/teachers/' + id + '/can-delete', {
+                                    method: 'GET',
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.canDelete) {
+                                            // Actually delete the teacher
+                                            const form = document.createElement('form');
+                                            form.method = 'POST';
+                                            form.action = '${pageContext.request.contextPath}/admin/teachers/' + id + '/delete';
+
+                                            const csrfToken = document.querySelector('input[name="${_csrf.parameterName}"]');
+                                            if (csrfToken) {
+                                                const csrfInput = document.createElement('input');
+                                                csrfInput.type = 'hidden';
+                                                csrfInput.name = csrfToken.name;
+                                                csrfInput.value = csrfToken.value;
+                                                form.appendChild(csrfInput);
+                                            }
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        } else {
+                                            alert('Không thể xóa giáo viên này vì đang là chủ nhiệm của một lớp học!');
+                                            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('deleteTeacherModal'));
+                                            if (modalInstance) {
+                                                modalInstance.hide();
+                                            }
                                         }
                                     })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.canDelete) {
-                                                // Actually delete the teacher
-                                                const form = document.createElement('form');
-                                                form.method = 'POST';
-                                                form.action = '${pageContext.request.contextPath}/admin/teachers/' + id + '/delete';
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        alert('Có lỗi xảy ra khi kiểm tra giáo viên!');
+                                    });
+                            };
 
-                                                const csrfToken = document.querySelector('input[name="${_csrf.parameterName}"]');
-                                                if (csrfToken) {
-                                                    const csrfInput = document.createElement('input');
-                                                    csrfInput.type = 'hidden';
-                                                    csrfInput.name = csrfToken.name;
-                                                    csrfInput.value = csrfToken.value;
-                                                    form.appendChild(csrfInput);
-                                                }
-
-                                                document.body.appendChild(form);
-                                                form.submit();
-                                            } else {
-                                                alert('Không thể xóa giáo viên này vì đang là chủ nhiệm của một lớp học!');
-                                                const modalInstance = bootstrap.Modal.getInstance(document.getElementById('deleteTeacherModal'));
-                                                if (modalInstance) {
-                                                    modalInstance.hide();
-                                                }
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error:', error);
-                                            alert('Có lỗi xảy ra khi kiểm tra giáo viên!');
-                                        });
-                                };
-
-                                // Show modal
-                                const modalElement = document.getElementById('deleteTeacherModal');
-                                if (modalElement) {
-                                    const modal = new bootstrap.Modal(modalElement);
-                                    modal.show();
-                                } else {
-                                    alert('Không tìm thấy modal xóa');
-                                }
-                            } catch (error) {
-                                console.error('Error in deleteTeacher:', error);
-                                alert('Có lỗi xảy ra khi mở dialog xác nhận xóa: ' + error.message);
+                            // Show modal
+                            const modalElement = document.getElementById('deleteTeacherModal');
+                            if (modalElement) {
+                                const modal = new bootstrap.Modal(modalElement);
+                                modal.show();
+                            } else {
+                                alert('Không tìm thấy modal xóa');
                             }
+                        } catch (error) {
+                            console.error('Error in deleteTeacher:', error);
+                            alert('Có lỗi xảy ra khi mở dialog xác nhận xóa: ' + error.message);
                         }
+                    }
 
-                        // Auto-format CCCD input (only allow numbers)
-                        function setupCCCDFormatting() {
-                            const cccdInputs = document.querySelectorAll('input[name="nationalId"]');
+                    // Auto-format CCCD input (only allow numbers)
+                    function setupCCCDFormatting() {
+                        const cccdInputs = document.querySelectorAll('input[name="nationalId"]');
 
-                            cccdInputs.forEach(input => {
-                                input.addEventListener('input', function (e) {
-                                    // Remove all non-numeric characters
+                        cccdInputs.forEach(input => {
+                            input.addEventListener('input', function (e) {
+                                // Remove all non-numeric characters
+                                let value = e.target.value.replace(/[^0-9]/g, '');
+
+                                // Limit to 12 digits
+                                if (value.length > 12) {
+                                    value = value.substring(0, 12);
+                                }
+
+                                // Update the input value
+                                e.target.value = value;
+                            });
+
+                            input.addEventListener('paste', function (e) {
+                                // Handle paste event
+                                setTimeout(() => {
                                     let value = e.target.value.replace(/[^0-9]/g, '');
-
-                                    // Limit to 12 digits
                                     if (value.length > 12) {
                                         value = value.substring(0, 12);
                                     }
-
-                                    // Update the input value
                                     e.target.value = value;
-                                });
-
-                                input.addEventListener('paste', function (e) {
-                                    // Handle paste event
-                                    setTimeout(() => {
-                                        let value = e.target.value.replace(/[^0-9]/g, '');
-                                        if (value.length > 12) {
-                                            value = value.substring(0, 12);
-                                        }
-                                        e.target.value = value;
-                                    }, 10);
-                                });
+                                }, 10);
                             });
-                        }
+                        });
+                    }
 
-                        // Setup CCCD formatting when page loads
-                        setupCCCDFormatting();
+                    // Setup CCCD formatting when page loads
+                    setupCCCDFormatting();
 
 
-                    </script>
+                </script>
             </body>
 
             </html>

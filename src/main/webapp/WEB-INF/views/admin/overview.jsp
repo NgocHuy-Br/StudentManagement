@@ -15,7 +15,7 @@
 
             <body>
                 <div class="container-fluid" style="padding: 0 clamp(12px, 4vw, 36px);">
-                    <jsp:include page="../common/_header.jsp">
+                    <jsp:include page="../common/header.jsp">
                         <jsp:param name="pageTitle" value="Tổng quan" />
                     </jsp:include>
 

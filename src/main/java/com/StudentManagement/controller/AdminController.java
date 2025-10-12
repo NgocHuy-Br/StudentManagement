@@ -1513,6 +1513,7 @@ public class AdminController {
     @GetMapping("/majors")
     public String majorSubjectManagement(Authentication auth, Model model,
             @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) Long facultyId,
             @RequestParam(required = false) Long selectedMajorId,
             @RequestParam(defaultValue = "") String subjectSearch,
             @RequestParam(defaultValue = "subjectCode") String subjectSort,
@@ -1521,16 +1522,25 @@ public class AdminController {
         addUserInfo(auth, model);
         model.addAttribute("activeTab", "majors");
 
-        // Lấy danh sách ngành
+        // Lấy danh sách ngành với filter
         List<Major> majors;
         if (q != null && !q.isBlank()) {
-            majors = majorRepository.searchByCodeOrName(q.trim());
+            if (facultyId != null) {
+                majors = majorRepository.searchByCodeOrNameAndFaculty(q.trim(), facultyId);
+            } else {
+                majors = majorRepository.searchByCodeOrName(q.trim());
+            }
         } else {
-            majors = majorRepository.findAllWithSubjectCount();
+            if (facultyId != null) {
+                majors = majorRepository.findByFacultyIdWithSubjectCount(facultyId);
+            } else {
+                majors = majorRepository.findAllWithSubjectCount();
+            }
         }
 
         model.addAttribute("majors", majors);
         model.addAttribute("q", q);
+        model.addAttribute("facultyId", facultyId);
 
         // Thêm danh sách các khoa để tạo/sửa ngành
         model.addAttribute("faculties", facultyRepository.findAllOrderByName());
@@ -2330,18 +2340,35 @@ public class AdminController {
         }
     }
 
-    // API lấy danh sách khóa học theo mã ngành
-    @GetMapping("/api/course-years/{majorCode}")
+    // API lấy chi tiết ngành học
+    @GetMapping("/api/major-details/{majorId}")
     @ResponseBody
-    public ResponseEntity<List<String>> getCourseYearsByMajorCode(@PathVariable String majorCode) {
+    public ResponseEntity<Map<String, Object>> getMajorDetails(@PathVariable Long majorId) {
         try {
-            List<String> courseYears = majorRepository.findByMajorCode(majorCode)
-                    .stream()
-                    .map(Major::getCourseYear)
-                    .distinct()
-                    .sorted()
-                    .toList();
-            return ResponseEntity.ok(courseYears);
+            Optional<Major> majorOpt = majorRepository.findById(majorId);
+            if (majorOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Major major = majorOpt.get();
+            Map<String, Object> response = new HashMap<>();
+
+            // Basic info
+            response.put("majorCode", major.getMajorCode());
+            response.put("majorName", major.getMajorName());
+            response.put("description", major.getDescription());
+            response.put("faculty", major.getFaculty() != null ? major.getFaculty().getName() : "Chưa phân khoa");
+
+            // Subject statistics
+            List<Subject> subjects = major.getSubjects();
+            response.put("subjectCount", subjects.size());
+
+            int totalCredits = subjects.stream()
+                    .mapToInt(Subject::getCredit)
+                    .sum();
+            response.put("totalCredits", totalCredits);
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

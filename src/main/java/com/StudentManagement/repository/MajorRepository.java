@@ -60,4 +60,25 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
 
   // Đếm số ngành theo faculty ID
   Long countByFacultyId(Long facultyId);
+
+  // Tìm kiếm theo mã/tên và khoa
+  @Query("""
+      SELECT m FROM Major m
+      LEFT JOIN FETCH m.faculty
+      WHERE m.faculty.id = :facultyId
+        AND (lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
+         OR lower(m.majorName) LIKE lower(concat('%', :search, '%')))
+      ORDER BY m.majorCode ASC
+      """)
+  List<Major> searchByCodeOrNameAndFaculty(@Param("search") String search, @Param("facultyId") Long facultyId);
+
+  // Lấy tất cả ngành theo khoa với thông tin môn học
+  @Query("""
+      SELECT DISTINCT m FROM Major m
+      LEFT JOIN FETCH m.faculty
+      LEFT JOIN FETCH m.subjects
+      WHERE m.faculty.id = :facultyId
+      ORDER BY m.majorCode ASC
+      """)
+  List<Major> findByFacultyIdWithSubjectCount(@Param("facultyId") Long facultyId);
 }

@@ -3,7 +3,6 @@
         <style>
             :root {
                 --brand: #b91c1c;
-                --page-x: clamp(12px, 4vw, 36px);
                 --tabs-inset: clamp(10px, 2vw, 24px);
             }
 

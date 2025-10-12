@@ -20,11 +20,6 @@
                         background: #f7f7f9
                     }
 
-                    .main-wrap {
-                        padding-left: var(--page-x);
-                        padding-right: var(--page-x)
-                    }
-
                     .card {
                         border-radius: 12px;
                         box-shadow: 0 10px 25px rgba(0, 0, 0, .06)
@@ -50,9 +45,10 @@
             </head>
 
             <body>
-                <%@ include file="../common/header.jsp" %>
+                <div class="container-fluid" style="padding: 0 clamp(12px, 4vw, 36px);">
+                    <%@ include file="../common/header.jsp" %>
 
-                    <main class="container-fluid main-wrap py-3">
+                        <c:set var="activeTab" value="students" scope="request" />
                         <%@ include file="_nav.jsp" %>
 
                             <div class="card mt-3">
@@ -232,95 +228,96 @@
                                     </c:if>
                                 </div>
                             </div>
-                    </main>
+                </div>
+                </div>
 
-                    <!-- Modal: Thêm sinh viên (có Lớp, Khoa) -->
-                    <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <form class="modal-content" method="post"
-                                action="${pageContext.request.contextPath}/admin/students">
-                                <div class="modal-header">
-                                    <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Thêm sinh viên</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row g-3">
-                                        <div class="col-sm-4">
-                                            <label class="form-label">MSSV (Username)</label>
-                                            <input name="username" class="form-control" required>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">Mật khẩu</label>
-                                            <input name="password" type="password" class="form-control" required>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">SĐT</label>
-                                            <input name="phone" class="form-control">
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">Họ</label>
-                                            <input name="fname" class="form-control" required>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">Tên</label>
-                                            <input name="lname" class="form-control">
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">Email</label>
-                                            <input name="email" type="email" class="form-control" required>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">CCCD</label>
-                                            <input name="nationalId" type="text" class="form-control"
-                                                placeholder="12 chữ số" maxlength="12" pattern="[0-9]{12}">
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Địa chỉ</label>
-                                            <input name="address" class="form-control" placeholder="Nhập địa chỉ">
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">Ngày sinh</label>
-                                            <input name="birthDate" type="date" class="form-control">
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">Lớp</label>
-                                            <input name="className" class="form-control" placeholder="VD: D20CQCN01-N">
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label">Ngành học</label>
-                                            <select name="majorId" class="form-select" required>
-                                                <option value="">-- Chọn ngành --</option>
-                                                <c:forEach var="major" items="${majors}">
-                                                    <option value="${major.id}">${major.majorCode} - ${major.majorName}
-                                                    </option>
-                                                </c:forEach>
-                                            </select>
-                                        </div>
+                <!-- Modal: Thêm sinh viên (có Lớp, Khoa) -->
+                <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <form class="modal-content" method="post"
+                            action="${pageContext.request.contextPath}/admin/students">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Thêm sinh viên</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row g-3">
+                                    <div class="col-sm-4">
+                                        <label class="form-label">MSSV (Username)</label>
+                                        <input name="username" class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">Mật khẩu</label>
+                                        <input name="password" type="password" class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">SĐT</label>
+                                        <input name="phone" class="form-control">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">Họ</label>
+                                        <input name="fname" class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">Tên</label>
+                                        <input name="lname" class="form-control">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">Email</label>
+                                        <input name="email" type="email" class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">CCCD</label>
+                                        <input name="nationalId" type="text" class="form-control"
+                                            placeholder="12 chữ số" maxlength="12" pattern="[0-9]{12}">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Địa chỉ</label>
+                                        <input name="address" class="form-control" placeholder="Nhập địa chỉ">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">Ngày sinh</label>
+                                        <input name="birthDate" type="date" class="form-control">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">Lớp</label>
+                                        <input name="className" class="form-control" placeholder="VD: D20CQCN01-N">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label">Ngành học</label>
+                                        <select name="majorId" class="form-select" required>
+                                            <option value="">-- Chọn ngành --</option>
+                                            <c:forEach var="major" items="${majors}">
+                                                <option value="${major.id}">${major.majorCode} - ${major.majorName}
+                                                </option>
+                                            </c:forEach>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <c:if test="${not empty _csrf}">
-                                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                                    </c:if>
-                                    <button class="btn btn-primary" type="submit"><i
-                                            class="bi bi-save2 me-1"></i>Lưu</button>
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        data-bs-dismiss="modal">Hủy</button>
-                                </div>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <c:if test="${not empty _csrf}">
+                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                </c:if>
+                                <button class="btn btn-primary" type="submit"><i
+                                        class="bi bi-save2 me-1"></i>Lưu</button>
+                                <button class="btn btn-outline-secondary" type="button"
+                                    data-bs-dismiss="modal">Hủy</button>
+                            </div>
+                        </form>
                     </div>
+                </div>
 
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-                    <script>
-                        // Kích hoạt tooltip
-                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                            return new bootstrap.Tooltip(tooltipTriggerEl, {
-                                html: true
-                            });
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script>
+                    // Kích hoạt tooltip
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl, {
+                            html: true
                         });
-                    </script>
+                    });
+                </script>
             </body>
 
             </html>

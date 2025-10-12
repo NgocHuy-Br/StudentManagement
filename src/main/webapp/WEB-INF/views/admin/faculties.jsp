@@ -20,11 +20,6 @@
                         background: #f7f7f9
                     }
 
-                    .main-wrap {
-                        padding-left: var(--page-x);
-                        padding-right: var(--page-x)
-                    }
-
                     .card {
                         border-radius: 12px;
                         box-shadow: 0 10px 25px rgba(0, 0, 0, .06)
@@ -77,8 +72,10 @@
             </head>
 
             <body>
-                <%@ include file="../common/header.jsp" %>
-                    <main class="container-fluid main-wrap py-3">
+                <div class="container-fluid" style="padding: 0 clamp(12px, 4vw, 36px);">
+                    <%@ include file="../common/header.jsp" %>
+
+                        <c:set var="activeTab" value="faculties" scope="request" />
                         <%@ include file="_nav.jsp" %>
 
                             <div class="card mt-3">
@@ -263,321 +260,321 @@
                                     </c:if>
                                 </div>
                             </div>
-                    </main>
+                </div>
+                </div>
 
-                    <!-- Modal: Thêm khoa -->
-                    <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <form class="modal-content" method="post"
-                                action="${pageContext.request.contextPath}/admin/faculties">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="bi bi-plus-circle me-2"></i>Thêm khoa mới
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <!-- Modal: Thêm khoa -->
+                <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <form class="modal-content" method="post"
+                            action="${pageContext.request.contextPath}/admin/faculties">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-plus-circle me-2"></i>Thêm khoa mới
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="createFacultyCode" class="form-label">Mã khoa <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="createFacultyCode" name="facultyCode"
+                                        placeholder="Nhập mã khoa (vd: CNTT, KTMT)" required maxlength="20">
                                 </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="createFacultyCode" class="form-label">Mã khoa <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="createFacultyCode"
-                                            name="facultyCode" placeholder="Nhập mã khoa (vd: CNTT, KTMT)" required
-                                            maxlength="20">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="createName" class="form-label">Tên khoa <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="createName" name="name"
-                                            placeholder="Nhập tên khoa" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="createDescription" class="form-label">Mô tả</label>
-                                        <textarea class="form-control" id="createDescription" name="description"
-                                            rows="3" placeholder="Mô tả về khoa (tùy chọn)"></textarea>
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="createName" class="form-label">Tên khoa <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="createName" name="name"
+                                        placeholder="Nhập tên khoa" required>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-check-lg me-1"></i>Lưu
-                                    </button>
+                                <div class="mb-3">
+                                    <label for="createDescription" class="form-label">Mô tả</label>
+                                    <textarea class="form-control" id="createDescription" name="description" rows="3"
+                                        placeholder="Mô tả về khoa (tùy chọn)"></textarea>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>Lưu
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                </div>
 
-                    <!-- Modal: Chỉnh sửa khoa -->
-                    <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <form class="modal-content" method="post" id="editForm">
-                                <input type="hidden" id="editId" name="id">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa khoa
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <!-- Modal: Chỉnh sửa khoa -->
+                <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <form class="modal-content" method="post" id="editForm">
+                            <input type="hidden" id="editId" name="id">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa khoa
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="editFacultyCode" class="form-label">Mã khoa <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editFacultyCode" name="facultyCode"
+                                        required maxlength="20">
                                 </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="editFacultyCode" class="form-label">Mã khoa <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editFacultyCode" name="facultyCode"
-                                            required maxlength="20">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="editName" class="form-label">Tên khoa <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="editName" name="name" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="editDescription" class="form-label">Mô tả</label>
-                                        <textarea class="form-control" id="editDescription" name="description"
-                                            rows="3"></textarea>
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="editName" class="form-label">Tên khoa <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editName" name="name" required>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-check-lg me-1"></i>Cập nhật
-                                    </button>
+                                <div class="mb-3">
+                                    <label for="editDescription" class="form-label">Mô tả</label>
+                                    <textarea class="form-control" id="editDescription" name="description"
+                                        rows="3"></textarea>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>Cập nhật
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                </div>
 
-                    <!-- Modal: Xác nhận xóa -->
-                    <div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title text-danger">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Bạn có chắc chắn muốn xóa khoa <strong id="deleteFacultyName"
-                                            class="text-danger"></strong> không?</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <form method="post" id="deleteForm" class="d-inline">
-                                        <input type="hidden" id="deleteId" name="id">
-                                        <button type="submit" class="btn btn-danger">
-                                            <i class="bi bi-trash me-1"></i>Xác nhận xóa
-                                        </button>
-                                    </form>
-                                </div>
+                <!-- Modal: Xác nhận xóa -->
+                <div class="modal fade" id="modalDelete" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title text-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Bạn có chắc chắn muốn xóa khoa <strong id="deleteFacultyName"
+                                        class="text-danger"></strong> không?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <form method="post" id="deleteForm" class="d-inline">
+                                    <input type="hidden" id="deleteId" name="id">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-trash me-1"></i>Xác nhận xóa
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-                    <script>
-                        // Get context path from JSP
-                        const contextPath = '${pageContext.request.contextPath}';
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script>
+                    // Get context path from JSP
+                    const contextPath = '${pageContext.request.contextPath}';
 
-                        document.addEventListener('DOMContentLoaded', function () {
-                            // Initialize tooltips
-                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                                return new bootstrap.Tooltip(tooltipTriggerEl);
-                            });
-
-                            // Handle Edit Faculty
-                            const editButtons = document.querySelectorAll('.edit-faculty');
-                            editButtons.forEach(button => {
-                                button.addEventListener('click', function (e) {
-                                    e.preventDefault();
-                                    const id = this.getAttribute('data-faculty-id');
-                                    const facultyCode = this.getAttribute('data-faculty-code');
-                                    const name = this.getAttribute('data-name');
-                                    const description = this.getAttribute('data-description');
-
-                                    document.getElementById('editId').value = id;
-                                    document.getElementById('editFacultyCode').value = facultyCode || '';
-                                    document.getElementById('editName').value = name || '';
-                                    document.getElementById('editDescription').value = description || '';
-
-                                    // Set form action
-                                    const editForm = document.getElementById('editForm');
-                                    editForm.action = contextPath + '/admin/faculties/' + id;
-
-                                    // Show modal
-                                    const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
-                                    modal.show();
-                                });
-                            });
-
-                            // Handle Delete Faculty
-                            const deleteButtons = document.querySelectorAll('.delete-faculty');
-                            deleteButtons.forEach(button => {
-                                button.addEventListener('click', function (e) {
-                                    e.preventDefault();
-                                    const id = this.getAttribute('data-faculty-id');
-                                    const facultyCode = this.getAttribute('data-faculty-code');
-                                    const name = this.getAttribute('data-name');
-
-                                    document.getElementById('deleteId').value = id;
-                                    document.getElementById('deleteFacultyName').textContent = name || '';
-
-                                    // Set form action
-                                    const deleteForm = document.getElementById('deleteForm');
-                                    deleteForm.action = contextPath + '/admin/faculties/' + id + '/delete';
-
-                                    // Show modal
-                                    const modal = new bootstrap.Modal(document.getElementById('modalDelete'));
-                                    modal.show();
-                                });
-                            });
-
-                            // Function to clear search
-                            window.clearSearch = function () {
-                                const searchInput = document.getElementById('searchInput');
-                                searchInput.value = '';
-
-                                // Get current URL without query params
-                                const url = new URL(window.location);
-                                url.searchParams.delete('q'); // Remove search query
-                                url.searchParams.set('page', '0'); // Reset to first page
-
-                                // Redirect to the new URL
-                                window.location.href = url.toString();
-                            };
-
-                            // Faculty validation functions
-                            window.validateFacultyCode = function (facultyCode, excludeId = null) {
-                                return fetch(contextPath + '/admin/faculties/check-code?facultyCode=' + encodeURIComponent(facultyCode) +
-                                    (excludeId ? '&excludeId=' + excludeId : ''))
-                                    .then(response => response.json())
-                                    .then(data => data.exists);
-                            };
-
-                            window.validateFacultyName = function (name, excludeId = null) {
-                                return fetch(contextPath + '/admin/faculties/check-name?name=' + encodeURIComponent(name) +
-                                    (excludeId ? '&excludeId=' + excludeId : ''))
-                                    .then(response => response.json())
-                                    .then(data => data.exists);
-                            };
-
-                            // Add validation to create form
-                            const createForm = document.querySelector('#modalCreate form');
-                            if (createForm) {
-                                createForm.addEventListener('submit', async function (e) {
-                                    e.preventDefault();
-
-                                    const submitBtn = this.querySelector('button[type="submit"]');
-                                    const originalText = submitBtn.innerHTML;
-
-                                    // Show loading state
-                                    submitBtn.disabled = true;
-                                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
-
-                                    const facultyCode = document.getElementById('createFacultyCode').value.trim();
-                                    const name = document.getElementById('createName').value.trim();
-
-                                    if (!facultyCode || !name) {
-                                        alert('Vui lòng nhập đầy đủ mã khoa và tên khoa.');
-                                        submitBtn.disabled = false;
-                                        submitBtn.innerHTML = originalText;
-                                        return;
-                                    }
-
-                                    try {
-                                        const [codeExists, nameExists] = await Promise.all([
-                                            validateFacultyCode(facultyCode),
-                                            validateFacultyName(name)
-                                        ]);
-
-                                        if (codeExists) {
-                                            alert('Mã khoa "' + facultyCode + '" đã tồn tại. Vui lòng chọn mã khác.');
-                                            document.getElementById('createFacultyCode').focus();
-                                            submitBtn.disabled = false;
-                                            submitBtn.innerHTML = originalText;
-                                            return;
-                                        }
-
-                                        if (nameExists) {
-                                            alert('Tên khoa "' + name + '" đã tồn tại. Vui lòng chọn tên khác.');
-                                            document.getElementById('createName').focus();
-                                            submitBtn.disabled = false;
-                                            submitBtn.innerHTML = originalText;
-                                            return;
-                                        }
-
-                                        // If validation passes, submit the form
-                                        submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Lưu';
-                                        this.submit();
-                                    } catch (error) {
-                                        console.error('Validation error:', error);
-                                        submitBtn.disabled = false;
-                                        submitBtn.innerHTML = originalText;
-                                        // If validation fails, still allow submission (server will handle it)
-                                        this.submit();
-                                    }
-                                });
-                            }
-
-                            // Add validation to edit form
-                            const editForm = document.getElementById('editForm');
-                            if (editForm) {
-                                editForm.addEventListener('submit', async function (e) {
-                                    e.preventDefault();
-
-                                    const submitBtn = this.querySelector('button[type="submit"]');
-                                    const originalText = submitBtn.innerHTML;
-
-                                    // Show loading state
-                                    submitBtn.disabled = true;
-                                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
-
-                                    const facultyCode = document.getElementById('editFacultyCode').value.trim();
-                                    const name = document.getElementById('editName').value.trim();
-                                    const excludeId = document.getElementById('editId').value;
-
-                                    if (!facultyCode || !name) {
-                                        alert('Vui lòng nhập đầy đủ mã khoa và tên khoa.');
-                                        submitBtn.disabled = false;
-                                        submitBtn.innerHTML = originalText;
-                                        return;
-                                    }
-
-                                    try {
-                                        const [codeExists, nameExists] = await Promise.all([
-                                            validateFacultyCode(facultyCode, excludeId),
-                                            validateFacultyName(name, excludeId)
-                                        ]);
-
-                                        if (codeExists) {
-                                            alert('Mã khoa "' + facultyCode + '" đã tồn tại. Vui lòng chọn mã khác.');
-                                            document.getElementById('editFacultyCode').focus();
-                                            submitBtn.disabled = false;
-                                            submitBtn.innerHTML = originalText;
-                                            return;
-                                        }
-
-                                        if (nameExists) {
-                                            alert('Tên khoa "' + name + '" đã tồn tại. Vui lòng chọn tên khác.');
-                                            document.getElementById('editName').focus();
-                                            submitBtn.disabled = false;
-                                            submitBtn.innerHTML = originalText;
-                                            return;
-                                        }
-
-                                        // If validation passes, submit the form
-                                        submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Cập nhật';
-                                        this.submit();
-                                    } catch (error) {
-                                        console.error('Validation error:', error);
-                                        submitBtn.disabled = false;
-                                        submitBtn.innerHTML = originalText;
-                                        // If validation fails, still allow submission (server will handle it)
-                                        this.submit();
-                                    }
-                                });
-                            }
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Initialize tooltips
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
                         });
-                    </script>
+
+                        // Handle Edit Faculty
+                        const editButtons = document.querySelectorAll('.edit-faculty');
+                        editButtons.forEach(button => {
+                            button.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                const id = this.getAttribute('data-faculty-id');
+                                const facultyCode = this.getAttribute('data-faculty-code');
+                                const name = this.getAttribute('data-name');
+                                const description = this.getAttribute('data-description');
+
+                                document.getElementById('editId').value = id;
+                                document.getElementById('editFacultyCode').value = facultyCode || '';
+                                document.getElementById('editName').value = name || '';
+                                document.getElementById('editDescription').value = description || '';
+
+                                // Set form action
+                                const editForm = document.getElementById('editForm');
+                                editForm.action = contextPath + '/admin/faculties/' + id;
+
+                                // Show modal
+                                const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
+                                modal.show();
+                            });
+                        });
+
+                        // Handle Delete Faculty
+                        const deleteButtons = document.querySelectorAll('.delete-faculty');
+                        deleteButtons.forEach(button => {
+                            button.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                const id = this.getAttribute('data-faculty-id');
+                                const facultyCode = this.getAttribute('data-faculty-code');
+                                const name = this.getAttribute('data-name');
+
+                                document.getElementById('deleteId').value = id;
+                                document.getElementById('deleteFacultyName').textContent = name || '';
+
+                                // Set form action
+                                const deleteForm = document.getElementById('deleteForm');
+                                deleteForm.action = contextPath + '/admin/faculties/' + id + '/delete';
+
+                                // Show modal
+                                const modal = new bootstrap.Modal(document.getElementById('modalDelete'));
+                                modal.show();
+                            });
+                        });
+
+                        // Function to clear search
+                        window.clearSearch = function () {
+                            const searchInput = document.getElementById('searchInput');
+                            searchInput.value = '';
+
+                            // Get current URL without query params
+                            const url = new URL(window.location);
+                            url.searchParams.delete('q'); // Remove search query
+                            url.searchParams.set('page', '0'); // Reset to first page
+
+                            // Redirect to the new URL
+                            window.location.href = url.toString();
+                        };
+
+                        // Faculty validation functions
+                        window.validateFacultyCode = function (facultyCode, excludeId = null) {
+                            return fetch(contextPath + '/admin/faculties/check-code?facultyCode=' + encodeURIComponent(facultyCode) +
+                                (excludeId ? '&excludeId=' + excludeId : ''))
+                                .then(response => response.json())
+                                .then(data => data.exists);
+                        };
+
+                        window.validateFacultyName = function (name, excludeId = null) {
+                            return fetch(contextPath + '/admin/faculties/check-name?name=' + encodeURIComponent(name) +
+                                (excludeId ? '&excludeId=' + excludeId : ''))
+                                .then(response => response.json())
+                                .then(data => data.exists);
+                        };
+
+                        // Add validation to create form
+                        const createForm = document.querySelector('#modalCreate form');
+                        if (createForm) {
+                            createForm.addEventListener('submit', async function (e) {
+                                e.preventDefault();
+
+                                const submitBtn = this.querySelector('button[type="submit"]');
+                                const originalText = submitBtn.innerHTML;
+
+                                // Show loading state
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
+
+                                const facultyCode = document.getElementById('createFacultyCode').value.trim();
+                                const name = document.getElementById('createName').value.trim();
+
+                                if (!facultyCode || !name) {
+                                    alert('Vui lòng nhập đầy đủ mã khoa và tên khoa.');
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalText;
+                                    return;
+                                }
+
+                                try {
+                                    const [codeExists, nameExists] = await Promise.all([
+                                        validateFacultyCode(facultyCode),
+                                        validateFacultyName(name)
+                                    ]);
+
+                                    if (codeExists) {
+                                        alert('Mã khoa "' + facultyCode + '" đã tồn tại. Vui lòng chọn mã khác.');
+                                        document.getElementById('createFacultyCode').focus();
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        return;
+                                    }
+
+                                    if (nameExists) {
+                                        alert('Tên khoa "' + name + '" đã tồn tại. Vui lòng chọn tên khác.');
+                                        document.getElementById('createName').focus();
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        return;
+                                    }
+
+                                    // If validation passes, submit the form
+                                    submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Lưu';
+                                    this.submit();
+                                } catch (error) {
+                                    console.error('Validation error:', error);
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalText;
+                                    // If validation fails, still allow submission (server will handle it)
+                                    this.submit();
+                                }
+                            });
+                        }
+
+                        // Add validation to edit form
+                        const editForm = document.getElementById('editForm');
+                        if (editForm) {
+                            editForm.addEventListener('submit', async function (e) {
+                                e.preventDefault();
+
+                                const submitBtn = this.querySelector('button[type="submit"]');
+                                const originalText = submitBtn.innerHTML;
+
+                                // Show loading state
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
+
+                                const facultyCode = document.getElementById('editFacultyCode').value.trim();
+                                const name = document.getElementById('editName').value.trim();
+                                const excludeId = document.getElementById('editId').value;
+
+                                if (!facultyCode || !name) {
+                                    alert('Vui lòng nhập đầy đủ mã khoa và tên khoa.');
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalText;
+                                    return;
+                                }
+
+                                try {
+                                    const [codeExists, nameExists] = await Promise.all([
+                                        validateFacultyCode(facultyCode, excludeId),
+                                        validateFacultyName(name, excludeId)
+                                    ]);
+
+                                    if (codeExists) {
+                                        alert('Mã khoa "' + facultyCode + '" đã tồn tại. Vui lòng chọn mã khác.');
+                                        document.getElementById('editFacultyCode').focus();
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        return;
+                                    }
+
+                                    if (nameExists) {
+                                        alert('Tên khoa "' + name + '" đã tồn tại. Vui lòng chọn tên khác.');
+                                        document.getElementById('editName').focus();
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        return;
+                                    }
+
+                                    // If validation passes, submit the form
+                                    submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Cập nhật';
+                                    this.submit();
+                                } catch (error) {
+                                    console.error('Validation error:', error);
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalText;
+                                    // If validation fails, still allow submission (server will handle it)
+                                    this.submit();
+                                }
+                            });
+                        }
+                    });
+                </script>
             </body>
 
             </html>
