@@ -130,6 +130,12 @@
                                                 <span class="info-label">Email:</span>
                                                 <span class="info-value">${teacher.user.email}</span>
                                             </div>
+                                            <c:if test="${not empty teacher.user.birthDate}">
+                                                <div class="info-item">
+                                                    <span class="info-label">Ngày sinh:</span>
+                                                    <span class="info-value">${teacher.user.birthDate}</span>
+                                                </div>
+                                            </c:if>
                                             <div class="info-item">
                                                 <span class="info-label">Số điện thoại:</span>
                                                 <span class="info-value">${teacher.user.phone}</span>

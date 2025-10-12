@@ -154,6 +154,12 @@
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
+                                                    <th>Ngày sinh
+                                                        <a class="sort-link"
+                                                            href="?q=${fn:escapeXml(q)}&faculty=${fn:escapeXml(param.faculty)}&size=${page.size}&sort=user.birthDate&dir=${dir=='asc' && sort=='user.birthDate' ? 'desc' : 'asc'}">
+                                                            <i class="bi bi-arrow-down-up"></i>
+                                                        </a>
+                                                    </th>
                                                     <th>Khoa
                                                         <a class="sort-link"
                                                             href="?q=${fn:escapeXml(q)}&faculty=${fn:escapeXml(param.faculty)}&size=${page.size}&sort=department&dir=${dir=='asc' && sort=='department' ? 'desc' : 'asc'}">
@@ -166,7 +172,7 @@
                                             <tbody>
                                                 <c:if test="${page.totalElements == 0}">
                                                     <tr>
-                                                        <td colspan="6" class="text-center text-muted py-4">Chưa có giáo
+                                                        <td colspan="7" class="text-center text-muted py-4">Chưa có giáo
                                                             viên nào.</td>
                                                     </tr>
                                                 </c:if>
@@ -189,6 +195,14 @@
                                                         </td>
                                                         <td>${t.user.email}</td>
                                                         <td>${t.user.phone}</td>
+                                                        <td>
+                                                            <c:if test="${not empty t.user.birthDate}">
+                                                                ${t.user.birthDate}
+                                                            </c:if>
+                                                            <c:if test="${empty t.user.birthDate}">
+                                                                <span class="text-muted">-</span>
+                                                            </c:if>
+                                                        </td>
                                                         <td>
                                                             <c:choose>
                                                                 <c:when test="${not empty t.faculty}">

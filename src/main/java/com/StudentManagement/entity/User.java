@@ -34,7 +34,7 @@ public class User {
     @Column(length = 500)
     private String address; // Địa chỉ
 
-    @Column
+    @Column(nullable = true)
     private java.time.LocalDate birthDate; // Ngày sinh
 
     @Enumerated(EnumType.STRING)

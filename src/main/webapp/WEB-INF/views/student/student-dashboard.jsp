@@ -94,7 +94,11 @@
                                                     <p class="mb-1"><strong>MSSV:</strong> ${student.user.username}</p>
                                                     <p class="mb-1"><strong>Họ tên:</strong> ${student.user.fname}
                                                         ${student.user.lname}</p>
-                                                    <p class="mb-0"><strong>Email:</strong> ${student.user.email}</p>
+                                                    <p class="mb-1"><strong>Email:</strong> ${student.user.email}</p>
+                                                    <c:if test="${not empty student.user.birthDate}">
+                                                        <p class="mb-0"><strong>Ngày sinh:</strong>
+                                                            ${student.user.birthDate}</p>
+                                                    </c:if>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <p class="mb-1"><strong>Lớp:</strong> ${student.className}</p>

@@ -140,6 +140,12 @@
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
+                                                    <th>Ngày sinh
+                                                        <a class="sort-link"
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.birthDate&dir=${dir=='asc' && sort=='user.birthDate' ? 'desc' : 'asc'}">
+                                                            <i class="bi bi-arrow-down-up"></i>
+                                                        </a>
+                                                    </th>
                                                     <th>Lớp
                                                         <a class="sort-link"
                                                             href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=className&dir=${dir=='asc' && sort=='className' ? 'desc' : 'asc'}">
@@ -157,7 +163,7 @@
                                             <tbody>
                                                 <c:if test="${page.totalElements == 0}">
                                                     <tr>
-                                                        <td colspan="7" class="text-center text-muted py-4">Chưa có sinh
+                                                        <td colspan="8" class="text-center text-muted py-4">Chưa có sinh
                                                             viên nào.</td>
                                                     </tr>
                                                 </c:if>
@@ -184,6 +190,14 @@
                                                                 ${s.user.nationalId}
                                                             </c:if>
                                                             <c:if test="${empty s.user.nationalId}">
+                                                                <span class="text-muted">-</span>
+                                                            </c:if>
+                                                        </td>
+                                                        <td>
+                                                            <c:if test="${not empty s.user.birthDate}">
+                                                                ${s.user.birthDate}
+                                                            </c:if>
+                                                            <c:if test="${empty s.user.birthDate}">
                                                                 <span class="text-muted">-</span>
                                                             </c:if>
                                                         </td>

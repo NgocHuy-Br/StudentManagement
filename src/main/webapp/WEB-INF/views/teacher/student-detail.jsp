@@ -215,8 +215,8 @@
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="info-item">
-                                                        <div class="info-label">Khoa</div>
-                                                        <div class="info-value">${student.classroom.major.faculty.name}
+                                                        <div class="info-label">Ngành</div>
+                                                        <div class="info-value">${student.classroom.major.majorName}
                                                         </div>
                                                     </div>
                                                 </div>
