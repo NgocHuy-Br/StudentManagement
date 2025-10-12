@@ -99,7 +99,7 @@
                                             <option value="">Tất cả khoa</option>
                                             <c:forEach var="f" items="${faculties}">
                                                 <option value="${f.id}" ${param.faculty==f.id ? 'selected' : '' }>
-                                                    ${f.name}</option>
+                                                    ${f.facultyCode} - ${f.name}</option>
                                             </c:forEach>
                                         </select>
 
@@ -207,7 +207,8 @@
                                                             <c:choose>
                                                                 <c:when test="${not empty t.faculty}">
                                                                     <span
-                                                                        class="badge faculty-badge bg-primary">${t.faculty.name}</span>
+                                                                        class="badge faculty-badge bg-primary">${t.faculty.facultyCode}
+                                                                        - ${t.faculty.name}</span>
                                                                 </c:when>
                                                                 <c:when test="${not empty t.department}">
                                                                     <span

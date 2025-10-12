@@ -15,9 +15,15 @@ public interface FacultyRepository extends JpaRepository<Faculty, Long> {
 
     Optional<Faculty> findByName(String name);
 
+    Optional<Faculty> findByFacultyCode(String facultyCode);
+
     boolean existsByName(String name);
 
+    boolean existsByFacultyCode(String facultyCode);
+
     boolean existsByNameAndIdNot(String name, Long id);
+
+    boolean existsByFacultyCodeAndIdNot(String facultyCode, Long id);
 
     @Query("SELECT f FROM Faculty f ORDER BY f.name ASC")
     List<Faculty> findAllOrderByName();
@@ -27,9 +33,10 @@ public interface FacultyRepository extends JpaRepository<Faculty, Long> {
 
     @Query("""
             SELECT f FROM Faculty f
-            WHERE lower(f.name) LIKE lower(concat('%', :q, '%'))
+            WHERE lower(f.facultyCode) LIKE lower(concat('%', :q, '%'))
+               OR lower(f.name) LIKE lower(concat('%', :q, '%'))
                OR lower(f.description) LIKE lower(concat('%', :q, '%'))
-            ORDER BY f.name ASC
+            ORDER BY f.facultyCode ASC, f.name ASC
             """)
     Page<Faculty> search(@Param("q") String q, Pageable pageable);
 }

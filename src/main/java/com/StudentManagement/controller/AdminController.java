@@ -1232,16 +1232,24 @@ public class AdminController {
      */
     @PostMapping("/faculties")
     @Transactional
-    public String createFaculty(@RequestParam String name,
+    public String createFaculty(@RequestParam String facultyCode,
+            @RequestParam String name,
             @RequestParam(required = false) String description,
             RedirectAttributes ra) {
 
+        // Kiểm tra trùng mã khoa
+        if (facultyRepository.existsByFacultyCode(facultyCode.trim())) {
+            ra.addFlashAttribute("error", "Mã khoa đã tồn tại.");
+            return "redirect:/admin/faculties/manage";
+        }
+
+        // Kiểm tra trùng tên khoa
         if (facultyRepository.existsByName(name.trim())) {
             ra.addFlashAttribute("error", "Tên khoa đã tồn tại.");
             return "redirect:/admin/faculties/manage";
         }
 
-        Faculty faculty = new Faculty(name.trim(), description != null ? description.trim() : null);
+        Faculty faculty = new Faculty(facultyCode.trim(), name.trim(), description != null ? description.trim() : null);
         facultyRepository.save(faculty);
 
         ra.addFlashAttribute("success", "Thêm khoa thành công.");
@@ -1254,6 +1262,7 @@ public class AdminController {
     @PostMapping("/faculties/{id}")
     @Transactional
     public String updateFaculty(@PathVariable Long id,
+            @RequestParam String facultyCode,
             @RequestParam String name,
             @RequestParam(required = false) String description,
             RedirectAttributes ra) {
@@ -1264,11 +1273,19 @@ public class AdminController {
             return "redirect:/admin/faculties/manage";
         }
 
+        // Kiểm tra trùng mã khoa với khoa khác
+        if (facultyRepository.existsByFacultyCodeAndIdNot(facultyCode.trim(), id)) {
+            ra.addFlashAttribute("error", "Mã khoa đã tồn tại.");
+            return "redirect:/admin/faculties/manage";
+        }
+
+        // Kiểm tra trùng tên khoa với khoa khác
         if (facultyRepository.existsByNameAndIdNot(name.trim(), id)) {
             ra.addFlashAttribute("error", "Tên khoa đã tồn tại.");
             return "redirect:/admin/faculties/manage";
         }
 
+        faculty.setFacultyCode(facultyCode.trim());
         faculty.setName(name.trim());
         faculty.setDescription(description != null ? description.trim() : null);
         facultyRepository.save(faculty);

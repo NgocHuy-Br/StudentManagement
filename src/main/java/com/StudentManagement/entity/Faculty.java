@@ -10,6 +10,9 @@ public class Faculty {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String facultyCode; // Mã khoa: CNTT, KTMT, etc.
+
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
@@ -23,11 +26,13 @@ public class Faculty {
     public Faculty() {
     }
 
-    public Faculty(String name) {
+    public Faculty(String facultyCode, String name) {
+        this.facultyCode = facultyCode;
         this.name = name;
     }
 
-    public Faculty(String name, String description) {
+    public Faculty(String facultyCode, String name, String description) {
+        this.facultyCode = facultyCode;
         this.name = name;
         this.description = description;
     }
@@ -39,6 +44,14 @@ public class Faculty {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getFacultyCode() {
+        return facultyCode;
+    }
+
+    public void setFacultyCode(String facultyCode) {
+        this.facultyCode = facultyCode;
     }
 
     public String getName() {

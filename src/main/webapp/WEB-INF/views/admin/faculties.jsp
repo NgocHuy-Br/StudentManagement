@@ -118,23 +118,29 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th width="60px">STT</th>
-                                                    <th width="280px">Tên khoa
+                                                    <th width="120px">Mã khoa
+                                                        <a class="sort-link"
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=facultyCode&dir=${dir=='asc' && sort=='facultyCode' ? 'desc' : 'asc'}">
+                                                            <i class="bi bi-arrow-down-up"></i>
+                                                        </a>
+                                                    </th>
+                                                    <th width="220px">Tên khoa
                                                         <a class="sort-link"
                                                             href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=name&dir=${dir=='asc' && sort=='name' ? 'desc' : 'asc'}">
                                                             <i class="bi bi-arrow-down-up"></i>
                                                         </a>
                                                     </th>
-                                                    <th width="220px">Mô tả</th>
-                                                    <th width="120px" class="text-center">Số ngành</th>
-                                                    <th width="120px" class="text-center">Số giáo viên</th>
-                                                    <th width="120px" class="text-center">Số sinh viên</th>
+                                                    <th width="180px">Mô tả</th>
+                                                    <th width="100px" class="text-center">Số ngành</th>
+                                                    <th width="100px" class="text-center">Số giáo viên</th>
+                                                    <th width="100px" class="text-center">Số sinh viên</th>
                                                     <th width="120px" class="text-center">Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <c:if test="${page.totalElements == 0}">
                                                     <tr>
-                                                        <td colspan="7" class="text-center text-muted py-4">Chưa có khoa
+                                                        <td colspan="8" class="text-center text-muted py-4">Chưa có khoa
                                                             nào.</td>
                                                     </tr>
                                                 </c:if>
@@ -143,6 +149,8 @@
                                                     <tr>
                                                         <td class="text-center fw-semibold text-muted">${status.index +
                                                             1 + (page.number * page.size)}</td>
+                                                        <td><span class="badge bg-primary">${faculty.facultyCode}</span>
+                                                        </td>
                                                         <td>${faculty.name}</td>
                                                         <td>
                                                             <c:choose>
@@ -172,6 +180,7 @@
                                                                 <button type="button"
                                                                     class="btn btn-sm btn-outline-primary edit-faculty"
                                                                     data-faculty-id="${faculty.id}"
+                                                                    data-faculty-code="${fn:escapeXml(faculty.facultyCode)}"
                                                                     data-name="${fn:escapeXml(faculty.name)}"
                                                                     data-description="${fn:escapeXml(faculty.description)}"
                                                                     data-bs-toggle="tooltip" data-bs-placement="top"
@@ -181,6 +190,7 @@
                                                                 <button type="button"
                                                                     class="btn btn-sm btn-outline-danger delete-faculty"
                                                                     data-faculty-id="${faculty.id}"
+                                                                    data-faculty-code="${fn:escapeXml(faculty.facultyCode)}"
                                                                     data-name="${fn:escapeXml(faculty.name)}"
                                                                     data-bs-toggle="tooltip" data-bs-placement="top"
                                                                     title="Xóa">
@@ -232,6 +242,13 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="mb-3">
+                                        <label for="createFacultyCode" class="form-label">Mã khoa <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="createFacultyCode"
+                                            name="facultyCode" placeholder="Nhập mã khoa (vd: CNTT, KTMT)" required
+                                            maxlength="20">
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="createName" class="form-label">Tên khoa <span
                                                 class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="createName" name="name"
@@ -265,6 +282,12 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="editFacultyCode" class="form-label">Mã khoa <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="editFacultyCode" name="facultyCode"
+                                            required maxlength="20">
+                                    </div>
                                     <div class="mb-3">
                                         <label for="editName" class="form-label">Tên khoa <span
                                                 class="text-danger">*</span></label>
@@ -337,10 +360,12 @@
                                 button.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     const id = this.getAttribute('data-faculty-id');
+                                    const facultyCode = this.getAttribute('data-faculty-code');
                                     const name = this.getAttribute('data-name');
                                     const description = this.getAttribute('data-description');
 
                                     document.getElementById('editId').value = id;
+                                    document.getElementById('editFacultyCode').value = facultyCode || '';
                                     document.getElementById('editName').value = name || '';
                                     document.getElementById('editDescription').value = description || '';
 
@@ -360,10 +385,11 @@
                                 button.addEventListener('click', function (e) {
                                     e.preventDefault();
                                     const id = this.getAttribute('data-faculty-id');
+                                    const facultyCode = this.getAttribute('data-faculty-code');
                                     const name = this.getAttribute('data-name');
 
                                     document.getElementById('deleteId').value = id;
-                                    document.getElementById('deleteFacultyName').textContent = name || '';
+                                    document.getElementById('deleteFacultyName').textContent = `${facultyCode} - ${name}` || '';
 
                                     // Set form action
                                     const deleteForm = document.getElementById('deleteForm');
