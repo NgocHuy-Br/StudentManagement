@@ -263,13 +263,18 @@
                                                                     <td>
                                                                         <div class="d-flex align-items-center">
                                                                             <div class="student-avatar me-2">
-                                                                                ${fn:toUpperCase(fn:substring(score.student.user.fname, 0, 1))}${fn:toUpperCase(fn:substring(score.student.user.lname, 0, 1))}
+                                                                                ${fn:toUpperCase(fn:substring(score.student.user.fname,
+                                                                                0,
+                                                                                1))}${fn:toUpperCase(fn:substring(score.student.user.lname,
+                                                                                0, 1))}
                                                                             </div>
                                                                             <div>
                                                                                 <div class="fw-semibold">
-                                                                                    ${score.student.user.fname} ${score.student.user.lname}
+                                                                                    ${score.student.user.fname}
+                                                                                    ${score.student.user.lname}
                                                                                 </div>
-                                                                                <small class="text-muted">${score.student.user.email}</small>
+                                                                                <small
+                                                                                    class="text-muted">${score.student.user.email}</small>
                                                                             </div>
                                                                         </div>
                                                                     </td>
