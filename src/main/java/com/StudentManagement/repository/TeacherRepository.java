@@ -83,4 +83,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
   // Đếm số giáo viên theo khoa
   @Query("SELECT COUNT(t) FROM Teacher t WHERE t.faculty.id = :facultyId")
   Long countByFacultyId(@Param("facultyId") Long facultyId);
+
+  // Đếm số giáo viên theo faculty
+  Long countByFaculty(com.StudentManagement.entity.Faculty faculty);
 }

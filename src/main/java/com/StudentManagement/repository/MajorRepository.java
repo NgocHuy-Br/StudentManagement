@@ -16,7 +16,13 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
 
   boolean existsByMajorCodeAndIdNot(String majorCode, Long id);
 
-  Major findByMajorCode(String majorCode);
+  List<Major> findByMajorCode(String majorCode);
+
+  List<Major> findByMajorCodeAndCourseYear(String majorCode, String courseYear);
+
+  // Lấy danh sách mã ngành duy nhất
+  @Query("SELECT DISTINCT m.majorCode FROM Major m ORDER BY m.majorCode")
+  List<String> findDistinctMajorCodes();
 
   // Tìm kiếm theo faculty
   Page<Major> findByFacultyId(Long facultyId, Pageable pageable);
@@ -52,4 +58,7 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
       ORDER BY m.courseYear DESC, m.majorCode ASC
       """)
   List<Major> findAllWithSubjectCount();
+
+  // Đếm số ngành theo faculty
+  Long countByFaculty(com.StudentManagement.entity.Faculty faculty);
 }

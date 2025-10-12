@@ -339,10 +339,18 @@
                                 </c:if>
                                 </td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="editScore('${score.student.id}', '${score.subject.id}', '${score.attendanceScore}', '${score.midtermScore}', '${score.finalScore}', '${score.notes}')">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            onclick="viewScoreHistory('${score.id}', '${score.student.user.fname} ${score.student.user.lname}', '${score.subject.subjectName}')"
+                                            title="Xem lịch sử điểm">
+                                            <i class="bi bi-clock-history"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="editScore('${score.student.id}', '${score.subject.id}', '${score.attendanceScore}', '${score.midtermScore}', '${score.finalScore}', '${score.notes}')"
+                                            title="Chỉnh sửa điểm">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
                                 </td>
                                 </tr>
                                 </c:forEach>
@@ -423,6 +431,63 @@
                             </div>
                         </div>
 
+                        <!-- Score History Modal -->
+                        <div class="modal fade" id="scoreHistoryModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            <i class="bi bi-clock-history me-2"></i>Lịch sử điểm
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <h6 id="historyStudentInfo" class="text-primary"></h6>
+                                            <small id="historySubjectInfo" class="text-muted"></small>
+                                        </div>
+
+                                        <div id="historyLoading" class="text-center py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Đang tải...</span>
+                                            </div>
+                                        </div>
+
+                                        <div id="historyContent" style="display: none;">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped">
+                                                    <thead class="table-dark">
+                                                        <tr>
+                                                            <th style="width: 60px;">Lần</th>
+                                                            <th style="width: 120px;">Thời gian</th>
+                                                            <th style="width: 150px;">Giáo viên</th>
+                                                            <th style="width: 80px;">CC</th>
+                                                            <th style="width: 80px;">GK</th>
+                                                            <th style="width: 80px;">CK</th>
+                                                            <th style="width: 80px;">TB</th>
+                                                            <th>Ghi chú</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="historyTableBody">
+                                                        <!-- Dữ liệu sẽ được load bằng AJAX -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <div id="historyError" style="display: none;" class="alert alert-danger">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            Có lỗi xảy ra khi tải lịch sử điểm.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Đóng</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         </div>
 
                         <script
@@ -445,6 +510,83 @@
 
                                 // Show modal
                                 new bootstrap.Modal(document.getElementById('editScoreModal')).show();
+                            }
+
+                            function viewScoreHistory(scoreId, studentName, subjectName) {
+                                // Reset modal state
+                                document.getElementById('historyLoading').style.display = 'block';
+                                document.getElementById('historyContent').style.display = 'none';
+                                document.getElementById('historyError').style.display = 'none';
+                                document.getElementById('historyTableBody').innerHTML = '';
+
+                                // Set student and subject info
+                                document.getElementById('historyStudentInfo').textContent = studentName;
+                                document.getElementById('historySubjectInfo').textContent = 'Môn: ' + subjectName;
+
+                                // Show modal
+                                const modal = new bootstrap.Modal(document.getElementById('scoreHistoryModal'));
+                                modal.show();
+
+                                // Load score history via fetch
+                                fetch('/admin/scores/history/' + scoreId)
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error('Network response was not ok');
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        document.getElementById('historyLoading').style.display = 'none';
+
+                                        if (data.histories && data.histories.length > 0) {
+                                            let historyHtml = '';
+                                            data.histories.forEach((history, index) => {
+                                                const actionBadge = history.actionType === 'CREATE' ?
+                                                    '<span class="badge bg-success">Tạo mới</span>' :
+                                                    '<span class="badge bg-info">Cập nhật</span>';
+
+                                                const changeDate = new Date(history.changedAt);
+                                                const formattedDate = changeDate.toLocaleDateString('vi-VN');
+                                                const formattedTime = changeDate.toLocaleTimeString('vi-VN');
+
+                                                const attendanceValue = history.attendanceScore != null ? history.attendanceScore : '-';
+                                                const midtermValue = history.midtermScore != null ? history.midtermScore : '-';
+                                                const finalValue = history.finalScore != null ? history.finalScore : '-';
+                                                const averageValue = history.averageScore != null ? history.averageScore : '-';
+                                                const descriptionHtml = history.changeDescription ? '<br><small class="text-muted">' + history.changeDescription + '</small>' : '';
+
+                                                historyHtml += '<tr>' +
+                                                    '<td class="text-center">' + (index + 1) + '</td>' +
+                                                    '<td>' +
+                                                    '<small>' + formattedDate + '</small><br>' +
+                                                    '<small class="text-muted">' + formattedTime + '</small>' +
+                                                    '</td>' +
+                                                    '<td>' +
+                                                    '<div class="fw-bold">' + history.changedBy.name + '</div>' +
+                                                    '<small class="text-muted">' + history.changedBy.username + '</small>' +
+                                                    '</td>' +
+                                                    '<td class="text-center">' + attendanceValue + '</td>' +
+                                                    '<td class="text-center">' + midtermValue + '</td>' +
+                                                    '<td class="text-center">' + finalValue + '</td>' +
+                                                    '<td class="text-center fw-bold">' + averageValue + '</td>' +
+                                                    '<td>' +
+                                                    actionBadge + descriptionHtml +
+                                                    '</td>' +
+                                                    '</tr>';
+                                            });
+                                            document.getElementById('historyTableBody').innerHTML = historyHtml;
+                                            document.getElementById('historyContent').style.display = 'block';
+                                        } else {
+                                            document.getElementById('historyError').innerHTML = '<i class="bi bi-info-circle me-2"></i>Chưa có lịch sử thay đổi điểm.';
+                                            document.getElementById('historyError').className = 'alert alert-info';
+                                            document.getElementById('historyError').style.display = 'block';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error loading score history:', error);
+                                        document.getElementById('historyLoading').style.display = 'none';
+                                        document.getElementById('historyError').style.display = 'block';
+                                    });
                             }
                         </script>
                 </body>

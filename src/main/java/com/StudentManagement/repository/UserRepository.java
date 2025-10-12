@@ -21,6 +21,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   boolean existsByNationalId(String nationalId);
 
+  boolean existsByRole(User.Role role);
+
   Page<User> findByRole(User.Role role, Pageable pageable);
 
   @Query("""

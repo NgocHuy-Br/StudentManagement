@@ -43,6 +43,7 @@ public class Classroom {
     public Classroom() {
     }
 
+    // Constructor with Major (recommended)
     public Classroom(String classCode, String courseYear, Major major) {
         this.classCode = classCode;
         this.courseYear = courseYear;

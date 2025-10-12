@@ -44,21 +44,9 @@
         <div class="tabs-bar">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'classrooms' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin/classrooms">
-                        <i class="bi bi-collection-fill me-1"></i> Lớp sinh viên
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'teachers' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin/teachers">
-                        <i class="bi bi-people-fill me-1"></i> Giáo viên
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link ${activeTab == 'scores' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin/scores">
-                        <i class="bi bi-journal-text me-1"></i> Điểm sinh viên
+                    <a class="nav-link ${activeTab == 'overview' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/overview">
+                        <i class="bi bi-speedometer2 me-1"></i> Tổng quan
                     </a>
                 </li>
                 <li class="nav-item">
@@ -71,6 +59,24 @@
                     <a class="nav-link ${activeTab == 'majors' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/admin/majors">
                         <i class="bi bi-mortarboard-fill me-1"></i> Ngành - Môn học
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ${activeTab == 'teachers' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/teachers">
+                        <i class="bi bi-people-fill me-1"></i> Giáo viên
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ${activeTab == 'classrooms' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/classrooms">
+                        <i class="bi bi-collection-fill me-1"></i> Lớp sinh viên
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ${activeTab == 'scores' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/scores">
+                        <i class="bi bi-journal-text me-1"></i> Điểm sinh viên
                     </a>
                 </li>
             </ul>

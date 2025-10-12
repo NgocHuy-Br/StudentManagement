@@ -4,6 +4,8 @@ import com.StudentManagement.entity.Classroom;
 import com.StudentManagement.entity.ClassroomTeacher;
 import com.StudentManagement.entity.Faculty;
 import com.StudentManagement.entity.Major;
+import com.StudentManagement.entity.Score;
+import com.StudentManagement.entity.ScoreHistory;
 import com.StudentManagement.entity.Student;
 import com.StudentManagement.entity.Subject;
 import com.StudentManagement.entity.Teacher;
@@ -12,11 +14,14 @@ import com.StudentManagement.repository.ClassroomRepository;
 import com.StudentManagement.repository.FacultyRepository;
 import com.StudentManagement.repository.MajorRepository;
 import com.StudentManagement.repository.ScoreRepository;
+import com.StudentManagement.repository.ScoreHistoryRepository;
 import com.StudentManagement.repository.StudentRepository;
 import com.StudentManagement.repository.SubjectRepository;
 import com.StudentManagement.repository.TeacherRepository;
 import com.StudentManagement.repository.UserRepository;
 import com.StudentManagement.service.ClassroomTeacherService;
+import com.StudentManagement.service.OverviewService;
+import com.StudentManagement.util.DateFormatHelper;
 import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -50,8 +55,10 @@ public class AdminController {
     private final MajorRepository majorRepository;
     private final SubjectRepository subjectRepository;
     private final ScoreRepository scoreRepository;
+    private final ScoreHistoryRepository scoreHistoryRepository;
     private final ClassroomRepository classroomRepository;
     private final ClassroomTeacherService classroomTeacherService;
+    private final OverviewService overviewService;
     private final PasswordEncoder passwordEncoder;
 
     // Pattern for course year validation
@@ -64,8 +71,10 @@ public class AdminController {
             MajorRepository majorRepository,
             SubjectRepository subjectRepository,
             ScoreRepository scoreRepository,
+            ScoreHistoryRepository scoreHistoryRepository,
             ClassroomRepository classroomRepository,
             ClassroomTeacherService classroomTeacherService,
+            OverviewService overviewService,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -74,8 +83,10 @@ public class AdminController {
         this.majorRepository = majorRepository;
         this.subjectRepository = subjectRepository;
         this.scoreRepository = scoreRepository;
+        this.scoreHistoryRepository = scoreHistoryRepository;
         this.classroomRepository = classroomRepository;
         this.classroomTeacherService = classroomTeacherService;
+        this.overviewService = overviewService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -142,8 +153,42 @@ public class AdminController {
 
     @GetMapping
     public String index(Authentication auth, Model model) {
-        // Redirect to classrooms since we removed notifications
-        return "redirect:/admin/classrooms";
+        // Redirect to overview page
+        return "redirect:/admin/overview";
+    }
+
+    // Trang tổng quan
+    @GetMapping("/overview")
+    public String overview(Authentication auth, Model model) {
+        // Thêm thông tin header
+        String firstName = "User";
+        String roleDisplay = "Admin";
+        if (auth != null) {
+            var u = userRepository.findByUsername(auth.getName()).orElse(null);
+            if (u != null) {
+                firstName = (u.getFname() != null && !u.getFname().isBlank()) ? u.getFname() : u.getUsername();
+            }
+        }
+
+        model.addAttribute("firstName", firstName);
+        model.addAttribute("roleDisplay", roleDisplay);
+
+        // Lấy thông tin user hiện tại
+        String username = auth.getName();
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        model.addAttribute("currentUser", currentUser);
+
+        // Lấy thống kê tổng quát
+        model.addAttribute("totalStats", overviewService.getTotalStatistics());
+
+        // Lấy thống kê theo khoa
+        model.addAttribute("facultyStats", overviewService.getFacultyStatistics());
+
+        // Lấy thống kê theo ngành
+        model.addAttribute("majorStats", overviewService.getMajorStatistics());
+
+        return "admin/overview";
     }
 
     // Danh sách lớp học: giao diện 2 panel - trái: quản lý lớp, phải: sinh viên
@@ -235,17 +280,26 @@ public class AdminController {
         return "admin/classrooms";
     }
 
+    // Hiển thị form tạo lớp học mới
+    @GetMapping("/classrooms/create")
+    public String showCreateClassroomForm(Model model) {
+        // Lấy danh sách giáo viên cho dropdown
+        model.addAttribute("teachers", teacherRepository.findAll());
+        return "admin/classrooms/create";
+    }
+
     // Thêm lớp học mới
     @PostMapping("/classrooms")
     @Transactional
     public String createClassroom(@RequestParam String classCode,
             @RequestParam String courseYear,
-            @RequestParam Long majorId,
+            @RequestParam String majorCode,
             @RequestParam(required = false) Long teacherId,
             RedirectAttributes ra) {
 
         String code = classCode.trim().toUpperCase();
         String year = courseYear.trim();
+        String majCode = majorCode.trim();
 
         if (code.isEmpty()) {
             ra.addFlashAttribute("error", "Vui lòng nhập mã lớp.");
@@ -264,11 +318,13 @@ public class AdminController {
             return "redirect:/admin/classrooms";
         }
 
-        Major major = majorRepository.findById(majorId).orElse(null);
-        if (major == null) {
-            ra.addFlashAttribute("error", "Ngành học không tồn tại.");
+        // Tìm ngành theo mã ngành và khóa học
+        List<Major> majors = majorRepository.findByMajorCodeAndCourseYear(majCode, year);
+        if (majors.isEmpty()) {
+            ra.addFlashAttribute("error", "Không tìm thấy ngành " + majCode + " khóa " + year);
             return "redirect:/admin/classrooms";
         }
+        Major major = majors.get(0);
 
         Teacher teacher = null;
         if (teacherId != null) {
@@ -333,6 +389,7 @@ public class AdminController {
             @RequestParam(required = false) String courseYear,
             @RequestParam(required = false) Long majorId,
             @RequestParam(required = false) Long teacherId,
+            @RequestParam(required = false) String teacherChangeNotes,
             RedirectAttributes ra) {
         System.out.println("DEBUG: updateClassroom called with id: " + id);
 
@@ -347,10 +404,11 @@ public class AdminController {
         System.out.println("DEBUG: Classroom has students: " + hasStudents);
 
         String oldCode = classroom.getClassCode();
-        String oldYear = classroom.getCourseYear();
-        String oldMajor = classroom.getMajor().getMajorName();
 
         try {
+            // Lưu thông tin giáo viên chủ nhiệm cũ để so sánh
+            Teacher oldTeacher = classroom.getHomeRoomTeacher();
+
             // Nếu lớp đã có sinh viên, chỉ cho phép sửa giáo viên chủ nhiệm
             if (hasStudents) {
                 // Chỉ cập nhật giáo viên chủ nhiệm
@@ -358,8 +416,16 @@ public class AdminController {
                 if (teacherId != null && teacherId > 0) {
                     newTeacher = teacherRepository.findById(teacherId).orElse(null);
                 }
-                classroom.setHomeRoomTeacher(newTeacher);
 
+                // Cập nhật lịch sử chủ nhiệm nếu có thay đổi giáo viên
+                if (!isTeacherSame(oldTeacher, newTeacher)) {
+                    String notes = (teacherChangeNotes != null && !teacherChangeNotes.trim().isEmpty())
+                            ? teacherChangeNotes.trim()
+                            : "Thay đổi giáo viên chủ nhiệm";
+                    updateTeacherHistory(classroom, newTeacher, notes);
+                }
+
+                classroom.setHomeRoomTeacher(newTeacher);
                 classroomRepository.save(classroom);
                 ra.addFlashAttribute("success", "Đã cập nhật giáo viên chủ nhiệm cho lớp " + oldCode);
             } else {
@@ -398,6 +464,15 @@ public class AdminController {
                 if (teacherId != null && teacherId > 0) {
                     newTeacher = teacherRepository.findById(teacherId).orElse(null);
                 }
+
+                // Cập nhật lịch sử chủ nhiệm nếu có thay đổi giáo viên
+                if (!isTeacherSame(oldTeacher, newTeacher)) {
+                    String notes = (teacherChangeNotes != null && !teacherChangeNotes.trim().isEmpty())
+                            ? teacherChangeNotes.trim()
+                            : "Cập nhật giáo viên chủ nhiệm";
+                    updateTeacherHistory(classroom, newTeacher, notes);
+                }
+
                 classroom.setHomeRoomTeacher(newTeacher);
 
                 classroomRepository.save(classroom);
@@ -1932,10 +2007,19 @@ public class AdminController {
             RedirectAttributes ra) {
 
         try {
+            // Lấy thông tin user hiện tại
+            String username = auth.getName();
+            Optional<User> currentUserOpt = userRepository.findByUsername(username);
+            User currentUser = null;
+            if (currentUserOpt.isPresent()) {
+                currentUser = currentUserOpt.get();
+            }
+
             // Tìm điểm hiện tại hoặc tạo mới
             Optional<com.StudentManagement.entity.Score> existingScore = scoreRepository
                     .findByStudentIdAndSubjectId(studentId, subjectId);
             com.StudentManagement.entity.Score score;
+            boolean isNewScore = false;
 
             if (existingScore.isPresent()) {
                 score = existingScore.get();
@@ -1943,26 +2027,36 @@ public class AdminController {
                 score = new com.StudentManagement.entity.Score();
                 score.setStudent(studentRepository.findById(studentId).orElse(null));
                 score.setSubject(subjectRepository.findById(subjectId).orElse(null));
+                isNewScore = true;
             }
 
             // Cập nhật điểm
             if (attendanceScore != null) {
-                score.setAttendanceScore(attendanceScore);
+                score.setAttendanceScore(attendanceScore.floatValue());
             }
             if (midtermScore != null) {
-                score.setMidtermScore(midtermScore);
+                score.setMidtermScore(midtermScore.floatValue());
             }
             if (finalScore != null) {
-                score.setFinalScore(finalScore);
+                score.setFinalScore(finalScore.floatValue());
             }
             if (notes != null) {
                 score.setNotes(notes);
             }
 
-            // Tính điểm trung bình
-            score.calculateAverageScore();
+            // Lưu điểm
+            score = scoreRepository.save(score);
 
-            scoreRepository.save(score);
+            // Tạo lịch sử thay đổi
+            if (currentUser != null) {
+                ScoreHistory.ActionType actionType = isNewScore ? ScoreHistory.ActionType.CREATE
+                        : ScoreHistory.ActionType.UPDATE;
+                String changeDescription = isNewScore ? "Tạo điểm mới" : "Cập nhật điểm";
+
+                ScoreHistory history = new ScoreHistory(score, currentUser, actionType, changeDescription);
+                scoreHistoryRepository.save(history);
+            }
+
             ra.addFlashAttribute("success", "Cập nhật điểm thành công");
 
         } catch (Exception e) {
@@ -1970,6 +2064,65 @@ public class AdminController {
         }
 
         return "redirect:/admin/scores";
+    }
+
+    /**
+     * Lấy lịch sử thay đổi điểm (AJAX endpoint)
+     */
+    @GetMapping("/scores/history/{scoreId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getScoreHistory(@PathVariable Long scoreId) {
+        try {
+            // Tìm điểm số
+            Optional<com.StudentManagement.entity.Score> scoreOpt = scoreRepository.findById(scoreId);
+            if (!scoreOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            com.StudentManagement.entity.Score score = scoreOpt.get();
+
+            // Lấy lịch sử thay đổi điểm
+            List<ScoreHistory> histories = scoreHistoryRepository.findByScoreIdOrderByChangedAtDesc(scoreId);
+
+            // Tạo response data
+            Map<String, Object> response = new HashMap<>();
+            response.put("score", Map.of(
+                    "id", score.getId(),
+                    "student", Map.of(
+                            "name",
+                            score.getStudent().getUser().getFname() + " " + score.getStudent().getUser().getLname(),
+                            "studentId", score.getStudent().getId()),
+                    "subject", Map.of(
+                            "name", score.getSubject().getSubjectName(),
+                            "subjectId", score.getSubject().getSubjectCode())));
+
+            // Convert histories to simplified format for JSON
+            List<Map<String, Object>> historyData = new ArrayList<>();
+            for (ScoreHistory history : histories) {
+                Map<String, Object> historyItem = new HashMap<>();
+                historyItem.put("id", history.getId());
+                historyItem.put("actionType", history.getActionType().toString());
+                historyItem.put("attendanceScore", history.getAttendanceScore());
+                historyItem.put("midtermScore", history.getMidtermScore());
+                historyItem.put("finalScore", history.getFinalScore());
+                historyItem.put("averageScore", history.getAvgScore());
+                historyItem.put("changeDescription", history.getChangeDescription());
+                historyItem.put("changedAt", history.getChangedAt());
+                historyItem.put("changedBy", Map.of(
+                        "name",
+                        history.getChangedByUser().getFname() + " " + history.getChangedByUser().getLname(),
+                        "username", history.getChangedByUser().getUsername()));
+                historyData.add(historyItem);
+            }
+
+            response.put("histories", historyData);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error loading score history for scoreId: " + scoreId, e);
+            return ResponseEntity.status(500).body(Map.of("error", "Có lỗi xảy ra khi tải lịch sử điểm"));
+        }
     }
 
     /**
@@ -2006,6 +2159,121 @@ public class AdminController {
             return true;
         } catch (NumberFormatException e) {
             return false;
+        }
+    }
+
+    // ===============================
+    // CLASSROOM DETAILS & HISTORY
+    // ===============================
+
+    /**
+     * Xem chi tiết lớp học và lịch sử chủ nhiệm
+     */
+    @GetMapping("/classrooms/{classroomId}/details")
+    public String viewClassroomDetails(@PathVariable Long classroomId, Model model) {
+        try {
+            // Lấy thông tin lớp học
+            Classroom classroom = classroomRepository.findById(classroomId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học"));
+
+            // Lấy danh sách sinh viên trong lớp
+            List<Student> students = studentRepository.findByClassroomId(classroomId);
+
+            // Lấy lịch sử giáo viên chủ nhiệm
+            List<com.StudentManagement.entity.ClassroomTeacher> teacherHistory = classroomTeacherService
+                    .getHomeRoomTeacherHistory(classroomId);
+
+            // Lấy giáo viên chủ nhiệm hiện tại
+            Optional<com.StudentManagement.entity.ClassroomTeacher> currentTeacher = classroomTeacherService
+                    .getCurrentHomeRoomTeacher(classroomId);
+
+            // Thống kê nhanh
+            model.addAttribute("classroom", classroom);
+            model.addAttribute("students", students);
+            model.addAttribute("studentCount", students.size());
+            model.addAttribute("teacherHistory", teacherHistory);
+            model.addAttribute("currentTeacher", currentTeacher.orElse(null));
+            model.addAttribute("activeTab", "classrooms");
+
+            // Thêm date formatter helper cho JSP
+            model.addAttribute("dateFormatter", new DateFormatHelper());
+
+            return "admin/classroom-details";
+
+        } catch (Exception e) {
+            model.addAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/classrooms";
+        }
+    }
+
+    // Kiểm tra xem giáo viên có khác nhau không
+    private boolean isTeacherSame(Teacher oldTeacher, Teacher newTeacher) {
+        if (oldTeacher == null && newTeacher == null) {
+            return true;
+        }
+        if (oldTeacher == null || newTeacher == null) {
+            return false;
+        }
+        return oldTeacher.getId().equals(newTeacher.getId());
+    }
+
+    // Cập nhật lịch sử chủ nhiệm
+    private void updateTeacherHistory(Classroom classroom, Teacher newTeacher, String notes) {
+        try {
+            if (newTeacher != null) {
+                classroomTeacherService.assignHomeRoomTeacher(classroom.getId(), newTeacher.getId(), notes);
+            } else {
+                // Nếu gỡ bỏ giáo viên chủ nhiệm, chỉ cần kết thúc lịch sử hiện tại
+                classroomTeacherService.endHomeRoomAssignment(classroom.getId(), notes);
+            }
+        } catch (Exception e) {
+            System.out.println("Warning: Could not update teacher history: " + e.getMessage());
+            // Không throw exception để không làm gián đoạn việc cập nhật chính
+        }
+    }
+
+    // API lấy danh sách mã ngành duy nhất
+    @GetMapping("/api/major-codes")
+    @ResponseBody
+    public ResponseEntity<List<String>> getMajorCodes() {
+        try {
+            List<String> majorCodes = majorRepository.findDistinctMajorCodes();
+            return ResponseEntity.ok(majorCodes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // API lấy danh sách khóa học theo mã ngành
+    @GetMapping("/api/course-years/{majorCode}")
+    @ResponseBody
+    public ResponseEntity<List<String>> getCourseYearsByMajorCode(@PathVariable String majorCode) {
+        try {
+            List<String> courseYears = majorRepository.findByMajorCode(majorCode)
+                    .stream()
+                    .map(Major::getCourseYear)
+                    .distinct()
+                    .sorted()
+                    .toList();
+            return ResponseEntity.ok(courseYears);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // API lấy thông tin ngành theo mã ngành và khóa học
+    @GetMapping("/api/major")
+    @ResponseBody
+    public ResponseEntity<Major> getMajorByCodeAndCourseYear(@RequestParam String majorCode,
+            @RequestParam String courseYear) {
+        try {
+            List<Major> majors = majorRepository.findByMajorCodeAndCourseYear(majorCode, courseYear);
+            if (!majors.isEmpty()) {
+                return ResponseEntity.ok(majors.get(0));
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

@@ -223,6 +223,14 @@
                                                                         <div class="d-flex gap-1"
                                                                             onclick="event.stopPropagation();">
                                                                             <button type="button"
+                                                                                class="btn btn-sm btn-outline-info"
+                                                                                onclick="event.preventDefault(); event.stopPropagation(); viewClassroomDetails('${classroom.id}');"
+                                                                                data-bs-toggle="tooltip"
+                                                                                data-bs-placement="top"
+                                                                                title="Xem chi tiết lớp và lịch sử chủ nhiệm">
+                                                                                <i class="bi bi-eye"></i>
+                                                                            </button>
+                                                                            <button type="button"
                                                                                 class="btn btn-sm btn-outline-primary"
                                                                                 data-classroom-id="${classroom.id}"
                                                                                 data-class-code="${classroom.classCode}"
@@ -663,6 +671,16 @@
                                                 </select>
                                             </div>
 
+                                            <div class="mb-3">
+                                                <label for="editTeacherChangeNotes" class="form-label">Ghi chú thay đổi
+                                                    chủ nhiệm (tùy chọn)</label>
+                                                <textarea class="form-control" id="editTeacherChangeNotes"
+                                                    name="teacherChangeNotes" rows="3"
+                                                    placeholder="Nhập lý do thay đổi giáo viên chủ nhiệm..."></textarea>
+                                                <small class="form-text text-muted">Ghi chú này sẽ được lưu vào lịch sử
+                                                    thay đổi chủ nhiệm</small>
+                                            </div>
+
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary"
                                                     data-bs-dismiss="modal">Hủy</button>
@@ -681,6 +699,10 @@
                                 const currentUrl = new URL(window.location.href);
                                 currentUrl.searchParams.set('selectedClassId', classroomId);
                                 window.location.href = currentUrl.toString();
+                            }
+
+                            function viewClassroomDetails(classroomId) {
+                                window.location.href = '${pageContext.request.contextPath}/admin/classrooms/' + classroomId + '/details';
                             }
 
                             function deleteClassroom(classroomId, classroomName) {
