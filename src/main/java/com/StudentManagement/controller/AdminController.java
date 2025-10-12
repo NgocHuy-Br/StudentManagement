@@ -318,10 +318,10 @@ public class AdminController {
             return "redirect:/admin/classrooms";
         }
 
-        // Tìm ngành theo mã ngành và khóa học
-        List<Major> majors = majorRepository.findByMajorCodeAndCourseYear(majCode, year);
+        // Tìm ngành theo mã ngành
+        List<Major> majors = majorRepository.findByMajorCode(majCode);
         if (majors.isEmpty()) {
-            ra.addFlashAttribute("error", "Không tìm thấy ngành " + majCode + " khóa " + year);
+            ra.addFlashAttribute("error", "Không tìm thấy ngành " + majCode);
             return "redirect:/admin/classrooms";
         }
         Major major = majors.get(0);
@@ -1795,17 +1795,10 @@ public class AdminController {
     @PostMapping("/majors")
     public String createMajor(@RequestParam String majorCode,
             @RequestParam String majorName,
-            @RequestParam String courseYear,
             @RequestParam(required = false) String description,
             @RequestParam Long facultyId,
             RedirectAttributes ra) {
         try {
-            // Validate course year format
-            if (!isValidCourseYearFormat(courseYear)) {
-                ra.addFlashAttribute("error", "Khóa học phải có định dạng YYYY-YYYY (ví dụ: 2023-2027)");
-                return "redirect:/admin/majors";
-            }
-
             // Kiểm tra faculty tồn tại
             Faculty faculty = facultyRepository.findById(facultyId).orElse(null);
             if (faculty == null) {
@@ -1813,13 +1806,9 @@ public class AdminController {
                 return "redirect:/admin/majors";
             }
 
-            // Kiểm tra mã ngành + khóa học đã tồn tại chưa
-            List<Major> existingMajors = majorRepository.findAll();
-            boolean exists = existingMajors.stream()
-                    .anyMatch(m -> m.getMajorCode().equals(majorCode) && m.getCourseYear().equals(courseYear));
-
-            if (exists) {
-                ra.addFlashAttribute("error", "Ngành " + majorCode + " khóa " + courseYear + " đã tồn tại");
+            // Kiểm tra mã ngành đã tồn tại chưa
+            if (majorRepository.existsByMajorCode(majorCode)) {
+                ra.addFlashAttribute("error", "Mã ngành \"" + majorCode + "\" đã tồn tại. Vui lòng chọn mã khác.");
                 return "redirect:/admin/majors";
             }
 
@@ -1827,7 +1816,6 @@ public class AdminController {
             Major major = new Major();
             major.setMajorCode(majorCode);
             major.setMajorName(majorName);
-            major.setCourseYear(courseYear);
             major.setDescription(description);
             major.setFaculty(faculty);
 
@@ -1848,17 +1836,10 @@ public class AdminController {
     public String updateMajor(@RequestParam Long id,
             @RequestParam String majorCode,
             @RequestParam String majorName,
-            @RequestParam String courseYear,
             @RequestParam(required = false) String description,
             @RequestParam Long facultyId,
             RedirectAttributes ra) {
         try {
-            // Validate course year format
-            if (!isValidCourseYearFormat(courseYear)) {
-                ra.addFlashAttribute("error", "Khóa học phải có định dạng YYYY-YYYY (ví dụ: 2023-2027)");
-                return "redirect:/admin/majors";
-            }
-
             Major major = majorRepository.findById(id).orElse(null);
             if (major == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy ngành học");
@@ -1872,22 +1853,15 @@ public class AdminController {
                 return "redirect:/admin/majors";
             }
 
-            // Kiểm tra mã ngành + khóa học đã tồn tại ở ngành khác chưa
-            List<Major> existingMajors = majorRepository.findAll();
-            boolean exists = existingMajors.stream()
-                    .anyMatch(m -> m.getMajorCode().equals(majorCode)
-                            && m.getCourseYear().equals(courseYear)
-                            && !m.getId().equals(id));
-
-            if (exists) {
-                ra.addFlashAttribute("error", "Ngành " + majorCode + " khóa " + courseYear + " đã tồn tại");
+            // Kiểm tra mã ngành đã tồn tại ở ngành khác chưa
+            if (majorRepository.existsByMajorCodeAndIdNot(majorCode, id)) {
+                ra.addFlashAttribute("error", "Mã ngành \"" + majorCode + "\" đã tồn tại. Vui lòng chọn mã khác.");
                 return "redirect:/admin/majors";
             }
 
             // Cập nhật thông tin ngành
             major.setMajorCode(majorCode);
             major.setMajorName(majorName);
-            major.setCourseYear(courseYear);
             major.setDescription(description);
             major.setFaculty(faculty);
 
@@ -2373,13 +2347,12 @@ public class AdminController {
         }
     }
 
-    // API lấy thông tin ngành theo mã ngành và khóa học
+    // API lấy thông tin ngành theo mã ngành
     @GetMapping("/api/major")
     @ResponseBody
-    public ResponseEntity<Major> getMajorByCodeAndCourseYear(@RequestParam String majorCode,
-            @RequestParam String courseYear) {
+    public ResponseEntity<Major> getMajorByCode(@RequestParam String majorCode) {
         try {
-            List<Major> majors = majorRepository.findByMajorCodeAndCourseYear(majorCode, courseYear);
+            List<Major> majors = majorRepository.findByMajorCode(majorCode);
             if (!majors.isEmpty()) {
                 return ResponseEntity.ok(majors.get(0));
             }

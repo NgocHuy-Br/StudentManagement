@@ -4,18 +4,16 @@ public class MajorStatDTO {
     private String majorCode;
     private String majorName;
     private String facultyName;
-    private String courseYear;
     private Long studentCount;
 
     // Constructors
     public MajorStatDTO() {
     }
 
-    public MajorStatDTO(String majorCode, String majorName, String facultyName, String courseYear, Long studentCount) {
+    public MajorStatDTO(String majorCode, String majorName, String facultyName, Long studentCount) {
         this.majorCode = majorCode;
         this.majorName = majorName;
         this.facultyName = facultyName;
-        this.courseYear = courseYear;
         this.studentCount = studentCount;
     }
 
@@ -42,14 +40,6 @@ public class MajorStatDTO {
 
     public void setFacultyName(String facultyName) {
         this.facultyName = facultyName;
-    }
-
-    public String getCourseYear() {
-        return courseYear;
-    }
-
-    public void setCourseYear(String courseYear) {
-        this.courseYear = courseYear;
     }
 
     public Long getStudentCount() {

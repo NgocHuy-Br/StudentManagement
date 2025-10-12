@@ -16,9 +16,6 @@ public class Major {
     @Column(nullable = false, length = 200)
     private String majorName; // Tên ngành: Công nghệ thông tin, etc.
 
-    @Column(nullable = false, length = 15)
-    private String courseYear = "2023-2027"; // Khóa học: 2023-2027, 2024-2028, etc.
-
     @Column(length = 500)
     private String description; // Mô tả ngành
 
@@ -41,10 +38,9 @@ public class Major {
     public Major() {
     }
 
-    public Major(String majorCode, String majorName, String courseYear, String description, Faculty faculty) {
+    public Major(String majorCode, String majorName, String description, Faculty faculty) {
         this.majorCode = majorCode;
         this.majorName = majorName;
-        this.courseYear = courseYear;
         this.description = description;
         this.faculty = faculty;
     }
@@ -72,14 +68,6 @@ public class Major {
 
     public void setMajorName(String majorName) {
         this.majorName = majorName;
-    }
-
-    public String getCourseYear() {
-        return courseYear;
-    }
-
-    public void setCourseYear(String courseYear) {
-        this.courseYear = courseYear;
     }
 
     public String getDescription() {

@@ -224,7 +224,6 @@
                                                 <tr>
                                                     <th>Ngành</th>
                                                     <th>Thuộc Khoa</th>
-                                                    <th class="text-center">Khóa học</th>
                                                     <th class="text-center">Số Học sinh</th>
                                                 </tr>
                                             </thead>
@@ -246,17 +245,13 @@
                                                         </td>
                                                         <td class="text-center">
                                                             <span
-                                                                class="badge bg-secondary rounded-pill">${majorStat.courseYear}</span>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span
                                                                 class="badge bg-warning rounded-pill">${majorStat.studentCount}</span>
                                                         </td>
                                                     </tr>
                                                 </c:forEach>
                                                 <c:if test="${empty majorStats}">
                                                     <tr>
-                                                        <td colspan="4" class="text-center text-muted py-4">
+                                                        <td colspan="3" class="text-center text-muted py-4">
                                                             <i class="bi bi-inbox display-4 d-block mb-2"></i>
                                                             Chưa có dữ liệu thống kê
                                                         </td>

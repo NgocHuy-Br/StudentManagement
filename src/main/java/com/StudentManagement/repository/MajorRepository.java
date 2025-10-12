@@ -18,8 +18,6 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
 
   List<Major> findByMajorCode(String majorCode);
 
-  List<Major> findByMajorCodeAndCourseYear(String majorCode, String courseYear);
-
   // Lấy danh sách mã ngành duy nhất
   @Query("SELECT DISTINCT m.majorCode FROM Major m ORDER BY m.majorCode")
   List<String> findDistinctMajorCodes();
@@ -34,7 +32,6 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
       where
         (lower(m.majorCode) like lower(concat('%', :q, '%'))
         or lower(m.majorName) like lower(concat('%', :q, '%'))
-        or lower(m.courseYear) like lower(concat('%', :q, '%'))
         or lower(m.description) like lower(concat('%', :q, '%'))
         or lower(m.faculty.name) like lower(concat('%', :q, '%'))
         or lower(m.faculty.facultyCode) like lower(concat('%', :q, '%')))
@@ -46,8 +43,7 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
       LEFT JOIN FETCH m.faculty
       WHERE lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
          OR lower(m.majorName) LIKE lower(concat('%', :search, '%'))
-         OR lower(m.courseYear) LIKE lower(concat('%', :search, '%'))
-      ORDER BY m.courseYear DESC, m.majorCode ASC
+      ORDER BY m.majorCode ASC
       """)
   List<Major> searchByCodeOrName(@Param("search") String search);
 
@@ -55,7 +51,7 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
       SELECT DISTINCT m FROM Major m
       LEFT JOIN FETCH m.faculty
       LEFT JOIN FETCH m.subjects
-      ORDER BY m.courseYear DESC, m.majorCode ASC
+      ORDER BY m.majorCode ASC
       """)
   List<Major> findAllWithSubjectCount();
 

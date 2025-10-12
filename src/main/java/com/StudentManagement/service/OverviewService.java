@@ -73,7 +73,6 @@ public class OverviewService {
                     major.getMajorCode(),
                     major.getMajorName(),
                     major.getFaculty().getName(),
-                    major.getCourseYear(),
                     studentCount);
             majorStats.add(stat);
         });

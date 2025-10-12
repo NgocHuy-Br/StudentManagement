@@ -122,9 +122,6 @@
                                                                         class="bi bi-arrow-down-up sort-icon"></i></th>
                                                                 <th class="sortable" data-sort="faculty">Khoa <i
                                                                         class="bi bi-arrow-down-up sort-icon"></i></th>
-                                                                <th class="sortable" data-sort="academicYear">Khóa học
-                                                                    <i class="bi bi-arrow-down-up sort-icon"></i>
-                                                                </th>
                                                                 <th class="sortable" data-sort="subjectCount">Môn học <i
                                                                         class="bi bi-arrow-down-up sort-icon"></i></th>
                                                                 <th>Thao tác</th>
@@ -134,7 +131,7 @@
                                                             <c:choose>
                                                                 <c:when test="${empty majors}">
                                                                     <tr>
-                                                                        <td colspan="6"
+                                                                        <td colspan="5"
                                                                             class="text-center py-4 text-muted">
                                                                             <i
                                                                                 class="bi bi-inbox display-6 d-block mb-2"></i>
@@ -168,10 +165,6 @@
                                                                             </td>
                                                                             <td class="text-center">
                                                                                 <span
-                                                                                    class="badge bg-warning text-dark">${major.courseYear}</span>
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                <span
                                                                                     class="badge bg-info">${fn:length(major.subjects)}</span>
                                                                             </td>
                                                                             <td class="text-center">
@@ -180,7 +173,6 @@
                                                                                     data-id="${major.id}"
                                                                                     data-code="${major.majorCode}"
                                                                                     data-name="${major.majorName}"
-                                                                                    data-course-year="${major.courseYear}"
                                                                                     data-description="${major.description}"
                                                                                     data-faculty-id="${not empty major.faculty ? major.faculty.id : ''}"
                                                                                     type="button">
@@ -459,13 +451,6 @@
                                                             required placeholder="VD: Công nghệ thông tin">
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Khóa học</label>
-                                                        <input type="text" class="form-control" name="courseYear"
-                                                            required pattern="\d{4}-\d{4}"
-                                                            placeholder="VD: 2023-2027, 2024-2028"
-                                                            title="Nhập theo định dạng YYYY-YYYY (ví dụ: 2023-2027)">
-                                                    </div>
-                                                    <div class="mb-3">
                                                         <label class="form-label">Mô tả</label>
                                                         <textarea class="form-control" name="description" rows="3"
                                                             placeholder="Mô tả về ngành học"></textarea>
@@ -515,12 +500,6 @@
                                                         <label class="form-label">Tên ngành</label>
                                                         <input type="text" class="form-control" id="editMajorName"
                                                             name="majorName" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Khóa học</label>
-                                                        <input type="text" class="form-control" id="editMajorCourseYear"
-                                                            name="courseYear" required pattern="\d{4}-\d{4}"
-                                                            title="Nhập theo định dạng YYYY-YYYY (ví dụ: 2023-2027)">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Mô tả</label>
@@ -760,7 +739,6 @@
                                                 const id = this.dataset.id;
                                                 const code = this.dataset.code;
                                                 const name = this.dataset.name;
-                                                const courseYear = this.dataset.courseYear || this.getAttribute('data-course-year');
                                                 const description = this.dataset.description || '';
                                                 const facultyId = this.dataset.facultyId || this.getAttribute('data-faculty-id');
 
@@ -768,7 +746,6 @@
                                                 document.getElementById('editMajorFacultyId').value = facultyId;
                                                 document.getElementById('editMajorCode').value = code;
                                                 document.getElementById('editMajorName').value = name;
-                                                document.getElementById('editMajorCourseYear').value = courseYear;
                                                 document.getElementById('editMajorDescription').value = description;
 
                                                 const editModal = new bootstrap.Modal(document.getElementById('editMajorModal'));
@@ -873,69 +850,6 @@
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
                                                     this.form.submit();
-                                                }
-                                            });
-                                        });
-
-                                        // Course Year Validation
-                                        function validateCourseYear(courseYear) {
-                                            const pattern = /^\d{4}-\d{4}$/;
-                                            if (!pattern.test(courseYear)) {
-                                                return "Khóa học phải có định dạng YYYY-YYYY (ví dụ: 2023-2027)";
-                                            }
-
-                                            const years = courseYear.split('-');
-                                            const startYear = parseInt(years[0]);
-                                            const endYear = parseInt(years[1]);
-
-                                            if (endYear <= startYear) {
-                                                return "Năm kết thúc phải lớn hơn năm bắt đầu";
-                                            }
-
-                                            const currentYear = new Date().getFullYear();
-                                            if (startYear < currentYear - 20 || startYear > currentYear + 20) {
-                                                return "Năm bắt đầu phải trong khoảng " + (currentYear - 20) + " - " + (currentYear + 20);
-                                            }
-
-                                            return null;
-                                        }
-
-                                        // Add validation to course year inputs
-                                        document.querySelectorAll('input[name="courseYear"]').forEach(input => {
-                                            input.addEventListener('blur', function () {
-                                                const error = validateCourseYear(this.value);
-                                                const feedback = this.parentNode.querySelector('.invalid-feedback');
-
-                                                if (error) {
-                                                    this.classList.add('is-invalid');
-                                                    if (!feedback) {
-                                                        const div = document.createElement('div');
-                                                        div.className = 'invalid-feedback';
-                                                        div.textContent = error;
-                                                        this.parentNode.appendChild(div);
-                                                    } else {
-                                                        feedback.textContent = error;
-                                                    }
-                                                } else {
-                                                    this.classList.remove('is-invalid');
-                                                    if (feedback) {
-                                                        feedback.remove();
-                                                    }
-                                                }
-                                            });
-                                        });
-
-                                        // Form submission validation
-                                        document.querySelectorAll('form').forEach(form => {
-                                            form.addEventListener('submit', function (e) {
-                                                const courseYearInput = this.querySelector('input[name="courseYear"]');
-                                                if (courseYearInput) {
-                                                    const error = validateCourseYear(courseYearInput.value);
-                                                    if (error) {
-                                                        e.preventDefault();
-                                                        alert(error);
-                                                        courseYearInput.focus();
-                                                    }
                                                 }
                                             });
                                         });
