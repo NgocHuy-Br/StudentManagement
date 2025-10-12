@@ -56,6 +56,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link ${activeTab == 'scores' ? 'active' : ''}"
+                        href="${pageContext.request.contextPath}/admin/scores">
+                        <i class="bi bi-journal-text me-1"></i> Điểm sinh viên
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link ${activeTab == 'faculties' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/admin/faculties/manage">
                         <i class="bi bi-building me-1"></i> Khoa

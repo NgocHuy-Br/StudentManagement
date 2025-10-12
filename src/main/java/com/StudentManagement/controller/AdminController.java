@@ -1833,6 +1833,145 @@ public class AdminController {
         }
     }
 
+    // ===============================
+    // SCORES MANAGEMENT
+    // ===============================
+
+    /**
+     * Quản lý điểm sinh viên (Admin)
+     */
+    @GetMapping("/scores")
+    public String manageScores(Authentication auth, Model model,
+            @RequestParam(required = false) Long classroomId,
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) String search) {
+
+        // Lấy tất cả lớp học
+        List<Classroom> allClasses = classroomRepository.findAll();
+
+        // Lấy tất cả môn học
+        List<Subject> subjects = subjectRepository.findAll();
+
+        // Nếu có chọn lớp cụ thể
+        List<Student> students = new ArrayList<>();
+        List<com.StudentManagement.entity.Score> scores = new ArrayList<>();
+
+        if (classroomId != null) {
+            students = studentRepository.findByClassroomId(classroomId);
+
+            if (subjectId != null) {
+                // Lọc điểm theo môn học cụ thể
+                scores = scoreRepository.findByStudentClassroomIdAndSubjectId(classroomId, subjectId);
+            } else {
+                // Lấy tất cả điểm của lớp (tất cả môn học)
+                Page<com.StudentManagement.entity.Score> scorePages = scoreRepository.findByClassroomId(classroomId,
+                        Pageable.unpaged());
+                scores = scorePages.getContent();
+            }
+        } else {
+            // Tất cả lớp - lấy tất cả sinh viên và điểm
+            for (Classroom classroom : allClasses) {
+                students.addAll(studentRepository.findByClassroomId(classroom.getId()));
+
+                if (subjectId != null) {
+                    // Lọc điểm theo môn học cụ thể cho tất cả lớp
+                    scores.addAll(scoreRepository.findByStudentClassroomIdAndSubjectId(classroom.getId(), subjectId));
+                } else {
+                    // Lấy tất cả điểm của tất cả lớp
+                    Page<com.StudentManagement.entity.Score> scorePages = scoreRepository
+                            .findByClassroomId(classroom.getId(), Pageable.unpaged());
+                    scores.addAll(scorePages.getContent());
+                }
+            }
+        }
+
+        // Lọc sinh viên theo tìm kiếm nếu có
+        if (search != null && !search.trim().isEmpty()) {
+            String searchTerm = search.trim().toLowerCase();
+            students = students.stream()
+                    .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
+                            (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
+                                    .contains(searchTerm))
+                    .collect(java.util.stream.Collectors.toList());
+
+            // Lọc điểm tương ứng với sinh viên đã lọc
+            List<Long> filteredStudentIds = students.stream()
+                    .map(Student::getId)
+                    .collect(java.util.stream.Collectors.toList());
+
+            scores = scores.stream()
+                    .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
+        model.addAttribute("assignedClasses", allClasses);
+        model.addAttribute("subjects", subjects);
+        model.addAttribute("students", students);
+        model.addAttribute("scores", scores);
+        model.addAttribute("selectedClassroomId", classroomId);
+        model.addAttribute("selectedSubjectId", subjectId);
+        model.addAttribute("search", search);
+        model.addAttribute("activeTab", "scores");
+        model.addAttribute("firstName", "Admin");
+        model.addAttribute("roleDisplay", "Quản trị viên");
+
+        return "admin/scores";
+    }
+
+    /**
+     * Cập nhật điểm sinh viên (Admin)
+     */
+    @PostMapping("/scores/update")
+    public String updateScore(@RequestParam Long studentId,
+            @RequestParam Long subjectId,
+            @RequestParam(required = false) Double attendanceScore,
+            @RequestParam(required = false) Double midtermScore,
+            @RequestParam(required = false) Double finalScore,
+            @RequestParam(required = false) String notes,
+            Authentication auth,
+            RedirectAttributes ra) {
+
+        try {
+            // Tìm điểm hiện tại hoặc tạo mới
+            Optional<com.StudentManagement.entity.Score> existingScore = scoreRepository
+                    .findByStudentIdAndSubjectId(studentId, subjectId);
+            com.StudentManagement.entity.Score score;
+
+            if (existingScore.isPresent()) {
+                score = existingScore.get();
+            } else {
+                score = new com.StudentManagement.entity.Score();
+                score.setStudent(studentRepository.findById(studentId).orElse(null));
+                score.setSubject(subjectRepository.findById(subjectId).orElse(null));
+            }
+
+            // Cập nhật điểm
+            if (attendanceScore != null) {
+                score.setAttendanceScore(attendanceScore);
+            }
+            if (midtermScore != null) {
+                score.setMidtermScore(midtermScore);
+            }
+            if (finalScore != null) {
+                score.setFinalScore(finalScore);
+            }
+            if (notes != null) {
+                score.setNotes(notes);
+            }
+
+            // Tính điểm trung bình
+            score.calculateAverageScore();
+
+            scoreRepository.save(score);
+            ra.addFlashAttribute("success", "Cập nhật điểm thành công");
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+        }
+
+        return "redirect:/admin/scores";
+    }
+
     /**
      * Validate course year format YYYY-YYYY
      */
