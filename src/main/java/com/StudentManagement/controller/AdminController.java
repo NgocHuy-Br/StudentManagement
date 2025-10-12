@@ -1346,6 +1346,9 @@ public class AdminController {
         model.addAttribute("majors", majors);
         model.addAttribute("q", q);
 
+        // Thêm danh sách các khoa để tạo/sửa ngành
+        model.addAttribute("faculties", facultyRepository.findAllOrderByName());
+
         // Xử lý chế độ xem môn học
         if (selectedMajorId != null || "true".equals(viewAll)) {
             Major selectedMajor = null;
@@ -1608,11 +1611,19 @@ public class AdminController {
             @RequestParam String majorName,
             @RequestParam String courseYear,
             @RequestParam(required = false) String description,
+            @RequestParam Long facultyId,
             RedirectAttributes ra) {
         try {
             // Validate course year format
             if (!isValidCourseYearFormat(courseYear)) {
                 ra.addFlashAttribute("error", "Khóa học phải có định dạng YYYY-YYYY (ví dụ: 2023-2027)");
+                return "redirect:/admin/majors";
+            }
+
+            // Kiểm tra faculty tồn tại
+            Faculty faculty = facultyRepository.findById(facultyId).orElse(null);
+            if (faculty == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy khoa");
                 return "redirect:/admin/majors";
             }
 
@@ -1632,6 +1643,7 @@ public class AdminController {
             major.setMajorName(majorName);
             major.setCourseYear(courseYear);
             major.setDescription(description);
+            major.setFaculty(faculty);
 
             majorRepository.save(major);
 
@@ -1652,6 +1664,7 @@ public class AdminController {
             @RequestParam String majorName,
             @RequestParam String courseYear,
             @RequestParam(required = false) String description,
+            @RequestParam Long facultyId,
             RedirectAttributes ra) {
         try {
             // Validate course year format
@@ -1663,6 +1676,13 @@ public class AdminController {
             Major major = majorRepository.findById(id).orElse(null);
             if (major == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy ngành học");
+                return "redirect:/admin/majors";
+            }
+
+            // Kiểm tra faculty tồn tại
+            Faculty faculty = facultyRepository.findById(facultyId).orElse(null);
+            if (faculty == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy khoa");
                 return "redirect:/admin/majors";
             }
 
@@ -1683,6 +1703,7 @@ public class AdminController {
             major.setMajorName(majorName);
             major.setCourseYear(courseYear);
             major.setDescription(description);
+            major.setFaculty(faculty);
 
             majorRepository.save(major);
 

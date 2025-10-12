@@ -22,6 +22,11 @@ public class Major {
     @Column(length = 500)
     private String description; // Mô tả ngành
 
+    // Quan hệ với Faculty (1 khoa có nhiều ngành, 1 ngành thuộc 1 khoa)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "faculty_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private Faculty faculty;
+
     // Quan hệ với Student (1 ngành có nhiều sinh viên)
     @OneToMany(mappedBy = "major", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Student> students;
@@ -36,11 +41,12 @@ public class Major {
     public Major() {
     }
 
-    public Major(String majorCode, String majorName, String courseYear, String description) {
+    public Major(String majorCode, String majorName, String courseYear, String description, Faculty faculty) {
         this.majorCode = majorCode;
         this.majorName = majorName;
         this.courseYear = courseYear;
         this.description = description;
+        this.faculty = faculty;
     }
 
     // Getters & Setters
@@ -82,6 +88,14 @@ public class Major {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Faculty getFaculty() {
+        return faculty;
+    }
+
+    public void setFaculty(Faculty faculty) {
+        this.faculty = faculty;
     }
 
     public List<Student> getStudents() {

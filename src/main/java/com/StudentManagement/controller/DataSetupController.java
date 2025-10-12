@@ -6,11 +6,21 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.StudentManagement.repository.FacultyRepository;
+import com.StudentManagement.repository.MajorRepository;
+import com.StudentManagement.entity.Faculty;
+
 @RestController
 public class DataSetupController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private FacultyRepository facultyRepository;
+
+    @Autowired
+    private MajorRepository majorRepository;
 
     @GetMapping("/setup-test-data")
     public String setupTestData() {
@@ -184,6 +194,37 @@ public class DataSetupController {
             }
 
             return result.toString();
+
+        } catch (Exception e) {
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
+    @GetMapping("/setup-faculties")
+    @ResponseBody
+    public String setupFaculties() {
+        try {
+            System.out.println("=== Setting up faculty data ===");
+
+            // Insert sample faculties
+            jdbcTemplate.execute(
+                    "INSERT IGNORE INTO faculties (faculty_code, name, description, created_at, updated_at) VALUES " +
+                            "('CNTT', 'Công nghệ thông tin', 'Khoa Công nghệ thông tin', NOW(), NOW()), " +
+                            "('DTVT', 'Điện tử viễn thông', 'Khoa Điện tử viễn thông', NOW(), NOW()), " +
+                            "('KT', 'Kinh tế', 'Khoa Kinh tế', NOW(), NOW()), " +
+                            "('CK', 'Cơ khí', 'Khoa Cơ khí', NOW(), NOW()), " +
+                            "('HH', 'Hóa học', 'Khoa Hóa học', NOW(), NOW())");
+
+            // Get CNTT faculty ID
+            var cnttFaculty = jdbcTemplate.queryForMap("SELECT id FROM faculties WHERE faculty_code = 'CNTT'");
+            Long cnttFacultyId = ((Number) cnttFaculty.get("id")).longValue();
+
+            // Update existing majors to assign them to CNTT faculty as default
+            int updatedMajors = jdbcTemplate.update(
+                    "UPDATE majors SET faculty_id = ? WHERE faculty_id IS NULL OR faculty_id = 0",
+                    cnttFacultyId);
+
+            return "SUCCESS: Created faculties and updated " + updatedMajors + " majors with faculty assignment.";
 
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();

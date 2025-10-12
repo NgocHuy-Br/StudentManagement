@@ -120,8 +120,11 @@
                                                                         class="bi bi-arrow-down-up sort-icon"></i></th>
                                                                 <th class="sortable" data-sort="majorName">Tên ngành <i
                                                                         class="bi bi-arrow-down-up sort-icon"></i></th>
+                                                                <th class="sortable" data-sort="faculty">Khoa <i
+                                                                        class="bi bi-arrow-down-up sort-icon"></i></th>
                                                                 <th class="sortable" data-sort="academicYear">Khóa học
-                                                                    <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                                                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                                                                </th>
                                                                 <th class="sortable" data-sort="subjectCount">Môn học <i
                                                                         class="bi bi-arrow-down-up sort-icon"></i></th>
                                                                 <th>Thao tác</th>
@@ -131,7 +134,7 @@
                                                             <c:choose>
                                                                 <c:when test="${empty majors}">
                                                                     <tr>
-                                                                        <td colspan="5"
+                                                                        <td colspan="6"
                                                                             class="text-center py-4 text-muted">
                                                                             <i
                                                                                 class="bi bi-inbox display-6 d-block mb-2"></i>
@@ -147,6 +150,21 @@
                                                                             <td class="fw-semibold text-primary">
                                                                                 ${major.majorCode}</td>
                                                                             <td class="fw-medium">${major.majorName}
+                                                                            </td>
+                                                                            <td>
+                                                                                <c:choose>
+                                                                                    <c:when
+                                                                                        test="${not empty major.faculty}">
+                                                                                        <span
+                                                                                            class="badge bg-primary">${major.faculty.facultyCode}
+                                                                                            -
+                                                                                            ${major.faculty.name}</span>
+                                                                                    </c:when>
+                                                                                    <c:otherwise>
+                                                                                        <span class="text-muted">Chưa
+                                                                                            phân khoa</span>
+                                                                                    </c:otherwise>
+                                                                                </c:choose>
                                                                             </td>
                                                                             <td class="text-center">
                                                                                 <span
@@ -164,6 +182,7 @@
                                                                                     data-name="${major.majorName}"
                                                                                     data-course-year="${major.courseYear}"
                                                                                     data-description="${major.description}"
+                                                                                    data-faculty-id="${not empty major.faculty ? major.faculty.id : ''}"
                                                                                     type="button">
                                                                                     <i class="bi bi-pencil"></i>
                                                                                 </button>
@@ -420,6 +439,16 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="mb-3">
+                                                        <label class="form-label">Khoa</label>
+                                                        <select class="form-select" name="facultyId" required>
+                                                            <option value="">-- Chọn khoa --</option>
+                                                            <c:forEach var="faculty" items="${faculties}">
+                                                                <option value="${faculty.id}">${faculty.facultyCode} -
+                                                                    ${faculty.name}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
                                                         <label class="form-label">Mã ngành</label>
                                                         <input type="text" class="form-control" name="majorCode"
                                                             required placeholder="VD: CNTT">
@@ -466,6 +495,17 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <input type="hidden" id="editMajorId" name="id">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Khoa</label>
+                                                        <select class="form-select" id="editMajorFacultyId"
+                                                            name="facultyId" required>
+                                                            <option value="">-- Chọn khoa --</option>
+                                                            <c:forEach var="faculty" items="${faculties}">
+                                                                <option value="${faculty.id}">${faculty.facultyCode} -
+                                                                    ${faculty.name}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Mã ngành</label>
                                                         <input type="text" class="form-control" id="editMajorCode"
@@ -722,8 +762,10 @@
                                                 const name = this.dataset.name;
                                                 const courseYear = this.dataset.courseYear || this.getAttribute('data-course-year');
                                                 const description = this.dataset.description || '';
+                                                const facultyId = this.dataset.facultyId || this.getAttribute('data-faculty-id');
 
                                                 document.getElementById('editMajorId').value = id;
+                                                document.getElementById('editMajorFacultyId').value = facultyId;
                                                 document.getElementById('editMajorCode').value = code;
                                                 document.getElementById('editMajorName').value = name;
                                                 document.getElementById('editMajorCourseYear').value = courseYear;

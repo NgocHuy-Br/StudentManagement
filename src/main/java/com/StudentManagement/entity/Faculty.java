@@ -22,6 +22,9 @@ public class Faculty {
     @OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Teacher> teachers;
 
+    @OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Major> majors;
+
     // Constructors
     public Faculty() {
     }
@@ -76,5 +79,13 @@ public class Faculty {
 
     public void setTeachers(List<Teacher> teachers) {
         this.teachers = teachers;
+    }
+
+    public List<Major> getMajors() {
+        return majors;
+    }
+
+    public void setMajors(List<Major> majors) {
+        this.majors = majors;
     }
 }
