@@ -61,4 +61,7 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
 
   // Đếm số ngành theo faculty
   Long countByFaculty(com.StudentManagement.entity.Faculty faculty);
+
+  // Đếm số ngành theo faculty ID
+  Long countByFacultyId(Long facultyId);
 }

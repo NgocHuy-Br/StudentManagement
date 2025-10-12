@@ -1264,13 +1264,57 @@ public class AdminController {
         model.addAttribute("activeTab", "faculties");
 
         Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        // Validate sort parameter to prevent errors
-        String validSort = ("name".equals(sort) || "description".equals(sort)) ? sort : "name";
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, validSort));
 
-        Page<Faculty> faculties = (q == null || q.isBlank())
-                ? facultyRepository.findAll(pageable)
-                : facultyRepository.search(q.trim(), pageable);
+        // Validate sort parameter và xử lý các loại sắp xếp khác nhau
+        Page<Faculty> faculties;
+        boolean isSearching = q != null && !q.isBlank();
+        String trimmedQuery = isSearching ? q.trim() : "";
+
+        if ("teacherCount".equals(sort)) {
+            // Sắp xếp theo số lượng giáo viên
+            Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+            if (isSearching) {
+                faculties = direction == Sort.Direction.ASC
+                        ? facultyRepository.searchOrderByTeacherCountAsc(trimmedQuery, pageable)
+                        : facultyRepository.searchOrderByTeacherCountDesc(trimmedQuery, pageable);
+            } else {
+                faculties = direction == Sort.Direction.ASC
+                        ? facultyRepository.findAllOrderByTeacherCountAsc(pageable)
+                        : facultyRepository.findAllOrderByTeacherCountDesc(pageable);
+            }
+        } else if ("majorCount".equals(sort)) {
+            // Sắp xếp theo số lượng ngành
+            Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+            if (isSearching) {
+                faculties = direction == Sort.Direction.ASC
+                        ? facultyRepository.searchOrderByMajorCountAsc(trimmedQuery, pageable)
+                        : facultyRepository.searchOrderByMajorCountDesc(trimmedQuery, pageable);
+            } else {
+                faculties = direction == Sort.Direction.ASC
+                        ? facultyRepository.findAllOrderByMajorCountAsc(pageable)
+                        : facultyRepository.findAllOrderByMajorCountDesc(pageable);
+            }
+        } else if ("studentCount".equals(sort)) {
+            // Sắp xếp theo số lượng sinh viên
+            Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+            if (isSearching) {
+                faculties = direction == Sort.Direction.ASC
+                        ? facultyRepository.searchOrderByStudentCountAsc(trimmedQuery, pageable)
+                        : facultyRepository.searchOrderByStudentCountDesc(trimmedQuery, pageable);
+            } else {
+                faculties = direction == Sort.Direction.ASC
+                        ? facultyRepository.findAllOrderByStudentCountAsc(pageable)
+                        : facultyRepository.findAllOrderByStudentCountDesc(pageable);
+            }
+        } else {
+            // Sắp xếp thông thường theo name, facultyCode, description
+            String validSort = ("name".equals(sort) || "description".equals(sort) || "facultyCode".equals(sort)) ? sort
+                    : "name";
+            Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, validSort));
+            faculties = isSearching
+                    ? facultyRepository.search(trimmedQuery, pageable)
+                    : facultyRepository.findAll(pageable);
+        }
 
         // Tính toán thống kê cho mỗi khoa
         Map<Long, Map<String, Long>> facultyStats = new HashMap<>();
@@ -1313,13 +1357,13 @@ public class AdminController {
 
         // Kiểm tra trùng mã khoa
         if (facultyRepository.existsByFacultyCode(facultyCode.trim())) {
-            ra.addFlashAttribute("error", "Mã khoa đã tồn tại.");
+            ra.addFlashAttribute("error", "Mã khoa \"" + facultyCode.trim() + "\" đã tồn tại. Vui lòng chọn mã khác.");
             return "redirect:/admin/faculties/manage";
         }
 
         // Kiểm tra trùng tên khoa
         if (facultyRepository.existsByName(name.trim())) {
-            ra.addFlashAttribute("error", "Tên khoa đã tồn tại.");
+            ra.addFlashAttribute("error", "Tên khoa \"" + name.trim() + "\" đã tồn tại. Vui lòng chọn tên khác.");
             return "redirect:/admin/faculties/manage";
         }
 
@@ -1349,13 +1393,13 @@ public class AdminController {
 
         // Kiểm tra trùng mã khoa với khoa khác
         if (facultyRepository.existsByFacultyCodeAndIdNot(facultyCode.trim(), id)) {
-            ra.addFlashAttribute("error", "Mã khoa đã tồn tại.");
+            ra.addFlashAttribute("error", "Mã khoa \"" + facultyCode.trim() + "\" đã tồn tại. Vui lòng chọn mã khác.");
             return "redirect:/admin/faculties/manage";
         }
 
         // Kiểm tra trùng tên khoa với khoa khác
         if (facultyRepository.existsByNameAndIdNot(name.trim(), id)) {
-            ra.addFlashAttribute("error", "Tên khoa đã tồn tại.");
+            ra.addFlashAttribute("error", "Tên khoa \"" + name.trim() + "\" đã tồn tại. Vui lòng chọn tên khác.");
             return "redirect:/admin/faculties/manage";
         }
 
@@ -1382,15 +1426,83 @@ public class AdminController {
 
         // Kiểm tra xem có giáo viên thuộc khoa này không
         Long teacherCount = teacherRepository.countByFacultyId(id);
-        if (teacherCount > 0) {
-            ra.addFlashAttribute("error",
-                    "Không thể xóa khoa vì còn có " + teacherCount + " giáo viên thuộc khoa này.");
+
+        // Kiểm tra xem có ngành học thuộc khoa này không
+        Long majorCount = majorRepository.countByFacultyId(id);
+
+        // Kiểm tra xem có sinh viên thuộc khoa này (thông qua ngành) không
+        Long studentCount = 0L;
+        if (majorCount > 0) {
+            // Đếm sinh viên thuộc các ngành của khoa này
+            studentCount = studentRepository.countByFacultyId(id);
+        }
+
+        // Không cho phép xóa nếu có dữ liệu liên quan
+        if (teacherCount > 0 || majorCount > 0 || studentCount > 0) {
+            StringBuilder errorMsg = new StringBuilder("Không thể xóa khoa \"" + faculty.getName() + "\" vì còn có: ");
+
+            boolean hasContent = false;
+            if (teacherCount > 0) {
+                errorMsg.append(teacherCount).append(" giáo viên");
+                hasContent = true;
+            }
+            if (majorCount > 0) {
+                if (hasContent)
+                    errorMsg.append(", ");
+                errorMsg.append(majorCount).append(" ngành học");
+                hasContent = true;
+            }
+            if (studentCount > 0) {
+                if (hasContent)
+                    errorMsg.append(", ");
+                errorMsg.append(studentCount).append(" sinh viên");
+            }
+            errorMsg.append(" thuộc khoa này.");
+
+            ra.addFlashAttribute("error", errorMsg.toString());
             return "redirect:/admin/faculties/manage";
         }
 
-        facultyRepository.delete(faculty);
-        ra.addFlashAttribute("success", "Xóa khoa thành công.");
+        try {
+            facultyRepository.delete(faculty);
+            ra.addFlashAttribute("success", "Xóa khoa \"" + faculty.getName() + "\" thành công.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra khi xóa khoa. Vui lòng thử lại.");
+        }
+
         return "redirect:/admin/faculties/manage";
+    }
+
+    /**
+     * AJAX endpoint to check faculty code uniqueness
+     */
+    @GetMapping("/faculties/check-code")
+    @ResponseBody
+    public Map<String, Boolean> checkFacultyCode(@RequestParam String facultyCode,
+            @RequestParam(required = false) Long excludeId) {
+        boolean exists = (excludeId == null)
+                ? facultyRepository.existsByFacultyCode(facultyCode.trim())
+                : facultyRepository.existsByFacultyCodeAndIdNot(facultyCode.trim(), excludeId);
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", exists);
+        return response;
+    }
+
+    /**
+     * AJAX endpoint to check faculty name uniqueness
+     */
+    @GetMapping("/faculties/check-name")
+    @ResponseBody
+    public Map<String, Boolean> checkFacultyName(@RequestParam String name,
+            @RequestParam(required = false) Long excludeId) {
+        boolean exists = (excludeId == null)
+                ? facultyRepository.existsByName(name.trim())
+                : facultyRepository.existsByNameAndIdNot(name.trim(), excludeId);
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", exists);
+        return response;
     }
 
     // ============= MAJOR-SUBJECT MANAGEMENT TAB =============

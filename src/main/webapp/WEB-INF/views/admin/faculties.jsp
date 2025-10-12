@@ -31,7 +31,20 @@
                     }
 
                     .faculty-toolbar .search .form-control {
-                        min-width: 260px
+                        min-width: 200px;
+                        max-width: 300px
+                    }
+
+                    .search-clear-btn {
+                        border: 1px solid #dee2e6;
+                        border-left: 0;
+                        background: white;
+                        cursor: pointer;
+                        border-radius: 0 0.375rem 0.375rem 0
+                    }
+
+                    .search-clear-btn:hover {
+                        background: #f8f9fa
                     }
 
                     .table-faculties tbody tr:hover {
@@ -87,10 +100,18 @@
                                     <!-- Toolbar: tìm kiếm + Thêm mới -->
                                     <form class="faculty-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
                                         method="get" action="">
-                                        <div class="input-group search">
-                                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                            <input name="q" class="form-control" placeholder="Tìm tên khoa, mô tả..."
-                                                value="${q}" />
+                                        <div class="d-flex">
+                                            <div class="input-group search">
+                                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                <input name="q" id="searchInput" class="form-control"
+                                                    placeholder="Tìm tên khoa, mô tả..." value="${q}" />
+                                            </div>
+                                            <c:if test="${not empty q}">
+                                                <button type="button" class="btn search-clear-btn"
+                                                    onclick="clearSearch()" title="Xóa tìm kiếm">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </c:if>
                                         </div>
 
                                         <div class="ms-auto"></div>
@@ -131,9 +152,24 @@
                                                         </a>
                                                     </th>
                                                     <th width="180px">Mô tả</th>
-                                                    <th width="100px" class="text-center">Số ngành</th>
-                                                    <th width="100px" class="text-center">Số giáo viên</th>
-                                                    <th width="100px" class="text-center">Số sinh viên</th>
+                                                    <th width="100px" class="text-center">Số ngành
+                                                        <a class="sort-link"
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=majorCount&dir=${dir=='asc' && sort=='majorCount' ? 'desc' : 'asc'}">
+                                                            <i class="bi bi-arrow-down-up"></i>
+                                                        </a>
+                                                    </th>
+                                                    <th width="100px" class="text-center">Số giáo viên
+                                                        <a class="sort-link"
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=teacherCount&dir=${dir=='asc' && sort=='teacherCount' ? 'desc' : 'asc'}">
+                                                            <i class="bi bi-arrow-down-up"></i>
+                                                        </a>
+                                                    </th>
+                                                    <th width="100px" class="text-center">Số sinh viên
+                                                        <a class="sort-link"
+                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=studentCount&dir=${dir=='asc' && sort=='studentCount' ? 'desc' : 'asc'}">
+                                                            <i class="bi bi-arrow-down-up"></i>
+                                                        </a>
+                                                    </th>
                                                     <th width="120px" class="text-center">Thao tác</th>
                                                 </tr>
                                             </thead>
@@ -320,21 +356,15 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <p>Bạn có chắc chắn muốn xóa khoa này?</p>
-                                    <p class="text-muted">Khoa: <strong id="deleteFacultyName"
-                                            class="text-dark"></strong></p>
-                                    <div class="alert alert-warning">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                        <strong>Lưu ý:</strong> Việc xóa khoa có thể ảnh hưởng đến dữ liệu giáo viên và
-                                        ngành học thuộc khoa này.
-                                    </div>
+                                    <p>Bạn có chắc chắn muốn xóa khoa <strong id="deleteFacultyName"
+                                            class="text-danger"></strong> không?</p>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                                     <form method="post" id="deleteForm" class="d-inline">
                                         <input type="hidden" id="deleteId" name="id">
                                         <button type="submit" class="btn btn-danger">
-                                            <i class="bi bi-trash me-1"></i>Xóa
+                                            <i class="bi bi-trash me-1"></i>Xác nhận xóa
                                         </button>
                                     </form>
                                 </div>
@@ -389,7 +419,7 @@
                                     const name = this.getAttribute('data-name');
 
                                     document.getElementById('deleteId').value = id;
-                                    document.getElementById('deleteFacultyName').textContent = `${facultyCode} - ${name}` || '';
+                                    document.getElementById('deleteFacultyName').textContent = name || '';
 
                                     // Set form action
                                     const deleteForm = document.getElementById('deleteForm');
@@ -400,6 +430,152 @@
                                     modal.show();
                                 });
                             });
+
+                            // Function to clear search
+                            window.clearSearch = function () {
+                                const searchInput = document.getElementById('searchInput');
+                                searchInput.value = '';
+
+                                // Get current URL without query params
+                                const url = new URL(window.location);
+                                url.searchParams.delete('q'); // Remove search query
+                                url.searchParams.set('page', '0'); // Reset to first page
+
+                                // Redirect to the new URL
+                                window.location.href = url.toString();
+                            };
+
+                            // Faculty validation functions
+                            window.validateFacultyCode = function (facultyCode, excludeId = null) {
+                                return fetch(contextPath + '/admin/faculties/check-code?facultyCode=' + encodeURIComponent(facultyCode) +
+                                    (excludeId ? '&excludeId=' + excludeId : ''))
+                                    .then(response => response.json())
+                                    .then(data => data.exists);
+                            };
+
+                            window.validateFacultyName = function (name, excludeId = null) {
+                                return fetch(contextPath + '/admin/faculties/check-name?name=' + encodeURIComponent(name) +
+                                    (excludeId ? '&excludeId=' + excludeId : ''))
+                                    .then(response => response.json())
+                                    .then(data => data.exists);
+                            };
+
+                            // Add validation to create form
+                            const createForm = document.querySelector('#modalCreate form');
+                            if (createForm) {
+                                createForm.addEventListener('submit', async function (e) {
+                                    e.preventDefault();
+
+                                    const submitBtn = this.querySelector('button[type="submit"]');
+                                    const originalText = submitBtn.innerHTML;
+
+                                    // Show loading state
+                                    submitBtn.disabled = true;
+                                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
+
+                                    const facultyCode = document.getElementById('createFacultyCode').value.trim();
+                                    const name = document.getElementById('createName').value.trim();
+
+                                    if (!facultyCode || !name) {
+                                        alert('Vui lòng nhập đầy đủ mã khoa và tên khoa.');
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        return;
+                                    }
+
+                                    try {
+                                        const [codeExists, nameExists] = await Promise.all([
+                                            validateFacultyCode(facultyCode),
+                                            validateFacultyName(name)
+                                        ]);
+
+                                        if (codeExists) {
+                                            alert('Mã khoa "' + facultyCode + '" đã tồn tại. Vui lòng chọn mã khác.');
+                                            document.getElementById('createFacultyCode').focus();
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = originalText;
+                                            return;
+                                        }
+
+                                        if (nameExists) {
+                                            alert('Tên khoa "' + name + '" đã tồn tại. Vui lòng chọn tên khác.');
+                                            document.getElementById('createName').focus();
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = originalText;
+                                            return;
+                                        }
+
+                                        // If validation passes, submit the form
+                                        submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Lưu';
+                                        this.submit();
+                                    } catch (error) {
+                                        console.error('Validation error:', error);
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        // If validation fails, still allow submission (server will handle it)
+                                        this.submit();
+                                    }
+                                });
+                            }
+
+                            // Add validation to edit form
+                            const editForm = document.getElementById('editForm');
+                            if (editForm) {
+                                editForm.addEventListener('submit', async function (e) {
+                                    e.preventDefault();
+
+                                    const submitBtn = this.querySelector('button[type="submit"]');
+                                    const originalText = submitBtn.innerHTML;
+
+                                    // Show loading state
+                                    submitBtn.disabled = true;
+                                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
+
+                                    const facultyCode = document.getElementById('editFacultyCode').value.trim();
+                                    const name = document.getElementById('editName').value.trim();
+                                    const excludeId = document.getElementById('editId').value;
+
+                                    if (!facultyCode || !name) {
+                                        alert('Vui lòng nhập đầy đủ mã khoa và tên khoa.');
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        return;
+                                    }
+
+                                    try {
+                                        const [codeExists, nameExists] = await Promise.all([
+                                            validateFacultyCode(facultyCode, excludeId),
+                                            validateFacultyName(name, excludeId)
+                                        ]);
+
+                                        if (codeExists) {
+                                            alert('Mã khoa "' + facultyCode + '" đã tồn tại. Vui lòng chọn mã khác.');
+                                            document.getElementById('editFacultyCode').focus();
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = originalText;
+                                            return;
+                                        }
+
+                                        if (nameExists) {
+                                            alert('Tên khoa "' + name + '" đã tồn tại. Vui lòng chọn tên khác.');
+                                            document.getElementById('editName').focus();
+                                            submitBtn.disabled = false;
+                                            submitBtn.innerHTML = originalText;
+                                            return;
+                                        }
+
+                                        // If validation passes, submit the form
+                                        submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Cập nhật';
+                                        this.submit();
+                                    } catch (error) {
+                                        console.error('Validation error:', error);
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = originalText;
+                                        // If validation fails, still allow submission (server will handle it)
+                                        this.submit();
+                                    }
+                                });
+                            }
                         });
                     </script>
             </body>
