@@ -63,16 +63,20 @@ public class HomeRoomTeacherController {
             return "redirect:/auth/login";
         }
 
-        // Lấy các lớp mà giáo viên đang chủ nhiệm (dùng direct reference)
-        List<Classroom> currentClassrooms = classroomRepository.findByHomeRoomTeacher(teacher);
+        // Lấy các lớp mà giáo viên được phân công
+        List<Classroom> assignedClasses = classroomRepository.findByHomeRoomTeacher(teacher);
+
+        // Lấy danh sách môn học
+        List<Subject> subjects = subjectRepository.findAll();
 
         model.addAttribute("teacher", teacher);
-        model.addAttribute("classrooms", currentClassrooms);
+        model.addAttribute("assignedClasses", assignedClasses);
+        model.addAttribute("subjects", subjects);
         model.addAttribute("activeTab", "dashboard");
         model.addAttribute("firstName", teacher.getUser().getFname());
         model.addAttribute("roleDisplay", "Giáo viên");
 
-        return "teacher/dashboard_clean";
+        return "teacher/dashboard";
     }
 
     /**

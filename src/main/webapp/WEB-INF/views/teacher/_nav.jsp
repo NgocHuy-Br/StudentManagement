@@ -7,6 +7,16 @@
                 --tabs-inset: clamp(10px, 2vw, 24px);
             }
 
+            /* Ensure no horizontal overflow and consistent scrollbar */
+            body {
+                overflow-x: hidden !important;
+                overflow-y: scroll !important;
+                /* Force vertical scrollbar on all pages */
+                min-height: 100vh !important;
+                /* Ensure minimum height */
+                background: #f7f7f9 !important;
+            }
+
             .tabs-bar {
                 background: var(--brand);
                 border: none;
@@ -14,6 +24,9 @@
                 padding: .35rem 0;
                 margin-left: calc(-1*var(--page-x));
                 margin-right: calc(-1*var(--page-x));
+                /* Ensure consistent positioning */
+                position: relative;
+                overflow-x: hidden;
             }
 
             .tabs-bar .nav-tabs {
