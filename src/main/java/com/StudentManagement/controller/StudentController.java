@@ -76,7 +76,7 @@ public class StudentController {
             model.addAttribute("recentScores", recentScores);
         }
 
-        return "student/student-dashboard";
+        return "student/dashboard";
     }
 
     // Xem danh sách môn học của ngành
@@ -128,6 +128,6 @@ public class StudentController {
             model.addAttribute("subjects", subjects);
         }
 
-        return "student/scores";
+        return "student/scores_new";
     }
 }
