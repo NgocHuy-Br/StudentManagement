@@ -28,6 +28,10 @@
                         body {
                             background: #f7f7f9;
                             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            /* Ensure consistent scrollbar with other pages */
+                            overflow-x: hidden !important;
+                            overflow-y: scroll !important;
+                            min-height: 100vh !important;
                         }
 
                         .card {

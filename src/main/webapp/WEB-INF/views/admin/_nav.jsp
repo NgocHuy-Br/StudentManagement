@@ -7,9 +7,13 @@
                 --page-x: clamp(12px, 4vw, 36px);
             }
 
-            /* Ensure no horizontal overflow */
+            /* Ensure no horizontal overflow and consistent scrollbar */
             body {
                 overflow-x: hidden;
+                overflow-y: scroll;
+                /* Force vertical scrollbar on all pages */
+                min-height: 100vh;
+                /* Ensure minimum height */
             }
 
             .tabs-bar {
