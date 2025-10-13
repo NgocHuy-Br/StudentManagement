@@ -30,36 +30,27 @@
             }
 
             .tabs-bar .nav-tabs {
-                border: none;
-                padding: 0 var(--tabs-inset);
-                margin: 0;
+                border-bottom: none;
+                padding-left: var(--tabs-inset);
+                padding-right: var(--tabs-inset);
             }
 
             .tabs-bar .nav-link {
+                color: #fff;
+                font-weight: 600;
                 border: none;
-                color: rgba(255, 255, 255, .75);
-                font-weight: 500;
-                padding: .75rem 1.2rem;
-                margin-right: .5rem;
-                border-radius: 6px 6px 0 0;
-                transition: all .2s;
-                background: transparent;
+                border-radius: .55rem;
+                margin-right: .25rem;
             }
 
             .tabs-bar .nav-link:hover {
-                color: white;
-                background: rgba(255, 255, 255, .1);
+                background: rgba(255, 255, 255, .12);
+                color: #fff;
             }
 
             .tabs-bar .nav-link.active {
-                color: var(--brand);
-                background: #f7f7f9;
-                border-color: transparent;
-            }
-
-            .tabs-bar .nav-link i {
-                font-size: .9rem;
-                margin-right: .4rem;
+                background: #fff;
+                color: #b91c1c;
             }
         </style>
 
@@ -68,13 +59,13 @@
                 <li class="nav-item">
                     <a class="nav-link ${activeTab == 'dashboard' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/student">
-                        <i class="bi bi-speedometer2"></i>Tổng quan
+                        <i class="bi bi-speedometer2 me-1"></i> Tổng quan
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link ${activeTab == 'scores' ? 'active' : ''}"
                         href="${pageContext.request.contextPath}/student/scores">
-                        <i class="bi bi-bar-chart"></i>Kết quả học tập
+                        <i class="bi bi-bar-chart me-1"></i> Kết quả học tập
                     </a>
                 </li>
             </ul>
