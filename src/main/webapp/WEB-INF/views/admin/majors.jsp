@@ -15,7 +15,6 @@
                         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
                     <style>
                         :root {
-                            --page-x: clamp(12px, 4vw, 36px);
                             --brand: #b91c1c;
                         }
 

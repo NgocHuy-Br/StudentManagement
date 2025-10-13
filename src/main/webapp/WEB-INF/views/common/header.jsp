@@ -3,8 +3,6 @@
         :root {
             --brand: #b91c1c;
             --brand-hover: #9f1414;
-            /* khoảng thụt lề bên phải cho cụm tài khoản */
-            --header-x: clamp(16px, 4vw, 48px);
         }
 
         /* Header trong suốt, không nền, không viền */
@@ -35,8 +33,6 @@
 
         .user-box {
             text-align: right;
-            padding-right: var(--header-x);
-            /* thụt vào bên phải */
         }
 
         .user-box .hello {
@@ -58,7 +54,7 @@
     </style>
 
     <header class="global-header">
-        <div class="container-fluid header-grid px-0">
+        <div class="header-grid">
             <!-- Trống để tiêu đề luôn ở giữa -->
             <div></div>
 

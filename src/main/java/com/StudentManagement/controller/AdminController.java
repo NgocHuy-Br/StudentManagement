@@ -162,11 +162,17 @@ public class AdminController {
     public String overview(Authentication auth, Model model) {
         // Thêm thông tin header
         String firstName = "User";
-        String roleDisplay = "Admin";
+        String roleDisplay = "Người dùng";
         if (auth != null) {
-            var u = userRepository.findByUsername(auth.getName()).orElse(null);
-            if (u != null) {
-                firstName = (u.getFname() != null && !u.getFname().isBlank()) ? u.getFname() : u.getUsername();
+            Optional<User> u = userRepository.findByUsername(auth.getName());
+            if (u.isPresent()) {
+                firstName = (u.get().getFname() != null && !u.get().getFname().isBlank()) ? u.get().getFname()
+                        : u.get().getUsername();
+                roleDisplay = switch (u.get().getRole()) {
+                    case ADMIN -> "Quản trị viên";
+                    case TEACHER -> "Giáo viên";
+                    case STUDENT -> "Sinh viên";
+                };
             }
         }
 
@@ -2083,8 +2089,24 @@ public class AdminController {
         model.addAttribute("selectedSubjectId", subjectId);
         model.addAttribute("search", search);
         model.addAttribute("activeTab", "scores");
-        model.addAttribute("firstName", "Admin");
-        model.addAttribute("roleDisplay", "Quản trị viên");
+
+        // Thêm thông tin user cho header
+        String firstName = "User";
+        String roleDisplay = "Người dùng";
+        if (auth != null) {
+            Optional<User> u = userRepository.findByUsername(auth.getName());
+            if (u.isPresent()) {
+                firstName = (u.get().getFname() != null && !u.get().getFname().isBlank()) ? u.get().getFname()
+                        : u.get().getUsername();
+                roleDisplay = switch (u.get().getRole()) {
+                    case ADMIN -> "Quản trị viên";
+                    case TEACHER -> "Giáo viên";
+                    case STUDENT -> "Sinh viên";
+                };
+            }
+        }
+        model.addAttribute("firstName", firstName);
+        model.addAttribute("roleDisplay", roleDisplay);
 
         return "admin/scores";
     }

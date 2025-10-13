@@ -4,6 +4,12 @@
             :root {
                 --brand: #b91c1c;
                 --tabs-inset: clamp(10px, 2vw, 24px);
+                --page-x: clamp(12px, 4vw, 36px);
+            }
+
+            /* Ensure no horizontal overflow */
+            body {
+                overflow-x: hidden;
             }
 
             .tabs-bar {
@@ -13,6 +19,9 @@
                 padding: .35rem 0;
                 margin-left: calc(-1*var(--page-x));
                 margin-right: calc(-1*var(--page-x));
+                /* Ensure consistent positioning */
+                position: relative;
+                overflow-x: hidden;
             }
 
             .tabs-bar .nav-tabs {
