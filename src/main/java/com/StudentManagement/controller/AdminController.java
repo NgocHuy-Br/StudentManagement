@@ -208,7 +208,7 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "classCode") String sort,
             @RequestParam(defaultValue = "asc") String dir,
-            @RequestParam(required = false) Long selectedClassId,
+            @RequestParam(required = false) Long selectedClassroomId,
             @RequestParam(defaultValue = "username-asc") String studentSort) {
         addUserInfo(auth, model);
         model.addAttribute("activeTab", "classrooms");
@@ -245,11 +245,11 @@ public class AdminController {
         model.addAttribute("majorId", majorId);
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
-        model.addAttribute("selectedClassId", selectedClassId);
+        model.addAttribute("selectedClassroomId", selectedClassroomId);
 
         // Nếu có lớp được chọn, lấy thông tin sinh viên trong lớp
-        if (selectedClassId != null) {
-            Classroom selectedClass = classroomRepository.findById(selectedClassId).orElse(null);
+        if (selectedClassroomId != null) {
+            Classroom selectedClass = classroomRepository.findById(selectedClassroomId).orElse(null);
             if (selectedClass != null) {
                 // Xử lý sắp xếp sinh viên
                 Sort studentSortBy;
@@ -268,7 +268,8 @@ public class AdminController {
                 }
 
                 Pageable studentPageable = PageRequest.of(0, 50, studentSortBy);
-                Page<Student> studentsInClass = studentRepository.findByClassroomId(selectedClassId, studentPageable);
+                Page<Student> studentsInClass = studentRepository.findByClassroomId(selectedClassroomId,
+                        studentPageable);
 
                 model.addAttribute("selectedClass", selectedClass);
                 model.addAttribute("classStudents", studentsInClass.getContent());
@@ -283,7 +284,7 @@ public class AdminController {
             }
         }
 
-        return "admin/classrooms";
+        return "admin/classrooms_new";
     }
 
     // Hiển thị form tạo lớp học mới
@@ -2407,6 +2408,47 @@ public class AdminController {
             }
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/students/api/all")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getAllStudentsApi() {
+        try {
+            List<Student> students = studentRepository.findAll(Sort.by("user.username"));
+            List<Map<String, Object>> result = new ArrayList<>();
+
+            for (Student student : students) {
+                Map<String, Object> studentData = new HashMap<>();
+                studentData.put("id", student.getId());
+                studentData.put("username", student.getUser().getUsername());
+                studentData.put("fname", student.getUser().getFname());
+                studentData.put("lname", student.getUser().getLname());
+                studentData.put("email", student.getUser().getEmail());
+
+                if (student.getClassroom() != null) {
+                    studentData.put("classroomId", student.getClassroom().getId());
+                    studentData.put("classroomName", student.getClassroom().getClassCode());
+                } else {
+                    studentData.put("classroomId", null);
+                    studentData.put("classroomName", null);
+                }
+
+                if (student.getMajor() != null) {
+                    studentData.put("majorId", student.getMajor().getId());
+                    studentData.put("majorName", student.getMajor().getMajorName());
+                } else {
+                    studentData.put("majorId", null);
+                    studentData.put("majorName", null);
+                }
+
+                result.add(studentData);
+            }
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            logger.error("Error fetching students API", e);
             return ResponseEntity.badRequest().build();
         }
     }
