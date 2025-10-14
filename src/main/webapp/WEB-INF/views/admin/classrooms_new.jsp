@@ -474,7 +474,7 @@
                                     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                                 <script>
                                     // Global variables
-                                    let selectedClassroomId = <c:out value="${selectedClassroomId != null ? selectedClassroomId : 'null'}" />;
+                                    let selectedClassroomId = <c:choose><c:when test="${selectedClassroomId != null}">${selectedClassroomId}</c:when><c:otherwise>null</c:otherwise></c:choose>;
                                     let allStudents = [];
 
                                     // Initialize page

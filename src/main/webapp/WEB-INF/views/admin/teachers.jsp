@@ -176,15 +176,7 @@
                                                             1 + (page.number * page.size)}</td>
                                                         <td>${t.user.username}</td>
                                                         <td>
-                                                            <span data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                data-bs-title="<c:if test='${not empty t.user.address}'>Địa chỉ: ${t.user.address}</c:if><c:if test='${not empty t.user.birthDate}'><c:if test='${not empty t.user.address}'> | </c:if>Ngày sinh: ${t.user.birthDate}</c:if>">
-                                                                ${t.user.fname} ${t.user.lname}
-                                                                <c:if
-                                                                    test="${not empty t.user.address or not empty t.user.birthDate}">
-                                                                    <i class="bi bi-info-circle-fill text-muted ms-1"
-                                                                        style="font-size: 0.8em;"></i>
-                                                                </c:if>
-                                                            </span>
+                                                            ${t.user.fname} ${t.user.lname}
                                                         </td>
                                                         <td>${t.user.email}</td>
                                                         <td>${t.user.phone}</td>
@@ -559,7 +551,55 @@
                             return new bootstrap.Tooltip(tooltipTriggerEl);
                         });
 
+                        // Add modal cleanup event listeners - REMOVED to prevent null issue
+                        // const modals = ['teacherDetailModal', 'editTeacherModal', 'deleteTeacherModal'];
+                        // modals.forEach(modalId => {
+                        //     const modalElement = document.getElementById(modalId);
+                        //     if (modalElement) {
+                        //         modalElement.addEventListener('hidden.bs.modal', function () {
+                        //             // Clean up any modal instance to prevent memory leaks
+                        //             const instance = bootstrap.Modal.getInstance(modalElement);
+                        //             if (instance) {
+                        //                 instance.dispose();
+                        //             }
+                        //         });
+                        //     }
+                        // });
+
                         console.log('DOM Content Loaded - Starting teacher page initialization...');
+
+                        // Function to clean up any unwanted text nodes
+                        function cleanupUnwantedText() {
+                            const walker = document.createTreeWalker(
+                                document.body,
+                                NodeFilter.SHOW_TEXT,
+                                {
+                                    acceptNode: function (node) {
+                                        // Look for standalone text nodes containing only "null"
+                                        if (node.nodeValue && node.nodeValue.trim() === 'null' &&
+                                            node.parentNode && node.parentNode.nodeName !== 'SCRIPT') {
+                                            return NodeFilter.FILTER_ACCEPT;
+                                        }
+                                        return NodeFilter.FILTER_REJECT;
+                                    }
+                                }
+                            );
+
+                            const nodesToRemove = [];
+                            let node;
+                            while (node = walker.nextNode()) {
+                                nodesToRemove.push(node);
+                            }
+
+                            nodesToRemove.forEach(n => {
+                                if (n.parentNode) {
+                                    n.parentNode.removeChild(n);
+                                }
+                            });
+                        }
+
+                        // Clean up any "null" text periodically
+                        setInterval(cleanupUnwantedText, 1000);
 
                         // IMMEDIATE BASIC TEST - Enable this by removing comments
                         setTimeout(function () {
@@ -785,10 +825,14 @@
                             const facultyText = facultyName || 'Chưa phân khoa';
                             document.getElementById('detailTeacherDepartment').innerText = facultyText;
 
-                            // Show modal
+                            // Show modal - simplified approach
                             const modalElement = document.getElementById('teacherDetailModal');
                             if (modalElement) {
-                                const modal = new bootstrap.Modal(modalElement);
+                                // Try to get existing instance or create new one
+                                let modal = bootstrap.Modal.getInstance(modalElement);
+                                if (!modal) {
+                                    modal = new bootstrap.Modal(modalElement);
+                                }
                                 modal.show();
                             } else {
                                 alert('Không tìm thấy modal xem chi tiết');
@@ -822,10 +866,14 @@
                             const form = document.getElementById('editTeacherForm');
                             form.action = '${pageContext.request.contextPath}/admin/teachers/' + id + '/edit';
 
-                            // Show modal
+                            // Show modal - simplified approach
                             const modalElement = document.getElementById('editTeacherModal');
                             if (modalElement) {
-                                const modal = new bootstrap.Modal(modalElement);
+                                // Try to get existing instance or create new one
+                                let modal = bootstrap.Modal.getInstance(modalElement);
+                                if (!modal) {
+                                    modal = new bootstrap.Modal(modalElement);
+                                }
                                 modal.show();
                             } else {
                                 alert('Không tìm thấy modal chỉnh sửa');
@@ -886,10 +934,14 @@
                                     });
                             };
 
-                            // Show modal
+                            // Show modal - simplified approach
                             const modalElement = document.getElementById('deleteTeacherModal');
                             if (modalElement) {
-                                const modal = new bootstrap.Modal(modalElement);
+                                // Try to get existing instance or create new one
+                                let modal = bootstrap.Modal.getInstance(modalElement);
+                                if (!modal) {
+                                    modal = new bootstrap.Modal(modalElement);
+                                }
                                 modal.show();
                             } else {
                                 alert('Không tìm thấy modal xóa');
