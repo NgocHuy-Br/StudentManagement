@@ -114,13 +114,21 @@ public class Score {
         this.notes = notes;
     }
 
-    // Phương thức tính điểm trung bình tự động
-    // Công thức: (Chuyên cần * 0.1) + (Giữa kỳ * 0.3) + (Cuối kỳ * 0.6)
+    // Phương thức tính điểm trung bình tự động theo hệ số của môn học
+    // Công thức: (Chuyên cần * hệ số TP1) + (Giữa kỳ * hệ số TP2) + (Cuối kỳ * hệ
+    // số TP3)
     public Float calculateAvgScore() {
-        if (attendanceScore == null || midtermScore == null || finalScore == null) {
+        if (attendanceScore == null || midtermScore == null || finalScore == null || subject == null) {
             return null; // Chưa đủ điểm để tính TB
         }
-        return Math.round((attendanceScore * 0.1f + midtermScore * 0.3f + finalScore * 0.6f) * 100f) / 100f;
+
+        // Lấy hệ số từ môn học, nếu không có thì dùng mặc định
+        Float attWeight = subject.getAttendanceWeight() != null ? subject.getAttendanceWeight() : 0.1f;
+        Float midWeight = subject.getMidtermWeight() != null ? subject.getMidtermWeight() : 0.3f;
+        Float finWeight = subject.getFinalWeight() != null ? subject.getFinalWeight() : 0.6f;
+
+        float result = attendanceScore * attWeight + midtermScore * midWeight + finalScore * finWeight;
+        return Math.round(result * 100f) / 100f;
     }
 
     // Phương thức để cập nhật lại điểm TB khi có thay đổi

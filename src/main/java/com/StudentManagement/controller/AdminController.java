@@ -1134,6 +1134,9 @@ public class AdminController {
     public String createSubject(@RequestParam String subjectCode,
             @RequestParam String subjectName,
             @RequestParam int credit,
+            @RequestParam(required = false, defaultValue = "10") Float attendanceWeight,
+            @RequestParam(required = false, defaultValue = "30") Float midtermWeight,
+            @RequestParam(required = false, defaultValue = "60") Float finalWeight,
             RedirectAttributes ra) {
 
         String code = subjectCode.trim();
@@ -1148,11 +1151,22 @@ public class AdminController {
             return "redirect:/admin/subjects";
         }
 
+        // Kiểm tra tổng hệ số
+        float totalWeight = attendanceWeight + midtermWeight + finalWeight;
+        if (Math.abs(totalWeight - 100.0f) > 0.1f) {
+            ra.addFlashAttribute("error", "Tổng hệ số điểm phải bằng 100%");
+            return "redirect:/admin/majors";
+        }
+
         Subject subject = new Subject();
         subject.setSubjectCode(code);
         subject.setSubjectName(name);
         subject.setCredit(credit);
-        // Không cần set major nữa vì sử dụng Many-to-Many
+        // Chuyển đổi từ % về dạng thập phân
+        subject.setAttendanceWeight(attendanceWeight / 100.0f);
+        subject.setMidtermWeight(midtermWeight / 100.0f);
+        subject.setFinalWeight(finalWeight / 100.0f);
+
         subjectRepository.save(subject);
 
         ra.addFlashAttribute("success",
@@ -1940,6 +1954,9 @@ public class AdminController {
             @RequestParam String subjectCode,
             @RequestParam String subjectName,
             @RequestParam int credit,
+            @RequestParam(required = false, defaultValue = "10") Float attendanceWeight,
+            @RequestParam(required = false, defaultValue = "30") Float midtermWeight,
+            @RequestParam(required = false, defaultValue = "60") Float finalWeight,
             RedirectAttributes ra) {
         try {
             Subject subject = subjectRepository.findById(id).orElse(null);
@@ -1955,12 +1972,26 @@ public class AdminController {
                 return "redirect:/admin/majors?selectedMajorId=" + majorId;
             }
 
+            // Kiểm tra tổng hệ số
+            float totalWeight = attendanceWeight + midtermWeight + finalWeight;
+            if (Math.abs(totalWeight - 100.0f) > 0.1f) {
+                ra.addFlashAttribute("error", "Tổng hệ số điểm phải bằng 100%");
+                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            }
+
             // Cập nhật thông tin môn học
             subject.setSubjectCode(subjectCode);
             subject.setSubjectName(subjectName);
             subject.setCredit(credit);
+            // Chuyển đổi từ % về dạng thập phân
+            subject.setAttendanceWeight(attendanceWeight / 100.0f);
+            subject.setMidtermWeight(midtermWeight / 100.0f);
+            subject.setFinalWeight(finalWeight / 100.0f);
 
             subjectRepository.save(subject);
+
+            // Cập nhật lại điểm trung bình cho tất cả điểm của môn học này
+            updateScoresForSubject(subject);
 
             ra.addFlashAttribute("success", "Cập nhật môn học thành công");
             return "redirect:/admin/majors?selectedMajorId=" + majorId;
@@ -2450,6 +2481,27 @@ public class AdminController {
         } catch (Exception e) {
             logger.error("Error fetching students API", e);
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Cập nhật lại điểm trung bình cho tất cả điểm của môn học khi thay đổi hệ số
+     */
+    @Transactional
+    private void updateScoresForSubject(Subject subject) {
+        try {
+            // Lấy tất cả điểm của môn học này
+            List<Score> scores = scoreRepository.findBySubjectId(subject.getId());
+
+            for (Score score : scores) {
+                // Tính lại điểm trung bình với hệ số mới
+                score.updateAvgScore();
+                scoreRepository.save(score);
+            }
+
+            logger.info("Updated {} scores for subject {}", scores.size(), subject.getSubjectCode());
+        } catch (Exception e) {
+            logger.error("Error updating scores for subject {}: {}", subject.getSubjectCode(), e.getMessage());
         }
     }
 }

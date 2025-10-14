@@ -151,6 +151,7 @@
                                                         <table class="table table-hover table-sm mb-0">
                                                             <thead class="table-light sticky-top">
                                                                 <tr>
+                                                                    <th style="width: 50px;">STT</th>
                                                                     <th class="sortable" data-sort="majorCode">Mã ngành
                                                                         <i class="bi bi-arrow-down-up sort-icon"></i>
                                                                     </th>
@@ -167,7 +168,7 @@
                                                                 <c:choose>
                                                                     <c:when test="${empty majors}">
                                                                         <tr>
-                                                                            <td colspan="4"
+                                                                            <td colspan="5"
                                                                                 class="text-center py-4 text-muted">
                                                                                 <i
                                                                                     class="bi bi-inbox display-6 d-block mb-2"></i>
@@ -176,10 +177,13 @@
                                                                         </tr>
                                                                     </c:when>
                                                                     <c:otherwise>
-                                                                        <c:forEach items="${majors}" var="major">
+                                                                        <c:forEach items="${majors}" var="major"
+                                                                            varStatus="status">
                                                                             <tr class="major-row ${major.id == selectedMajorId ? 'table-primary' : ''}"
                                                                                 style="cursor: pointer;"
                                                                                 onclick="selectMajor(${major.id})">
+                                                                                <td class="text-center">${status.index +
+                                                                                    1}</td>
                                                                                 <td class="fw-semibold text-primary">
                                                                                     ${major.majorCode}</td>
                                                                                 <td class="fw-medium">${major.majorName}
@@ -364,6 +368,7 @@
                                                                 <table class="table table-hover table-sm mb-0">
                                                                     <thead class="table-light sticky-top">
                                                                         <tr>
+                                                                            <th style="width: 50px;">STT</th>
                                                                             <th class="sortable"
                                                                                 data-sort="subjectCode">
                                                                                 Mã môn <i
@@ -384,6 +389,7 @@
                                                                                 Tín chỉ <i
                                                                                     class="bi bi-arrow-down-up sort-icon"></i>
                                                                             </th>
+                                                                            <th>Hệ số điểm</th>
                                                                             <th>Thao tác</th>
                                                                         </tr>
                                                                     </thead>
@@ -391,7 +397,7 @@
                                                                         <c:choose>
                                                                             <c:when test="${empty subjects}">
                                                                                 <tr>
-                                                                                    <td colspan="${param.viewAll eq 'true' ? '5' : '4'}"
+                                                                                    <td colspan="${param.viewAll eq 'true' ? '7' : '6'}"
                                                                                         class="text-center py-4 text-muted">
                                                                                         <i
                                                                                             class="bi bi-journals display-6 d-block mb-2"></i>
@@ -401,8 +407,10 @@
                                                                             </c:when>
                                                                             <c:otherwise>
                                                                                 <c:forEach items="${subjects}"
-                                                                                    var="subject">
+                                                                                    var="subject" varStatus="status">
                                                                                     <tr>
+                                                                                        <td class="text-center">
+                                                                                            ${status.index + 1}</td>
                                                                                         <td
                                                                                             class="fw-semibold text-success">
                                                                                             ${subject.subjectCode}</td>
@@ -432,12 +440,21 @@
                                                                                                 class="badge bg-secondary">${subject.credit}</span>
                                                                                         </td>
                                                                                         <td class="text-center">
+                                                                                            <small
+                                                                                                class="text-muted fw-semibold">
+                                                                                                ${subject.weightDisplayFormat}
+                                                                                            </small>
+                                                                                        </td>
+                                                                                        <td class="text-center">
                                                                                             <button
                                                                                                 class="btn btn-sm btn-outline-warning me-1 edit-subject-btn"
                                                                                                 data-id="${subject.id}"
                                                                                                 data-code="${subject.subjectCode}"
                                                                                                 data-name="${subject.subjectName}"
-                                                                                                data-credit="${subject.credit}">
+                                                                                                data-credit="${subject.credit}"
+                                                                                                data-attendance-weight="${subject.attendanceWeight != null ? Math.round(subject.attendanceWeight * 100) : 10}"
+                                                                                                data-midterm-weight="${subject.midtermWeight != null ? Math.round(subject.midtermWeight * 100) : 30}"
+                                                                                                data-final-weight="${subject.finalWeight != null ? Math.round(subject.finalWeight * 100) : 60}">
                                                                                                 <i
                                                                                                     class="bi bi-pencil"></i>
                                                                                             </button>
@@ -723,6 +740,32 @@
                                             <input type="number" class="form-control" name="credit" min="1" max="10"
                                                 value="3" required>
                                         </div>
+
+                                        <!-- Hệ số điểm -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Hệ số điểm</label>
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Chuyên cần (%)</label>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        name="attendanceWeight" min="0" max="100" value="10"
+                                                        placeholder="10" step="5">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Giữa kỳ (%)</label>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        name="midtermWeight" min="0" max="100" value="30"
+                                                        placeholder="30" step="5">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Cuối kỳ (%)</label>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        name="finalWeight" min="0" max="100" value="60" placeholder="60"
+                                                        step="5">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">Tổng hệ số phải bằng 100%</small>
+                                        </div>
                                         <c:if test="${param.viewAll ne 'true' and not empty selectedMajor}">
                                             <div class="alert alert-info">
                                                 <i class="fas fa-info-circle"></i>
@@ -752,7 +795,8 @@
                     <div class="modal fade" id="editSubjectModal" tabindex="-1">
                         <div class="modal-dialog">
                             <div class="modal-content">
-                                <form method="post" action="${pageContext.request.contextPath}/admin/subjects/edit">
+                                <form method="post" action="${pageContext.request.contextPath}/admin/subjects/edit"
+                                    id="editSubjectForm">
                                     <div class="modal-header">
                                         <h5 class="modal-title">Chỉnh sửa môn học</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -774,6 +818,32 @@
                                             <label class="form-label">Số tín chỉ</label>
                                             <input type="number" class="form-control" id="editSubjectCredit"
                                                 name="credit" min="1" max="10" required>
+                                        </div>
+
+                                        <!-- Hệ số điểm -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Hệ số điểm</label>
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Chuyên cần (%)</label>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        id="editAttendanceWeight" name="attendanceWeight" min="0"
+                                                        max="100" placeholder="10" step="5">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Giữa kỳ (%)</label>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        id="editMidtermWeight" name="midtermWeight" min="0" max="100"
+                                                        placeholder="30" step="5">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Cuối kỳ (%)</label>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        id="editFinalWeight" name="finalWeight" min="0" max="100"
+                                                        placeholder="60" step="5">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">Tổng hệ số phải bằng 100%</small>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -1021,11 +1091,17 @@
                                     const code = btn.dataset.code;
                                     const name = btn.dataset.name;
                                     const credit = btn.dataset.credit;
+                                    const attendanceWeight = btn.dataset.attendanceWeight || '10';
+                                    const midtermWeight = btn.dataset.midtermWeight || '30';
+                                    const finalWeight = btn.dataset.finalWeight || '60';
 
                                     document.getElementById('editSubjectId').value = id;
                                     document.getElementById('editSubjectCode').value = code;
                                     document.getElementById('editSubjectName').value = name;
                                     document.getElementById('editSubjectCredit').value = credit;
+                                    document.getElementById('editAttendanceWeight').value = attendanceWeight;
+                                    document.getElementById('editMidtermWeight').value = midtermWeight;
+                                    document.getElementById('editFinalWeight').value = finalWeight;
 
                                     const editModal = new bootstrap.Modal(document.getElementById('editSubjectModal'));
                                     editModal.show();
@@ -1270,6 +1346,65 @@
                                     rows.forEach(row => tbody.appendChild(row));
                                 });
                             });
+
+                            // Validation hệ số điểm
+                            function validateWeights(attendanceWeight, midtermWeight, finalWeight) {
+                                const total = parseFloat(attendanceWeight || 0) + parseFloat(midtermWeight || 0) + parseFloat(finalWeight || 0);
+                                return Math.abs(total - 100) < 0.1; // Cho phép sai số nhỏ
+                            }
+
+                            function showWeightError(message) {
+                                // Tạo alert hiển thị lỗi
+                                const alertDiv = document.createElement('div');
+                                alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-2';
+                                alertDiv.innerHTML = `
+                                    <i class="bi bi-exclamation-triangle-fill"></i> ${message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                `;
+
+                                // Tìm vị trí để chèn alert
+                                const weightContainer = document.querySelector('.modal.show .row.g-2');
+                                if (weightContainer) {
+                                    const parent = weightContainer.parentNode;
+                                    // Xóa alert cũ nếu có
+                                    const oldAlert = parent.querySelector('.alert-danger');
+                                    if (oldAlert) oldAlert.remove();
+                                    // Thêm alert mới
+                                    parent.insertBefore(alertDiv, weightContainer.nextSibling);
+                                }
+                            }
+
+                            // Validation cho form thêm môn học
+                            const addSubjectForm = document.querySelector('#addSubjectForm');
+                            if (addSubjectForm) {
+                                addSubjectForm.addEventListener('submit', function (e) {
+                                    const attendance = this.querySelector('input[name="attendanceWeight"]').value;
+                                    const midterm = this.querySelector('input[name="midtermWeight"]').value;
+                                    const final = this.querySelector('input[name="finalWeight"]').value;
+
+                                    if (!validateWeights(attendance, midterm, final)) {
+                                        e.preventDefault();
+                                        showWeightError('Tổng hệ số điểm phải bằng 100%. Hiện tại: ' +
+                                            (parseFloat(attendance || 0) + parseFloat(midterm || 0) + parseFloat(final || 0)) + '%');
+                                    }
+                                });
+                            }
+
+                            // Validation cho form sửa môn học  
+                            const editSubjectForm = document.querySelector('#editSubjectForm');
+                            if (editSubjectForm) {
+                                editSubjectForm.addEventListener('submit', function (e) {
+                                    const attendance = this.querySelector('#editAttendanceWeight').value;
+                                    const midterm = this.querySelector('#editMidtermWeight').value;
+                                    const final = this.querySelector('#editFinalWeight').value;
+
+                                    if (!validateWeights(attendance, midterm, final)) {
+                                        e.preventDefault();
+                                        showWeightError('Tổng hệ số điểm phải bằng 100%. Hiện tại: ' +
+                                            (parseFloat(attendance || 0) + parseFloat(midterm || 0) + parseFloat(final || 0)) + '%');
+                                    }
+                                });
+                            }
                         });
                     </script>
                 </body>
