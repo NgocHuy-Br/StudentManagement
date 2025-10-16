@@ -91,134 +91,141 @@
                             <c:set var="activeTab" value="dashboard" />
                             <%@include file="_nav.jsp" %>
 
-                                <!-- Flash Messages -->
-                                <c:if test="${not empty success}">
-                                    <div class="alert alert-success alert-dismissible fade show">
-                                        <i class="bi bi-check-circle me-2"></i>${success}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>
-                                </c:if>
-                                <c:if test="${not empty error}">
-                                    <div class="alert alert-danger alert-dismissible fade show">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>${error}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>
-                                </c:if>
+                                <!-- Include notification modal -->
+                                <%@ include file="../common/notification-modal.jsp" %>
 
-                                <div class="row g-4">
-                                    <!-- Thông tin cá nhân -->
-                                    <div class="col-lg-6">
-                                        <div class="info-card">
-                                            <h6>
-                                                <i class="bi bi-person-fill me-2 text-primary"></i>
-                                                Thông tin cá nhân
-                                            </h6>
-                                            <div class="info-item">
-                                                <span class="info-label">Họ và tên:</span>
-                                                <span class="info-value">${teacher.user.fname}
-                                                    ${teacher.user.lname}</span>
-                                            </div>
-                                            <div class="info-item">
-                                                <span class="info-label">Mã giáo viên:</span>
-                                                <span class="info-value">${teacher.teacherCode}</span>
-                                            </div>
-                                            <div class="info-item">
-                                                <span class="info-label">Bộ môn:</span>
-                                                <span class="info-value">${teacher.department}</span>
-                                            </div>
-                                            <div class="info-item">
-                                                <span class="info-label">Email:</span>
-                                                <span class="info-value">${teacher.user.email}</span>
-                                            </div>
-                                            <c:if test="${not empty teacher.user.birthDate}">
+                                    <div class="row g-4">
+                                        <!-- Thông tin cá nhân -->
+                                        <div class="col-lg-6">
+                                            <div class="info-card">
+                                                <h6>
+                                                    <i class="bi bi-person-fill me-2 text-primary"></i>
+                                                    Thông tin cá nhân
+                                                </h6>
                                                 <div class="info-item">
-                                                    <span class="info-label">Ngày sinh:</span>
-                                                    <span class="info-value">${teacher.user.birthDate}</span>
+                                                    <span class="info-label">Họ và tên:</span>
+                                                    <span class="info-value">${teacher.user.fname}
+                                                        ${teacher.user.lname}</span>
                                                 </div>
-                                            </c:if>
-                                            <div class="info-item">
-                                                <span class="info-label">Số điện thoại:</span>
-                                                <span class="info-value">${teacher.user.phone}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Lớp phụ trách -->
-                                    <div class="col-lg-6">
-                                        <div class="info-card">
-                                            <h6>
-                                                <i class="bi bi-people-fill me-2 text-success"></i>
-                                                Lớp phụ trách
-                                                <span class="badge bg-primary ms-2">${fn:length(classrooms)}</span>
-                                            </h6>
-                                            <c:choose>
-                                                <c:when test="${not empty classrooms}">
-                                                    <c:forEach items="${classrooms}" var="classroom">
-                                                        <div class="classroom-item">
-                                                            <div>
-                                                                <div class="classroom-name">${classroom.classCode}</div>
-                                                                <small class="text-muted">Lớp
-                                                                    ${classroom.classCode}</small>
-                                                            </div>
-                                                            <span
-                                                                class="classroom-count">${classroom.currentSize}/${classroom.maxSize}</span>
-                                                        </div>
-                                                    </c:forEach>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="text-center py-4">
-                                                        <i class="bi bi-info-circle text-muted"
-                                                            style="font-size: 2rem;"></i>
-                                                        <p class="text-muted mt-2">Chưa được phân công lớp nào</p>
+                                                <div class="info-item">
+                                                    <span class="info-label">Mã giáo viên:</span>
+                                                    <span class="info-value">${teacher.teacherCode}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="info-label">Bộ môn:</span>
+                                                    <span class="info-value">${teacher.department}</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <span class="info-label">Email:</span>
+                                                    <span class="info-value">${teacher.user.email}</span>
+                                                </div>
+                                                <c:if test="${not empty teacher.user.birthDate}">
+                                                    <div class="info-item">
+                                                        <span class="info-label">Ngày sinh:</span>
+                                                        <span class="info-value">${teacher.user.birthDate}</span>
                                                     </div>
-                                                </c:otherwise>
-                                            </c:choose>
+                                                </c:if>
+                                                <div class="info-item">
+                                                    <span class="info-label">Số điện thoại:</span>
+                                                    <span class="info-value">${teacher.user.phone}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <!-- Thống kê nhanh -->
-                                <div class="row mt-4">
-                                    <div class="col-md-3">
-                                        <div class="card text-center border-primary">
-                                            <div class="card-body">
-                                                <i class="bi bi-people-fill text-primary" style="font-size: 2rem;"></i>
-                                                <h4 class="card-title mt-2">${fn:length(classrooms)}</h4>
-                                                <p class="card-text text-muted">Lớp phụ trách</p>
+                                        <!-- Lớp phụ trách -->
+                                        <div class="col-lg-6">
+                                            <div class="info-card">
+                                                <h6>
+                                                    <i class="bi bi-people-fill me-2 text-success"></i>
+                                                    Lớp phụ trách
+                                                    <span class="badge bg-primary ms-2">${fn:length(classrooms)}</span>
+                                                </h6>
+                                                <c:choose>
+                                                    <c:when test="${not empty classrooms}">
+                                                        <c:forEach items="${classrooms}" var="classroom">
+                                                            <div class="classroom-item">
+                                                                <div>
+                                                                    <div class="classroom-name">${classroom.classCode}
+                                                                    </div>
+                                                                    <small class="text-muted">Lớp
+                                                                        ${classroom.classCode}</small>
+                                                                </div>
+                                                                <span
+                                                                    class="classroom-count">${classroom.currentSize}/${classroom.maxSize}</span>
+                                                            </div>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="text-center py-4">
+                                                            <i class="bi bi-info-circle text-muted"
+                                                                style="font-size: 2rem;"></i>
+                                                            <p class="text-muted mt-2">Chưa được phân công lớp nào</p>
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="card text-center border-success">
-                                            <div class="card-body">
-                                                <i class="bi bi-person-check-fill text-success"
-                                                    style="font-size: 2rem;"></i>
-                                                <h4 class="card-title mt-2">
-                                                    <c:set var="totalStudents" value="0" />
-                                                    <c:forEach items="${classrooms}" var="classroom">
-                                                        <c:set var="totalStudents"
-                                                            value="${totalStudents + classroom.currentSize}" />
-                                                    </c:forEach>
-                                                    ${totalStudents}
-                                                </h4>
-                                                <p class="card-text text-muted">Tổng sinh viên</p>
+
+                                    <!-- Thống kê nhanh -->
+                                    <div class="row mt-4">
+                                        <div class="col-md-3">
+                                            <div class="card text-center border-primary">
+                                                <div class="card-body">
+                                                    <i class="bi bi-people-fill text-primary"
+                                                        style="font-size: 2rem;"></i>
+                                                    <h4 class="card-title mt-2">${fn:length(classrooms)}</h4>
+                                                    <p class="card-text text-muted">Lớp phụ trách</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center border-success">
+                                                <div class="card-body">
+                                                    <i class="bi bi-person-check-fill text-success"
+                                                        style="font-size: 2rem;"></i>
+                                                    <h4 class="card-title mt-2">
+                                                        <c:set var="totalStudents" value="0" />
+                                                        <c:forEach items="${classrooms}" var="classroom">
+                                                            <c:set var="totalStudents"
+                                                                value="${totalStudents + classroom.currentSize}" />
+                                                        </c:forEach>
+                                                        ${totalStudents}
+                                                    </h4>
+                                                    <p class="card-text text-muted">Tổng sinh viên</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center border-info">
+                                                <div class="card-body">
+                                                    <i class="bi bi-calendar-event text-info"
+                                                        style="font-size: 2rem;"></i>
+                                                    <h4 class="card-title mt-2">0</h4>
+                                                    <p class="card-text text-muted">Lịch hôm nay</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="card text-center border-info">
-                                            <div class="card-body">
-                                                <i class="bi bi-calendar-event text-info" style="font-size: 2rem;"></i>
-                                                <h4 class="card-title mt-2">0</h4>
-                                                <p class="card-text text-muted">Lịch hôm nay</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                         </div>
 
                         <script
                             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+                        <script>
+                            // Check for flash messages on page load
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const successMessage = '${success}';
+                                if (successMessage && successMessage.trim() !== '') {
+                                    showNotification('success', successMessage, 'Thành công');
+                                }
+
+                                const errorMessage = '${error}';
+                                if (errorMessage && errorMessage.trim() !== '') {
+                                    showNotification('error', errorMessage, 'Lỗi');
+                                }
+                            });
+                        </script>
                 </body>
 
                 </html>

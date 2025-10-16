@@ -149,222 +149,215 @@
 
                                 <div class="row mt-4 content-row">
 
-                                    <!-- Flash Messages -->
-                                    <c:if test="${not empty success}">
-                                        <div class="alert alert-success alert-dismissible fade show">
-                                            <i class="bi bi-check-circle me-2"></i>${success}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
-                                    <c:if test="${not empty error}">
-                                        <div class="alert alert-danger alert-dismissible fade show">
-                                            <i class="bi bi-exclamation-triangle me-2"></i>${error}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
+                                    <!-- Include notification modal -->
+                                    <%@ include file="../common/notification-modal.jsp" %>
 
-                                    <!-- Teacher Info -->
-                                    <div class="class-selector">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-8">
-                                                <h5 class="fw-semibold mb-0">
-                                                    <i class="bi bi-person-circle"></i> Chào mừng, ${teacher.user.fname}
-                                                    ${teacher.user.lname}
-                                                </h5>
-                                                <p class="text-muted mb-0">Mã giáo viên: ${teacher.teacherCode} | Bộ
-                                                    môn: ${teacher.department}</p>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="class-info-badge mt-4">
-                                                    <i class="bi bi-people"></i>
-                                                    <span>${fn:length(classrooms)}</span> lớp phụ trách
+                                        <!-- Teacher Info -->
+                                        <div class="class-selector">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-8">
+                                                    <h5 class="fw-semibold mb-0">
+                                                        <i class="bi bi-person-circle"></i> Chào mừng,
+                                                        ${teacher.user.fname}
+                                                        ${teacher.user.lname}
+                                                    </h5>
+                                                    <p class="text-muted mb-0">Mã giáo viên: ${teacher.teacherCode} | Bộ
+                                                        môn: ${teacher.department}</p>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Dashboard Content -->
-                                    <div class="row g-4">
-                                        <!-- Thông tin cá nhân -->
-                                        <div class="col-lg-6">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h6 class="mb-0">
-                                                        <i class="bi bi-person-fill me-2 text-primary"></i>
-                                                        Thông tin cá nhân
-                                                    </h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="info-item">
-                                                        <span class="info-label">Họ và tên:</span>
-                                                        <span class="info-value">${teacher.user.fname}
-                                                            ${teacher.user.lname}</span>
-                                                    </div>
-                                                    <div class="info-item">
-                                                        <span class="info-label">Mã giáo viên:</span>
-                                                        <span class="info-value">${teacher.teacherCode}</span>
-                                                    </div>
-                                                    <div class="info-item">
-                                                        <span class="info-label">Bộ môn:</span>
-                                                        <span class="info-value">${teacher.department}</span>
-                                                    </div>
-                                                    <div class="info-item">
-                                                        <span class="info-label">Email:</span>
-                                                        <span class="info-value">${teacher.user.email}</span>
-                                                    </div>
-                                                    <div class="info-item">
-                                                        <span class="info-label">Số điện thoại:</span>
-                                                        <span class="info-value">${teacher.user.phone}</span>
+                                                <div class="col-md-4">
+                                                    <div class="class-info-badge mt-4">
+                                                        <i class="bi bi-people"></i>
+                                                        <span>${fn:length(classrooms)}</span> lớp phụ trách
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Lớp phụ trách -->
-                                        <div class="col-lg-6">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h6 class="mb-0">
-                                                        <i class="bi bi-people-fill me-2 text-success"></i>
-                                                        Lớp phụ trách
-                                                        <span
-                                                            class="badge bg-primary ms-2">${fn:length(classrooms)}</span>
-                                                    </h6>
+                                        <!-- Dashboard Content -->
+                                        <div class="row g-4">
+                                            <!-- Thông tin cá nhân -->
+                                            <div class="col-lg-6">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-person-fill me-2 text-primary"></i>
+                                                            Thông tin cá nhân
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="info-item">
+                                                            <span class="info-label">Họ và tên:</span>
+                                                            <span class="info-value">${teacher.user.fname}
+                                                                ${teacher.user.lname}</span>
+                                                        </div>
+                                                        <div class="info-item">
+                                                            <span class="info-label">Mã giáo viên:</span>
+                                                            <span class="info-value">${teacher.teacherCode}</span>
+                                                        </div>
+                                                        <div class="info-item">
+                                                            <span class="info-label">Bộ môn:</span>
+                                                            <span class="info-value">${teacher.department}</span>
+                                                        </div>
+                                                        <div class="info-item">
+                                                            <span class="info-label">Email:</span>
+                                                            <span class="info-value">${teacher.user.email}</span>
+                                                        </div>
+                                                        <div class="info-item">
+                                                            <span class="info-label">Số điện thoại:</span>
+                                                            <span class="info-value">${teacher.user.phone}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="card-body">
-                                                    <c:choose>
-                                                        <c:when test="${not empty classrooms}">
-                                                            <c:forEach items="${classrooms}" var="classroom">
-                                                                <div class="classroom-item">
-                                                                    <div>
-                                                                        <div class="classroom-name">
-                                                                            ${classroom.classCode}</div>
-                                                                        <small class="text-muted">Lớp
-                                                                            ${classroom.classCode}</small>
+                                            </div>
+
+                                            <!-- Lớp phụ trách -->
+                                            <div class="col-lg-6">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-people-fill me-2 text-success"></i>
+                                                            Lớp phụ trách
+                                                            <span
+                                                                class="badge bg-primary ms-2">${fn:length(classrooms)}</span>
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <c:choose>
+                                                            <c:when test="${not empty classrooms}">
+                                                                <c:forEach items="${classrooms}" var="classroom">
+                                                                    <div class="classroom-item">
+                                                                        <div>
+                                                                            <div class="classroom-name">
+                                                                                ${classroom.classCode}</div>
+                                                                            <small class="text-muted">Lớp
+                                                                                ${classroom.classCode}</small>
+                                                                        </div>
+                                                                        <span
+                                                                            class="classroom-count">${classroom.currentSize}/${classroom.maxSize}</span>
                                                                     </div>
-                                                                    <span
-                                                                        class="classroom-count">${classroom.currentSize}/${classroom.maxSize}</span>
+                                                                </c:forEach>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <div class="text-center py-4">
+                                                                    <i class="bi bi-info-circle text-muted"
+                                                                        style="font-size: 2rem;"></i>
+                                                                    <p class="text-muted mt-2">Chưa được phân công lớp
+                                                                        nào
+                                                                    </p>
                                                                 </div>
-                                                            </c:forEach>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <div class="text-center py-4">
-                                                                <i class="bi bi-info-circle text-muted"
-                                                                    style="font-size: 2rem;"></i>
-                                                                <p class="text-muted mt-2">Chưa được phân công lớp nào
-                                                                </p>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Statistics Cards -->
+                                        <div class="row mt-4">
+                                            <div class="col-md-3 mb-3">
+                                                <div class="card text-center">
+                                                    <div class="card-body">
+                                                        <i class="bi bi-people-fill text-primary"
+                                                            style="font-size: 2rem;"></i>
+                                                        <h4 class="card-title mt-2">${fn:length(classrooms)}</h4>
+                                                        <p class="card-text text-muted">Lớp phụ trách</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <div class="card text-center">
+                                                    <div class="card-body">
+                                                        <i class="bi bi-person-check-fill text-success"
+                                                            style="font-size: 2rem;"></i>
+                                                        <h4 class="card-title mt-2">0</h4>
+                                                        <p class="card-text text-muted">Sinh viên</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <div class="card text-center">
+                                                    <div class="card-body">
+                                                        <i class="bi bi-journal-check text-info"
+                                                            style="font-size: 2rem;"></i>
+                                                        <h4 class="card-title mt-2">0</h4>
+                                                        <p class="card-text text-muted">Bài kiểm tra</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <div class="card text-center">
+                                                    <div class="card-body">
+                                                        <i class="bi bi-exclamation-triangle-fill text-warning"
+                                                            style="font-size: 2rem;"></i>
+                                                        <h4 class="card-title mt-2">0</h4>
+                                                        <p class="card-text text-muted">Thông báo mới</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Extra content to match height of classes page -->
+                                        <div class="row mt-4">
+                                            <div class="col-12">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-lightning-fill me-2 text-warning"></i>
+                                                            Chức năng nhanh
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-md-3 mb-3">
+                                                                <a href="/teacher/classes"
+                                                                    class="btn btn-outline-primary w-100">
+                                                                    <i class="bi bi-people me-2"></i>
+                                                                    Quản lý lớp
+                                                                </a>
                                                             </div>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Statistics Cards -->
-                                    <div class="row mt-4">
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <i class="bi bi-people-fill text-primary"
-                                                        style="font-size: 2rem;"></i>
-                                                    <h4 class="card-title mt-2">${fn:length(classrooms)}</h4>
-                                                    <p class="card-text text-muted">Lớp phụ trách</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <i class="bi bi-person-check-fill text-success"
-                                                        style="font-size: 2rem;"></i>
-                                                    <h4 class="card-title mt-2">0</h4>
-                                                    <p class="card-text text-muted">Sinh viên</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <i class="bi bi-journal-check text-info"
-                                                        style="font-size: 2rem;"></i>
-                                                    <h4 class="card-title mt-2">0</h4>
-                                                    <p class="card-text text-muted">Bài kiểm tra</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <i class="bi bi-exclamation-triangle-fill text-warning"
-                                                        style="font-size: 2rem;"></i>
-                                                    <h4 class="card-title mt-2">0</h4>
-                                                    <p class="card-text text-muted">Thông báo mới</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Extra content to match height of classes page -->
-                                    <div class="row mt-4">
-                                        <div class="col-12">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h6 class="mb-0">
-                                                        <i class="bi bi-lightning-fill me-2 text-warning"></i>
-                                                        Chức năng nhanh
-                                                    </h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="row">
-                                                        <div class="col-md-3 mb-3">
-                                                            <a href="/teacher/classes"
-                                                                class="btn btn-outline-primary w-100">
-                                                                <i class="bi bi-people me-2"></i>
-                                                                Quản lý lớp
-                                                            </a>
-                                                        </div>
-                                                        <div class="col-md-3 mb-3">
-                                                            <a href="/teacher/scores"
-                                                                class="btn btn-outline-success w-100">
-                                                                <i class="bi bi-journal-text me-2"></i>
-                                                                Quản lý điểm
-                                                            </a>
-                                                        </div>
-                                                        <div class="col-md-3 mb-3">
-                                                            <button class="btn btn-outline-info w-100" disabled>
-                                                                <i class="bi bi-calendar-check me-2"></i>
-                                                                Lịch giảng dạy
-                                                            </button>
-                                                        </div>
-                                                        <div class="col-md-3 mb-3">
-                                                            <button class="btn btn-outline-warning w-100" disabled>
-                                                                <i class="bi bi-bell me-2"></i>
-                                                                Thông báo
-                                                            </button>
+                                                            <div class="col-md-3 mb-3">
+                                                                <a href="/teacher/scores"
+                                                                    class="btn btn-outline-success w-100">
+                                                                    <i class="bi bi-journal-text me-2"></i>
+                                                                    Quản lý điểm
+                                                                </a>
+                                                            </div>
+                                                            <div class="col-md-3 mb-3">
+                                                                <button class="btn btn-outline-info w-100" disabled>
+                                                                    <i class="bi bi-calendar-check me-2"></i>
+                                                                    Lịch giảng dạy
+                                                                </button>
+                                                            </div>
+                                                            <div class="col-md-3 mb-3">
+                                                                <button class="btn btn-outline-warning w-100" disabled>
+                                                                    <i class="bi bi-bell me-2"></i>
+                                                                    Thông báo
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Additional content to ensure page height matches other pages -->
-                                    <div class="row mt-4" style="min-height: 300px;">
-                                        <div class="col-12">
-                                            <div class="card">
-                                                <div class="card-body text-center py-5">
-                                                    <i class="bi bi-house-door text-muted" style="font-size: 3rem;"></i>
-                                                    <h5 class="mt-3 text-muted">Chào mừng bạn đến với Dashboard Giáo
-                                                        viên</h5>
-                                                    <p class="text-muted">Sử dụng các chức năng ở trên để quản lý lớp
-                                                        học và điểm số sinh viên</p>
+                                        <!-- Additional content to ensure page height matches other pages -->
+                                        <div class="row mt-4" style="min-height: 300px;">
+                                            <div class="col-12">
+                                                <div class="card">
+                                                    <div class="card-body text-center py-5">
+                                                        <i class="bi bi-house-door text-muted"
+                                                            style="font-size: 3rem;"></i>
+                                                        <h5 class="mt-3 text-muted">Chào mừng bạn đến với Dashboard Giáo
+                                                            viên</h5>
+                                                        <p class="text-muted">Sử dụng các chức năng ở trên để quản lý
+                                                            lớp
+                                                            học và điểm số sinh viên</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div style="height: 200px;"></div>
+                                        <div style="height: 200px;"></div>
                                 </div>
                     </div>
 
@@ -488,6 +481,17 @@
                         });
 
                         document.getElementById('studentCount').textContent = visibleCount;
+                    }
+
+                    // Check for flash messages on page load
+                    const successMessage = '${success}';
+                    if (successMessage && successMessage.trim() !== '') {
+                        showNotification('success', successMessage, 'Thành công');
+                    }
+
+                    const errorMessage = '${error}';
+                    if (errorMessage && errorMessage.trim() !== '') {
+                        showNotification('error', errorMessage, 'Lỗi');
                     }
                 </script>
                 </div>

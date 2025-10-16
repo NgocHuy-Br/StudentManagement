@@ -88,130 +88,118 @@
                                 <div class="tab-content" id="subjectTabContent">
                                     <!-- Tab môn học -->
                                     <div class="tab-pane fade show active" id="subjects-pane" role="tabpanel">
-                                        <!-- Error messages -->
-                                        <c:if test="${not empty error}">
-                                            <div class="alert alert-danger alert-dismissible">
-                                                <i class="bi bi-exclamation-triangle me-2"></i>${error}
-                                                <button type="button" class="btn-close"
-                                                    data-bs-dismiss="alert"></button>
-                                            </div>
-                                        </c:if>
-                                        <c:if test="${not empty success}">
-                                            <div class="alert alert-success alert-dismissible">
-                                                <i class="bi bi-check-circle me-2"></i>${success}
-                                                <button type="button" class="btn-close"
-                                                    data-bs-dismiss="alert"></button>
-                                            </div>
-                                        </c:if>
+                                        <!-- Include notification modal -->
+                                        <%@ include file="../common/notification-modal.jsp" %>
 
-                                        <!-- Tìm kiếm và lọc -->
-                                        <form method="get" class="d-flex gap-2 mb-3 flex-wrap">
-                                            <div class="search flex-grow-1">
-                                                <div class="input-group">
-                                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                                    <input class="form-control" name="q" value="${fn:escapeXml(q)}"
-                                                        placeholder="Tìm mã môn, tên môn...">
+                                            <!-- Tìm kiếm và lọc -->
+                                            <form method="get" class="d-flex gap-2 mb-3 flex-wrap">
+                                                <div class="search flex-grow-1">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i
+                                                                class="bi bi-search"></i></span>
+                                                        <input class="form-control" name="q" value="${fn:escapeXml(q)}"
+                                                            placeholder="Tìm mã môn, tên môn...">
+                                                    </div>
                                                 </div>
+                                                <button class="btn btn-outline-primary" type="submit">Tìm</button>
+                                                <c:if test="${not empty q}">
+                                                    <a class="btn btn-outline-secondary" href="?">Xóa</a>
+                                                </c:if>
+                                            </form>
+
+                                            <!-- Bảng danh sách môn học -->
+                                            <div class="table-responsive">
+                                                <table class="table table-hover align-middle table-subjects">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Mã môn
+                                                                <a class="sort-link"
+                                                                    href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=subjectCode&dir=${dir=='asc' && sort=='subjectCode' ? 'desc' : 'asc'}">
+                                                                    <i class="bi bi-arrow-down-up"></i>
+                                                                </a>
+                                                            </th>
+                                                            <th>Tên môn học
+                                                                <a class="sort-link"
+                                                                    href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=subjectName&dir=${dir=='asc' && sort=='subjectName' ? 'desc' : 'asc'}">
+                                                                    <i class="bi bi-arrow-down-up"></i>
+                                                                </a>
+                                                            </th>
+                                                            <th>Tín chỉ
+                                                                <a class="sort-link"
+                                                                    href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=credit&dir=${dir=='asc' && sort=='credit' ? 'desc' : 'asc'}">
+                                                                    <i class="bi bi-arrow-down-up"></i>
+                                                                </a>
+                                                            </th>
+                                                            <th>Các ngành</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <c:if test="${page.totalElements == 0}">
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted py-4">Chưa
+                                                                    có môn
+                                                                    học nào.</td>
+                                                            </tr>
+                                                        </c:if>
+
+                                                        <c:forEach var="sub" items="${page.content}">
+                                                            <tr>
+                                                                <td><strong>${sub.subjectCode}</strong></td>
+                                                                <td>${sub.subjectName}</td>
+                                                                <td>
+                                                                    <span class="badge bg-info">${sub.credit} TC</span>
+                                                                </td>
+                                                                <td>
+                                                                    <c:choose>
+                                                                        <c:when test="${empty sub.majors}">
+                                                                            <span class="text-muted">Chưa thuộc ngành
+                                                                                nào</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <c:forEach var="major" items="${sub.majors}"
+                                                                                varStatus="status">
+                                                                                <span
+                                                                                    class="badge bg-secondary me-1">${major.majorCode}</span>
+                                                                                <c:if test="${!status.last}">
+                                                                                </c:if>
+                                                                            </c:forEach>
+                                                                            <br>
+                                                                            <c:forEach var="major" items="${sub.majors}"
+                                                                                varStatus="status">
+                                                                                <small
+                                                                                    class="text-muted">${major.majorName}</small>
+                                                                                <c:if test="${!status.last}">, </c:if>
+                                                                            </c:forEach>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </td>
+                                                            </tr>
+                                                        </c:forEach>
+                                                    </tbody>
+                                                </table>
                                             </div>
-                                            <button class="btn btn-outline-primary" type="submit">Tìm</button>
-                                            <c:if test="${not empty q}">
-                                                <a class="btn btn-outline-secondary" href="?">Xóa</a>
-                                            </c:if>
-                                        </form>
 
-                                        <!-- Bảng danh sách môn học -->
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle table-subjects">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Mã môn
-                                                            <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=subjectCode&dir=${dir=='asc' && sort=='subjectCode' ? 'desc' : 'asc'}">
-                                                                <i class="bi bi-arrow-down-up"></i>
-                                                            </a>
-                                                        </th>
-                                                        <th>Tên môn học
-                                                            <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&majorId=${majorId}&size=${page.size}&sort=subjectName&dir=${dir=='asc' && sort=='subjectName' ? 'desc' : 'asc'}">
-                                                                <i class="bi bi-arrow-down-up"></i>
-                                                            </a>
-                                                        </th>
-                                                        <th>Tín chỉ
-                                                            <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=credit&dir=${dir=='asc' && sort=='credit' ? 'desc' : 'asc'}">
-                                                                <i class="bi bi-arrow-down-up"></i>
-                                                            </a>
-                                                        </th>
-                                                        <th>Các ngành</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <c:if test="${page.totalElements == 0}">
-                                                        <tr>
-                                                            <td colspan="4" class="text-center text-muted py-4">Chưa
-                                                                có môn
-                                                                học nào.</td>
-                                                        </tr>
-                                                    </c:if>
-
-                                                    <c:forEach var="sub" items="${page.content}">
-                                                        <tr>
-                                                            <td><strong>${sub.subjectCode}</strong></td>
-                                                            <td>${sub.subjectName}</td>
-                                                            <td>
-                                                                <span class="badge bg-info">${sub.credit} TC</span>
-                                                            </td>
-                                                            <td>
-                                                                <c:choose>
-                                                                    <c:when test="${empty sub.majors}">
-                                                                        <span class="text-muted">Chưa thuộc ngành
-                                                                            nào</span>
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <c:forEach var="major" items="${sub.majors}"
-                                                                            varStatus="status">
-                                                                            <span
-                                                                                class="badge bg-secondary me-1">${major.majorCode}</span>
-                                                                            <c:if test="${!status.last}">
-                                                                            </c:if>
-                                                                        </c:forEach>
-                                                                        <br>
-                                                                        <c:forEach var="major" items="${sub.majors}"
-                                                                            varStatus="status">
-                                                                            <small
-                                                                                class="text-muted">${major.majorName}</small>
-                                                                            <c:if test="${!status.last}">, </c:if>
-                                                                        </c:forEach>
-                                                                    </c:otherwise>
-                                                                </c:choose>
-                                                            </td>
-                                                        </tr>
-                                                    </c:forEach>
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                        <!-- Phân trang -->
-                                        <c:if test="${page.totalPages > 1}">
-                                            <nav class="d-flex justify-content-end">
-                                                <ul class="pagination pagination-sm mb-0">
-                                                    <li class="page-item ${page.first ? 'disabled' : ''}">
-                                                        <a class="page-link"
-                                                            href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
-                                                    </li>
-                                                    <c:forEach var="i" begin="0" end="${page.totalPages-1}">
-                                                        <li class="page-item ${i==page.number ? 'active' : ''}">
+                                            <!-- Phân trang -->
+                                            <c:if test="${page.totalPages > 1}">
+                                                <nav class="d-flex justify-content-end">
+                                                    <ul class="pagination pagination-sm mb-0">
+                                                        <li class="page-item ${page.first ? 'disabled' : ''}">
                                                             <a class="page-link"
-                                                                href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                                href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
                                                         </li>
-                                                    </c:forEach>
-                                                    <li class="page-item ${page.last ? 'disabled' : ''}">
-                                                        <a class="page-link"
-                                                            href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
-                                                    </li>
-                                                </ul>
-                                            </nav>
-                                        </c:if>
+                                                        <c:forEach var="i" begin="0" end="${page.totalPages-1}">
+                                                            <li class="page-item ${i==page.number ? 'active' : ''}">
+                                                                <a class="page-link"
+                                                                    href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                            </li>
+                                                        </c:forEach>
+                                                        <li class="page-item ${page.last ? 'disabled' : ''}">
+                                                            <a class="page-link"
+                                                                href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
+                                                        </li>
+                                                    </ul>
+                                                </nav>
+                                            </c:if>
                                     </div>
 
                                     <!-- Tab khoa -->
@@ -570,6 +558,17 @@
                     // Initialize event listeners on page load
                     document.addEventListener('DOMContentLoaded', function () {
                         attachFacultyEventListeners();
+
+                        // Check for flash messages on page load
+                        const successMessage = '${success}';
+                        if (successMessage && successMessage.trim() !== '') {
+                            showNotification('success', successMessage, 'Thành công');
+                        }
+
+                        const errorMessage = '${error}';
+                        if (errorMessage && errorMessage.trim() !== '') {
+                            showNotification('error', errorMessage, 'Lỗi');
+                        }
                     });
                 </script>
             </body>

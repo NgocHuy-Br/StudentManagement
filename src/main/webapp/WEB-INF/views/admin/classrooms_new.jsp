@@ -66,273 +66,276 @@
                             <%@include file="_nav.jsp" %>
 
                                 <div class="mt-4">
-                                    <!-- Flash Messages -->
-                                    <c:if test="${not empty success}">
-                                        <div class="alert alert-success alert-dismissible fade show">
-                                            <i class="bi bi-check-circle me-2"></i>${success}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
-                                    <c:if test="${not empty error}">
-                                        <div class="alert alert-danger alert-dismissible fade show">
-                                            <i class="bi bi-exclamation-triangle me-2"></i>${error}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
+                                    <!-- Include notification modal -->
+                                    <%@ include file="../common/notification-modal.jsp" %>
 
-                                    <div class="row g-4">
-                                        <!-- Left Panel - Classrooms List -->
-                                        <div class="col-lg-6">
-                                            <div class="card shadow-sm h-100">
-                                                <div
-                                                    class="card-header d-flex justify-content-between align-items-center">
-                                                    <h6 class="mb-0">
-                                                        <i class="bi bi-door-open-fill me-2"></i>
-                                                        Danh sách Lớp học
-                                                    </h6>
-                                                    <button type="button" class="btn btn-success btn-sm"
-                                                        data-bs-toggle="modal" data-bs-target="#addClassroomModal">
-                                                        <i class="bi bi-plus-lg me-1"></i>Thêm lớp
-                                                    </button>
+                                        <div class="row g-4">
+                                            <!-- Left Panel - Classrooms List -->
+                                            <div class="col-lg-6">
+                                                <div class="card shadow-sm h-100">
+                                                    <div
+                                                        class="card-header d-flex justify-content-between align-items-center">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-door-open-fill me-2"></i>
+                                                            Danh sách Lớp học
+                                                        </h6>
+                                                        <button type="button" class="btn btn-success btn-sm"
+                                                            data-bs-toggle="modal" data-bs-target="#addClassroomModal">
+                                                            <i class="bi bi-plus-lg me-1"></i>Thêm lớp
+                                                        </button>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <!-- Filter and Search -->
+                                                        <div class="mb-3">
+                                                            <form method="get" id="filterSearchForm">
+                                                                <div class="row g-2">
+                                                                    <!-- Major Filter -->
+                                                                    <div class="col-md-6">
+                                                                        <div class="input-group input-group-sm">
+                                                                            <span class="input-group-text">
+                                                                                <i class="bi bi-funnel"></i>
+                                                                            </span>
+                                                                            <select name="majorId"
+                                                                                class="form-select form-select-sm"
+                                                                                id="majorFilter">
+                                                                                <option value="">Tất cả ngành</option>
+                                                                                <c:forEach var="major"
+                                                                                    items="${majors}">
+                                                                                    <option value="${major.id}"
+                                                                                        ${param.majorId==major.id
+                                                                                        ? 'selected' : '' }>
+                                                                                        ${major.majorCode} -
+                                                                                        ${major.majorName}
+                                                                                    </option>
+                                                                                </c:forEach>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Search -->
+                                                                    <div class="col-md-6">
+                                                                        <div class="input-group input-group-sm">
+                                                                            <span class="input-group-text">
+                                                                                <i class="bi bi-search"></i>
+                                                                            </span>
+                                                                            <input type="text" name="q" value="${q}"
+                                                                                class="form-control form-control-sm"
+                                                                                placeholder="Tìm lớp...">
+                                                                            <c:if test="${not empty q}">
+                                                                                <a href="${pageContext.request.contextPath}/admin/classrooms"
+                                                                                    class="btn btn-outline-secondary btn-sm">
+                                                                                    <i class="bi bi-x-circle"></i>
+                                                                                </a>
+                                                                            </c:if>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Preserve parameters -->
+                                                                <c:if test="${not empty selectedClassroomId}">
+                                                                    <input type="hidden" name="selectedClassroomId"
+                                                                        value="${selectedClassroomId}">
+                                                                </c:if>
+                                                            </form>
+                                                        </div>
+
+                                                        <!-- Classrooms Table -->
+                                                        <div class="table-responsive"
+                                                            style="max-height: 500px; overflow-y: auto;">
+                                                            <table class="table table-hover table-sm mb-0">
+                                                                <thead class="table-light sticky-top">
+                                                                    <tr>
+                                                                        <th style="width: 50px;">STT</th>
+                                                                        <th class="sortable" data-sort="classCode">Mã
+                                                                            lớp
+                                                                            <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
+                                                                        <th class="sortable" data-sort="courseYear">Khóa
+                                                                            <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
+                                                                        <th class="sortable" data-sort="major">Ngành
+                                                                            <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
+                                                                        <th>SV</th>
+                                                                        <th>Thao tác</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <c:choose>
+                                                                        <c:when test="${empty classrooms}">
+                                                                            <tr>
+                                                                                <td colspan="6"
+                                                                                    class="text-center py-4 text-muted">
+                                                                                    <i
+                                                                                        class="bi bi-inbox display-6 d-block mb-2"></i>
+                                                                                    Không tìm thấy lớp học nào
+                                                                                </td>
+                                                                            </tr>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <c:forEach items="${classrooms}"
+                                                                                var="classroom" varStatus="status">
+                                                                                <tr class="classroom-row ${classroom.id == selectedClassroomId ? 'table-primary' : ''}"
+                                                                                    style="cursor: pointer;"
+                                                                                    onclick="selectClassroom(<c:out value='${classroom.id}' />)">
+                                                                                    <td class="text-center">
+                                                                                        ${status.index +
+                                                                                        1}</td>
+                                                                                    <td
+                                                                                        class="fw-semibold text-primary">
+                                                                                        ${classroom.classCode}</td>
+                                                                                    <td class="fw-medium">
+                                                                                        ${classroom.courseYear}</td>
+                                                                                    <td>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${not empty classroom.major}">
+                                                                                                <span
+                                                                                                    class="badge bg-primary">${classroom.major.majorCode}</span>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span
+                                                                                                    class="text-muted">Chưa
+                                                                                                    phân ngành</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <span
+                                                                                            class="badge bg-info">${fn:length(classroom.students)}</span>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div
+                                                                                            class="btn-group btn-group-sm">
+                                                                                            <button type="button"
+                                                                                                class="btn btn-outline-primary btn-sm"
+                                                                                                onclick="event.stopPropagation(); editClassroom(<c:out value='${classroom.id}' />)"
+                                                                                                title="Sửa">
+                                                                                                <i
+                                                                                                    class="bi bi-pencil"></i>
+                                                                                            </button>
+                                                                                            <button type="button"
+                                                                                                class="btn btn-outline-danger btn-sm"
+                                                                                                onclick="event.stopPropagation(); deleteClassroom(<c:out value='${classroom.id}' />)"
+                                                                                                title="Xóa">
+                                                                                                <i
+                                                                                                    class="bi bi-trash"></i>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </c:forEach>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="card-body">
-                                                    <!-- Filter and Search -->
-                                                    <div class="mb-3">
-                                                        <form method="get" id="filterSearchForm">
+                                            </div>
+
+                                            <!-- Right Panel - Students List -->
+                                            <div class="col-lg-6">
+                                                <div class="card shadow-sm h-100">
+                                                    <div
+                                                        class="card-header d-flex justify-content-between align-items-center">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-people-fill me-2"></i>
+                                                            <span id="studentsTitle">Chọn lớp để xem danh sách sinh
+                                                                viên</span>
+                                                        </h6>
+                                                        <button type="button" class="btn btn-success btn-sm"
+                                                            data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                                                            <i class="bi bi-person-plus me-1"></i>Thêm sinh viên
+                                                        </button>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <!-- Classroom Selector and Search -->
+                                                        <div class="mb-3">
                                                             <div class="row g-2">
-                                                                <!-- Major Filter -->
+                                                                <!-- Classroom Selector -->
                                                                 <div class="col-md-6">
                                                                     <div class="input-group input-group-sm">
                                                                         <span class="input-group-text">
-                                                                            <i class="bi bi-funnel"></i>
+                                                                            <i class="bi bi-door-open"></i>
                                                                         </span>
-                                                                        <select name="majorId"
-                                                                            class="form-select form-select-sm"
-                                                                            id="majorFilter">
-                                                                            <option value="">Tất cả ngành</option>
-                                                                            <c:forEach var="major" items="${majors}">
-                                                                                <option value="${major.id}"
-                                                                                    ${param.majorId==major.id
+                                                                        <select class="form-select form-select-sm"
+                                                                            id="classroomSelector">
+                                                                            <option value="">Tất cả lớp</option>
+                                                                            <c:forEach var="classroom"
+                                                                                items="${classrooms}">
+                                                                                <option value="${classroom.id}"
+                                                                                    ${classroom.id==selectedClassroomId
                                                                                     ? 'selected' : '' }>
-                                                                                    ${major.majorCode} -
-                                                                                    ${major.majorName}
+                                                                                    ${classroom.classCode}
+                                                                                    (${classroom.courseYear})
                                                                                 </option>
                                                                             </c:forEach>
                                                                         </select>
                                                                     </div>
                                                                 </div>
 
-                                                                <!-- Search -->
+                                                                <!-- Search Students -->
                                                                 <div class="col-md-6">
                                                                     <div class="input-group input-group-sm">
                                                                         <span class="input-group-text">
                                                                             <i class="bi bi-search"></i>
                                                                         </span>
-                                                                        <input type="text" name="q" value="${q}"
+                                                                        <input type="text"
                                                                             class="form-control form-control-sm"
-                                                                            placeholder="Tìm lớp...">
-                                                                        <c:if test="${not empty q}">
-                                                                            <a href="${pageContext.request.contextPath}/admin/classrooms"
-                                                                                class="btn btn-outline-secondary btn-sm">
-                                                                                <i class="bi bi-x-circle"></i>
-                                                                            </a>
-                                                                        </c:if>
+                                                                            id="studentSearch"
+                                                                            placeholder="Tìm sinh viên...">
+                                                                        <button class="btn btn-outline-secondary btn-sm"
+                                                                            type="button" id="clearSearchBtn"
+                                                                            style="display: none;" title="Xóa tìm kiếm">
+                                                                            <i class="bi bi-x-circle"></i>
+                                                                        </button>
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                        </div>
 
-                                                            <!-- Preserve parameters -->
-                                                            <c:if test="${not empty selectedClassroomId}">
-                                                                <input type="hidden" name="selectedClassroomId"
-                                                                    value="${selectedClassroomId}">
-                                                            </c:if>
-                                                        </form>
-                                                    </div>
-
-                                                    <!-- Classrooms Table -->
-                                                    <div class="table-responsive"
-                                                        style="max-height: 500px; overflow-y: auto;">
-                                                        <table class="table table-hover table-sm mb-0">
-                                                            <thead class="table-light sticky-top">
-                                                                <tr>
-                                                                    <th style="width: 50px;">STT</th>
-                                                                    <th class="sortable" data-sort="classCode">Mã lớp
-                                                                        <i class="bi bi-arrow-down-up sort-icon"></i>
-                                                                    </th>
-                                                                    <th class="sortable" data-sort="courseYear">Khóa
-                                                                        <i class="bi bi-arrow-down-up sort-icon"></i>
-                                                                    </th>
-                                                                    <th class="sortable" data-sort="major">Ngành
-                                                                        <i class="bi bi-arrow-down-up sort-icon"></i>
-                                                                    </th>
-                                                                    <th>SV</th>
-                                                                    <th>Thao tác</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <c:choose>
-                                                                    <c:when test="${empty classrooms}">
-                                                                        <tr>
-                                                                            <td colspan="6"
-                                                                                class="text-center py-4 text-muted">
-                                                                                <i
-                                                                                    class="bi bi-inbox display-6 d-block mb-2"></i>
-                                                                                Không tìm thấy lớp học nào
-                                                                            </td>
-                                                                        </tr>
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <c:forEach items="${classrooms}" var="classroom"
-                                                                            varStatus="status">
-                                                                            <tr class="classroom-row ${classroom.id == selectedClassroomId ? 'table-primary' : ''}"
-                                                                                style="cursor: pointer;"
-                                                                                onclick="selectClassroom(<c:out value='${classroom.id}' />)">
-                                                                                <td class="text-center">${status.index +
-                                                                                    1}</td>
-                                                                                <td class="fw-semibold text-primary">
-                                                                                    ${classroom.classCode}</td>
-                                                                                <td class="fw-medium">
-                                                                                    ${classroom.courseYear}</td>
-                                                                                <td>
-                                                                                    <c:choose>
-                                                                                        <c:when
-                                                                                            test="${not empty classroom.major}">
-                                                                                            <span
-                                                                                                class="badge bg-primary">${classroom.major.majorCode}</span>
-                                                                                        </c:when>
-                                                                                        <c:otherwise>
-                                                                                            <span
-                                                                                                class="text-muted">Chưa
-                                                                                                phân ngành</span>
-                                                                                        </c:otherwise>
-                                                                                    </c:choose>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <span
-                                                                                        class="badge bg-info">${fn:length(classroom.students)}</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div class="btn-group btn-group-sm">
-                                                                                        <button type="button"
-                                                                                            class="btn btn-outline-primary btn-sm"
-                                                                                            onclick="event.stopPropagation(); editClassroom(<c:out value='${classroom.id}' />)"
-                                                                                            title="Sửa">
-                                                                                            <i class="bi bi-pencil"></i>
-                                                                                        </button>
-                                                                                        <button type="button"
-                                                                                            class="btn btn-outline-danger btn-sm"
-                                                                                            onclick="event.stopPropagation(); deleteClassroom(<c:out value='${classroom.id}' />)"
-                                                                                            title="Xóa">
-                                                                                            <i class="bi bi-trash"></i>
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        </c:forEach>
-                                                                    </c:otherwise>
-                                                                </c:choose>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Right Panel - Students List -->
-                                        <div class="col-lg-6">
-                                            <div class="card shadow-sm h-100">
-                                                <div
-                                                    class="card-header d-flex justify-content-between align-items-center">
-                                                    <h6 class="mb-0">
-                                                        <i class="bi bi-people-fill me-2"></i>
-                                                        <span id="studentsTitle">Chọn lớp để xem danh sách sinh
-                                                            viên</span>
-                                                    </h6>
-                                                    <button type="button" class="btn btn-success btn-sm"
-                                                        data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                                                        <i class="bi bi-person-plus me-1"></i>Thêm sinh viên
-                                                    </button>
-                                                </div>
-                                                <div class="card-body">
-                                                    <!-- Classroom Selector and Search -->
-                                                    <div class="mb-3">
-                                                        <div class="row g-2">
-                                                            <!-- Classroom Selector -->
-                                                            <div class="col-md-6">
-                                                                <div class="input-group input-group-sm">
-                                                                    <span class="input-group-text">
-                                                                        <i class="bi bi-door-open"></i>
-                                                                    </span>
-                                                                    <select class="form-select form-select-sm"
-                                                                        id="classroomSelector">
-                                                                        <option value="">Tất cả lớp</option>
-                                                                        <c:forEach var="classroom"
-                                                                            items="${classrooms}">
-                                                                            <option value="${classroom.id}"
-                                                                                ${classroom.id==selectedClassroomId
-                                                                                ? 'selected' : '' }>
-                                                                                ${classroom.classCode}
-                                                                                (${classroom.courseYear})
-                                                                            </option>
-                                                                        </c:forEach>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-
-                                                            <!-- Search Students -->
-                                                            <div class="col-md-6">
-                                                                <div class="input-group input-group-sm">
-                                                                    <span class="input-group-text">
-                                                                        <i class="bi bi-search"></i>
-                                                                    </span>
-                                                                    <input type="text"
-                                                                        class="form-control form-control-sm"
-                                                                        id="studentSearch"
-                                                                        placeholder="Tìm sinh viên...">
-                                                                    <button class="btn btn-outline-secondary btn-sm"
-                                                                        type="button" id="clearSearchBtn"
-                                                                        style="display: none;" title="Xóa tìm kiếm">
-                                                                        <i class="bi bi-x-circle"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
+                                                        <!-- Students Table -->
+                                                        <div class="table-responsive"
+                                                            style="max-height: 500px; overflow-y: auto;">
+                                                            <table class="table table-hover table-sm mb-0">
+                                                                <thead class="table-light sticky-top">
+                                                                    <tr>
+                                                                        <th width="50">STT</th>
+                                                                        <th class="sortable" data-sort="username">MSSV
+                                                                            <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
+                                                                        <th class="sortable" data-sort="name">Họ tên
+                                                                            <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
+                                                                        <th class="sortable" data-sort="classroom">Lớp
+                                                                            <i
+                                                                                class="bi bi-arrow-down-up sort-icon"></i>
+                                                                        </th>
+                                                                        <th>Thao tác</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="studentsTableBody">
+                                                                    <tr>
+                                                                        <td colspan="5"
+                                                                            class="text-center py-4 text-muted">
+                                                                            <i
+                                                                                class="bi bi-arrow-left display-6 d-block mb-2"></i>
+                                                                            Vui lòng chọn một lớp từ danh sách bên trái
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
                                                         </div>
                                                     </div>
-
-                                                    <!-- Students Table -->
-                                                    <div class="table-responsive"
-                                                        style="max-height: 500px; overflow-y: auto;">
-                                                        <table class="table table-hover table-sm mb-0">
-                                                            <thead class="table-light sticky-top">
-                                                                <tr>
-                                                                    <th width="50">STT</th>
-                                                                    <th class="sortable" data-sort="username">MSSV
-                                                                        <i class="bi bi-arrow-down-up sort-icon"></i>
-                                                                    </th>
-                                                                    <th class="sortable" data-sort="name">Họ tên
-                                                                        <i class="bi bi-arrow-down-up sort-icon"></i>
-                                                                    </th>
-                                                                    <th class="sortable" data-sort="classroom">Lớp
-                                                                        <i class="bi bi-arrow-down-up sort-icon"></i>
-                                                                    </th>
-                                                                    <th>Thao tác</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="studentsTableBody">
-                                                                <tr>
-                                                                    <td colspan="5" class="text-center py-4 text-muted">
-                                                                        <i
-                                                                            class="bi bi-arrow-left display-6 d-block mb-2"></i>
-                                                                        Vui lòng chọn một lớp từ danh sách bên trái
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                 </div>
 
                                 <!-- Add Classroom Modal -->
@@ -686,8 +689,19 @@
                                                 if (selectedClassroomId) {
                                                     document.getElementById('studentClassroomSelect').value = selectedClassroomId;
                                                 }
-                                            });
-                                        }
+                                            }
+                                        });
+
+                                    // Check for flash messages on page load
+                                    const successMessage = '${success}';
+                                    if (successMessage && successMessage.trim() !== '') {
+                                        showNotification('success', successMessage, 'Thành công');
+                                    }
+
+                                    const errorMessage = '${error}';
+                                    if (errorMessage && errorMessage.trim() !== '') {
+                                        showNotification('error', errorMessage, 'Lỗi');
+                                    }
                                     });
                                 </script>
                 </body>

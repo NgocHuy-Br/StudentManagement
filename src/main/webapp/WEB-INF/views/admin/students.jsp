@@ -49,179 +49,170 @@
 
                             <div class="card mt-3">
                                 <div class="card-body">
-                                    <!-- Flash messages -->
-                                    <c:if test="${not empty success}">
-                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                            ${success}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
-                                    <c:if test="${not empty error}">
-                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                            ${error}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
+                                    <!-- Include notification modal -->
+                                    <%@ include file="../common/notification-modal.jsp" %>
 
-                                    <!-- Toolbar: tìm kiếm + page-size + Thêm mới -->
-                                    <form class="student-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
-                                        method="get" action="">
-                                        <div class="input-group search">
-                                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                            <input name="q" class="form-control"
-                                                placeholder="Tìm MSSV, họ tên, email, SĐT, lớp, khoa..." value="${q}" />
-                                        </div>
+                                        <!-- Toolbar: tìm kiếm + page-size + Thêm mới -->
+                                        <form class="student-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
+                                            method="get" action="">
+                                            <div class="input-group search">
+                                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                <input name="q" class="form-control"
+                                                    placeholder="Tìm MSSV, họ tên, email, SĐT, lớp, khoa..."
+                                                    value="${q}" />
+                                            </div>
 
-                                        <div class="ms-auto"></div>
+                                            <div class="ms-auto"></div>
 
-                                        <label class="me-1 text-muted small">Hiển thị</label>
-                                        <select class="form-select" name="size" style="width:100px"
-                                            onchange="this.form.submit()">
-                                            <option value="10" ${param.size=='10' ?'selected':''}>10</option>
-                                            <option value="20" ${param.size=='20' ?'selected':''}>20</option>
-                                            <option value="50" ${param.size=='50' ?'selected':''}>50</option>
-                                            <option value="100" ${param.size=='100' ?'selected':''}>100</option>
-                                        </select>
-                                        <input type="hidden" name="sort" value="${sort}">
-                                        <input type="hidden" name="dir" value="${dir}">
+                                            <label class="me-1 text-muted small">Hiển thị</label>
+                                            <select class="form-select" name="size" style="width:100px"
+                                                onchange="this.form.submit()">
+                                                <option value="10" ${param.size=='10' ?'selected':''}>10</option>
+                                                <option value="20" ${param.size=='20' ?'selected':''}>20</option>
+                                                <option value="50" ${param.size=='50' ?'selected':''}>50</option>
+                                                <option value="100" ${param.size=='100' ?'selected':''}>100</option>
+                                            </select>
+                                            <input type="hidden" name="sort" value="${sort}">
+                                            <input type="hidden" name="dir" value="${dir}">
 
-                                        <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal"
-                                            data-bs-target="#modalCreate">
-                                            <i class="bi bi-plus-lg me-1"></i> Thêm mới
-                                        </button>
-                                    </form>
+                                            <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal"
+                                                data-bs-target="#modalCreate">
+                                                <i class="bi bi-plus-lg me-1"></i> Thêm mới
+                                            </button>
+                                        </form>
 
-                                    <!-- Bảng danh sách: Page<Student>, truy cập field user qua s.user -->
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle table-students">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>MSSV
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.username&dir=${dir=='asc' && sort=='user.username' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>Họ
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.fname&dir=${dir=='asc' && sort=='user.fname' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>Tên
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.lname&dir=${dir=='asc' && sort=='user.lname' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>Email
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.email&dir=${dir=='asc' && sort=='user.email' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>SĐT
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.phone&dir=${dir=='asc' && sort=='user.phone' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>CCCD
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.nationalId&dir=${dir=='asc' && sort=='user.nationalId' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>Ngày sinh
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.birthDate&dir=${dir=='asc' && sort=='user.birthDate' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>Lớp
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=className&dir=${dir=='asc' && sort=='className' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th>Ngành
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=major.majorName&dir=${dir=='asc' && sort=='major.majorName' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <c:if test="${page.totalElements == 0}">
+                                        <!-- Bảng danh sách: Page<Student>, truy cập field user qua s.user -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle table-students">
+                                                <thead class="table-light">
                                                     <tr>
-                                                        <td colspan="8" class="text-center text-muted py-4">Chưa có sinh
-                                                            viên nào.</td>
+                                                        <th>MSSV
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.username&dir=${dir=='asc' && sort=='user.username' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>Họ
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.fname&dir=${dir=='asc' && sort=='user.fname' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>Tên
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.lname&dir=${dir=='asc' && sort=='user.lname' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>Email
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.email&dir=${dir=='asc' && sort=='user.email' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>SĐT
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.phone&dir=${dir=='asc' && sort=='user.phone' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>CCCD
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.nationalId&dir=${dir=='asc' && sort=='user.nationalId' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>Ngày sinh
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=user.birthDate&dir=${dir=='asc' && sort=='user.birthDate' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>Lớp
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=className&dir=${dir=='asc' && sort=='className' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th>Ngành
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=major.majorName&dir=${dir=='asc' && sort=='major.majorName' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
                                                     </tr>
-                                                </c:if>
+                                                </thead>
+                                                <tbody>
+                                                    <c:if test="${page.totalElements == 0}">
+                                                        <tr>
+                                                            <td colspan="8" class="text-center text-muted py-4">Chưa có
+                                                                sinh
+                                                                viên nào.</td>
+                                                        </tr>
+                                                    </c:if>
 
-                                                <c:forEach var="s" items="${page.content}">
-                                                    <tr>
-                                                        <td>${s.user.username}</td>
-                                                        <td>${s.user.fname}</td>
-                                                        <td>
-                                                            <span data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                data-bs-title="<c:if test='${not empty s.user.address}'>Địa chỉ: ${s.user.address}</c:if><c:if test='${not empty s.user.birthDate}'><c:if test='${not empty s.user.address}'> | </c:if>Ngày sinh: ${s.user.birthDate}</c:if>">
-                                                                ${s.user.lname}
-                                                                <c:if
-                                                                    test="${not empty s.user.address or not empty s.user.birthDate}">
-                                                                    <i class="bi bi-info-circle-fill text-muted ms-1"
-                                                                        style="font-size: 0.8em;"></i>
+                                                    <c:forEach var="s" items="${page.content}">
+                                                        <tr>
+                                                            <td>${s.user.username}</td>
+                                                            <td>${s.user.fname}</td>
+                                                            <td>
+                                                                <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-title="<c:if test='${not empty s.user.address}'>Địa chỉ: ${s.user.address}</c:if><c:if test='${not empty s.user.birthDate}'><c:if test='${not empty s.user.address}'> | </c:if>Ngày sinh: ${s.user.birthDate}</c:if>">
+                                                                    ${s.user.lname}
+                                                                    <c:if
+                                                                        test="${not empty s.user.address or not empty s.user.birthDate}">
+                                                                        <i class="bi bi-info-circle-fill text-muted ms-1"
+                                                                            style="font-size: 0.8em;"></i>
+                                                                    </c:if>
+                                                                </span>
+                                                            </td>
+                                                            <td>${s.user.email}</td>
+                                                            <td>${s.user.phone}</td>
+                                                            <td>
+                                                                <c:if test="${not empty s.user.nationalId}">
+                                                                    ${s.user.nationalId}
                                                                 </c:if>
-                                                            </span>
-                                                        </td>
-                                                        <td>${s.user.email}</td>
-                                                        <td>${s.user.phone}</td>
-                                                        <td>
-                                                            <c:if test="${not empty s.user.nationalId}">
-                                                                ${s.user.nationalId}
-                                                            </c:if>
-                                                            <c:if test="${empty s.user.nationalId}">
-                                                                <span class="text-muted">-</span>
-                                                            </c:if>
-                                                        </td>
-                                                        <td>
-                                                            <c:if test="${not empty s.user.birthDate}">
-                                                                ${s.user.birthDate}
-                                                            </c:if>
-                                                            <c:if test="${empty s.user.birthDate}">
-                                                                <span class="text-muted">-</span>
-                                                            </c:if>
-                                                        </td>
-                                                        <td>${s.className}</td>
-                                                        <td>${s.major.majorName}</td>
-                                                    </tr>
-                                                </c:forEach>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                                <c:if test="${empty s.user.nationalId}">
+                                                                    <span class="text-muted">-</span>
+                                                                </c:if>
+                                                            </td>
+                                                            <td>
+                                                                <c:if test="${not empty s.user.birthDate}">
+                                                                    ${s.user.birthDate}
+                                                                </c:if>
+                                                                <c:if test="${empty s.user.birthDate}">
+                                                                    <span class="text-muted">-</span>
+                                                                </c:if>
+                                                            </td>
+                                                            <td>${s.className}</td>
+                                                            <td>${s.major.majorName}</td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
+                                        </div>
 
-                                    <!-- Phân trang -->
-                                    <c:if test="${page.totalPages > 1}">
-                                        <nav class="d-flex justify-content-end">
-                                            <ul class="pagination pagination-sm mb-0">
-                                                <li class="page-item ${page.first ? 'disabled' : ''}">
-                                                    <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
-                                                </li>
-                                                <c:forEach var="i" begin="0" end="${page.totalPages-1}">
-                                                    <li class="page-item ${i==page.number ? 'active' : ''}">
+                                        <!-- Phân trang -->
+                                        <c:if test="${page.totalPages > 1}">
+                                            <nav class="d-flex justify-content-end">
+                                                <ul class="pagination pagination-sm mb-0">
+                                                    <li class="page-item ${page.first ? 'disabled' : ''}">
                                                         <a class="page-link"
-                                                            href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                            href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
                                                     </li>
-                                                </c:forEach>
-                                                <li class="page-item ${page.last ? 'disabled' : ''}">
-                                                    <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                    </c:if>
+                                                    <c:forEach var="i" begin="0" end="${page.totalPages-1}">
+                                                        <li class="page-item ${i==page.number ? 'active' : ''}">
+                                                            <a class="page-link"
+                                                                href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                        </li>
+                                                    </c:forEach>
+                                                    <li class="page-item ${page.last ? 'disabled' : ''}">
+                                                        <a class="page-link"
+                                                            href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </c:if>
                                 </div>
                             </div>
                 </div>

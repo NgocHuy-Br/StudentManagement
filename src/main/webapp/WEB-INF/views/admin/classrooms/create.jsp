@@ -31,80 +31,68 @@
                         <i class="fas fa-plus-circle"></i> Thêm Lớp Học Mới
                     </h2>
 
-                    <!-- Hiển thị thông báo -->
-                    <c:if test="${not empty error}">
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle"></i> ${error}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
+                    <!-- Include notification modal -->
+                    <%@ include file="../../common/notification-modal.jsp" %>
 
-                    <c:if test="${not empty success}">
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle"></i> ${success}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
+                        <form action="/admin/classrooms" method="post" id="classroomForm">
+                            <!-- Mã lớp -->
+                            <div class="mb-3">
+                                <label for="classCode" class="form-label">
+                                    Mã lớp <span class="required">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="classCode" name="classCode"
+                                    placeholder="Ví dụ: D20CQCN01-N" required maxlength="20">
+                                <div class="form-text">Mã lớp phải duy nhất trong hệ thống</div>
+                            </div>
 
-                    <form action="/admin/classrooms" method="post" id="classroomForm">
-                        <!-- Mã lớp -->
-                        <div class="mb-3">
-                            <label for="classCode" class="form-label">
-                                Mã lớp <span class="required">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="classCode" name="classCode"
-                                placeholder="Ví dụ: D20CQCN01-N" required maxlength="20">
-                            <div class="form-text">Mã lớp phải duy nhất trong hệ thống</div>
-                        </div>
+                            <!-- Chọn ngành -->
+                            <div class="mb-3">
+                                <label for="majorCode" class="form-label">
+                                    Ngành học <span class="required">*</span>
+                                </label>
+                                <select class="form-select" id="majorCode" name="majorCode" required>
+                                    <option value="">-- Chọn ngành học --</option>
+                                </select>
+                                <div class="form-text">Chọn ngành đào tạo</div>
+                            </div>
 
-                        <!-- Chọn ngành -->
-                        <div class="mb-3">
-                            <label for="majorCode" class="form-label">
-                                Ngành học <span class="required">*</span>
-                            </label>
-                            <select class="form-select" id="majorCode" name="majorCode" required>
-                                <option value="">-- Chọn ngành học --</option>
-                            </select>
-                            <div class="form-text">Chọn ngành đào tạo</div>
-                        </div>
+                            <!-- Chọn khóa học -->
+                            <div class="mb-3">
+                                <label for="courseYear" class="form-label">
+                                    Khóa học <span class="required">*</span>
+                                </label>
+                                <select class="form-select" id="courseYear" name="courseYear" required disabled>
+                                    <option value="">-- Chọn khóa học --</option>
+                                </select>
+                                <div class="form-text">Khóa học sẽ được tải sau khi chọn ngành</div>
+                            </div>
 
-                        <!-- Chọn khóa học -->
-                        <div class="mb-3">
-                            <label for="courseYear" class="form-label">
-                                Khóa học <span class="required">*</span>
-                            </label>
-                            <select class="form-select" id="courseYear" name="courseYear" required disabled>
-                                <option value="">-- Chọn khóa học --</option>
-                            </select>
-                            <div class="form-text">Khóa học sẽ được tải sau khi chọn ngành</div>
-                        </div>
+                            <!-- Giáo viên chủ nhiệm -->
+                            <div class="mb-3">
+                                <label for="teacherId" class="form-label">
+                                    Giáo viên chủ nhiệm
+                                </label>
+                                <select class="form-select" id="teacherId" name="teacherId">
+                                    <option value="">-- Chọn giáo viên chủ nhiệm (tùy chọn) --</option>
+                                    <c:forEach var="teacher" items="${teachers}">
+                                        <option value="${teacher.id}">
+                                            ${teacher.teacherCode} - ${teacher.lastName} ${teacher.firstName}
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                                <div class="form-text">Có thể để trống và gán sau</div>
+                            </div>
 
-                        <!-- Giáo viên chủ nhiệm -->
-                        <div class="mb-3">
-                            <label for="teacherId" class="form-label">
-                                Giáo viên chủ nhiệm
-                            </label>
-                            <select class="form-select" id="teacherId" name="teacherId">
-                                <option value="">-- Chọn giáo viên chủ nhiệm (tùy chọn) --</option>
-                                <c:forEach var="teacher" items="${teachers}">
-                                    <option value="${teacher.id}">
-                                        ${teacher.teacherCode} - ${teacher.lastName} ${teacher.firstName}
-                                    </option>
-                                </c:forEach>
-                            </select>
-                            <div class="form-text">Có thể để trống và gán sau</div>
-                        </div>
-
-                        <!-- Nút thao tác -->
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="/admin/classrooms" class="btn btn-secondary me-md-2">
-                                <i class="fas fa-arrow-left"></i> Quay lại
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="submitBtn">
-                                <i class="fas fa-save"></i> Tạo lớp học
-                            </button>
-                        </div>
-                    </form>
+                            <!-- Nút thao tác -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/admin/classrooms" class="btn btn-secondary me-md-2">
+                                    <i class="fas fa-arrow-left"></i> Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="fas fa-save"></i> Tạo lớp học
+                                </button>
+                            </div>
+                        </form>
                 </div>
             </div>
 
@@ -202,6 +190,17 @@
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo...';
                     });
+
+                    // Check for flash messages on page load
+                    const successMessage = '${success}';
+                    if (successMessage && successMessage.trim() !== '') {
+                        showNotification('success', successMessage, 'Thành công');
+                    }
+
+                    const errorMessage = '${error}';
+                    if (errorMessage && errorMessage.trim() !== '') {
+                        showNotification('error', errorMessage, 'Lỗi');
+                    }
                 });
             </script>
         </body>

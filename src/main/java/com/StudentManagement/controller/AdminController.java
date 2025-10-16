@@ -2504,4 +2504,159 @@ public class AdminController {
             logger.error("Error updating scores for subject {}: {}", subject.getSubjectCode(), e.getMessage());
         }
     }
+
+    @PostMapping("/update-profile")
+    public String updateProfile(@RequestParam("username") String username,
+            @RequestParam("fullName") String fullName,
+            @RequestParam("email") String email,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "birthDate", required = false) String birthDate,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            // Get current user
+            String currentUsername = authentication.getName();
+            User user = userRepository.findByUsername(currentUsername).orElse(null);
+
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản");
+                return "redirect:/admin/overview";
+            }
+
+            // Check if email is already used by another user
+            if (!user.getEmail().equals(email)) {
+                User existingUser = userRepository.findByEmail(email).orElse(null);
+                if (existingUser != null && !existingUser.getId().equals(user.getId())) {
+                    redirectAttributes.addFlashAttribute("error", "Email này đã được sử dụng bởi tài khoản khác");
+                    return "redirect:/admin/overview";
+                }
+            }
+
+            // Update user information - split fullName into fname and lname
+            String[] nameParts = fullName.trim().split("\\s+", 2);
+            if (nameParts.length == 1) {
+                user.setFname(nameParts[0]);
+                user.setLname("");
+            } else {
+                user.setFname(nameParts[0]);
+                user.setLname(nameParts[1]);
+            }
+
+            user.setEmail(email);
+            user.setPhone(phone);
+            user.setAddress(address);
+
+            // Parse and set birth date
+            if (birthDate != null && !birthDate.trim().isEmpty()) {
+                try {
+                    user.setBirthDate(java.time.LocalDate.parse(birthDate));
+                } catch (Exception e) {
+                    logger.warn("Invalid birth date format: {}", birthDate);
+                }
+            }
+
+            userRepository.save(user);
+
+            redirectAttributes.addFlashAttribute("success", "Cập nhật thông tin thành công");
+            logger.info("Profile updated successfully for user: {}", currentUsername);
+
+        } catch (Exception e) {
+            logger.error("Error updating profile: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi cập nhật thông tin");
+        }
+
+        return "redirect:/admin/overview";
+    }
+
+    @PostMapping("/update-email")
+    public String updateEmail(@RequestParam("newEmail") String newEmail,
+            @RequestParam("currentPassword") String currentPassword,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            // Get current user
+            String currentUsername = authentication.getName();
+            User user = userRepository.findByUsername(currentUsername).orElse(null);
+
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản");
+                return "redirect:/admin/overview";
+            }
+
+            // Verify current password
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                redirectAttributes.addFlashAttribute("error", "Mật khẩu hiện tại không đúng");
+                return "redirect:/admin/overview";
+            }
+
+            // Check if email is already used by another user
+            User existingUser = userRepository.findByEmail(newEmail).orElse(null);
+            if (existingUser != null && !existingUser.getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "Email này đã được sử dụng bởi tài khoản khác");
+                return "redirect:/admin/overview";
+            }
+
+            // Update email
+            user.setEmail(newEmail);
+            userRepository.save(user);
+
+            redirectAttributes.addFlashAttribute("success", "Cập nhật email thành công");
+            logger.info("Email updated successfully for user: {}", currentUsername);
+
+        } catch (Exception e) {
+            logger.error("Error updating email: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi cập nhật email");
+        }
+
+        return "redirect:/admin/overview";
+    }
+
+    @PostMapping("/change-password")
+    public String changePassword(@RequestParam("oldPassword") String oldPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("confirmPassword") String confirmPassword,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            // Get current user
+            String currentUsername = authentication.getName();
+            User user = userRepository.findByUsername(currentUsername).orElse(null);
+
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy tài khoản");
+                return "redirect:/admin/overview";
+            }
+
+            // Verify old password
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                redirectAttributes.addFlashAttribute("error", "Mật khẩu hiện tại không đúng");
+                return "redirect:/admin/overview";
+            }
+
+            // Validate new password
+            if (newPassword == null || newPassword.length() < 5) {
+                redirectAttributes.addFlashAttribute("error", "Mật khẩu mới phải có ít nhất 5 ký tự");
+                return "redirect:/admin/overview";
+            }
+
+            if (!newPassword.equals(confirmPassword)) {
+                redirectAttributes.addFlashAttribute("error", "Mật khẩu mới và xác nhận mật khẩu không khớp");
+                return "redirect:/admin/overview";
+            }
+
+            // Update password
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+
+            redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công");
+            logger.info("Password changed successfully for user: {}", currentUsername);
+
+        } catch (Exception e) {
+            logger.error("Error changing password: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi đổi mật khẩu");
+        }
+
+        return "redirect:/admin/overview";
+    }
 }

@@ -126,39 +126,39 @@
                     </div>
 
                     <div class="login-body">
-                        <c:if test="${param.error == 'true'}">
-                            <div class="alert alert-danger py-2 mb-3">Sai tài khoản hoặc mật khẩu.</div>
-                        </c:if>
+                        <!-- Include notification modal -->
+                        <%@ include file="notification-modal.jsp" %>
 
-                        <form method="post" action="<c:url value='/perform-login'/>" autocomplete="on">
-                            <div class="mb-3">
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <input type="text" class="form-control" name="username" placeholder="Tài khoản"
-                                        required />
+                            <form method="post" action="<c:url value='/perform-login'/>" autocomplete="on">
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                        <input type="text" class="form-control" name="username" placeholder="Tài khoản"
+                                            required />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="mb-3">
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                    <input type="password" class="form-control" id="password" name="password"
-                                        placeholder="Mật khẩu" required />
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword"
-                                        aria-label="Hiện/ẩn mật khẩu">
-                                        <i class="bi bi-eye-slash" id="toggleIcon"></i>
-                                    </button>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                        <input type="password" class="form-control" id="password" name="password"
+                                            placeholder="Mật khẩu" required />
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword"
+                                            aria-label="Hiện/ẩn mật khẩu">
+                                            <i class="bi bi-eye-slash" id="toggleIcon"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="d-flex justify-content-end mb-3">
-                                <a class="link-secondary fst-italic" style="color:#b91c1c" href="#">Quên mật khẩu</a>
-                            </div>
+                                <div class="d-flex justify-content-end mb-3">
+                                    <a class="link-secondary fst-italic" style="color:#b91c1c" href="#">Quên mật
+                                        khẩu</a>
+                                </div>
 
-                            <button class="btn btn-login w-100 text-white" type="submit">
-                                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
-                            </button>
-                        </form>
+                                <button class="btn btn-login w-100 text-white" type="submit">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                                </button>
+                            </form>
                     </div>
                 </div>
             </main>
@@ -175,6 +175,16 @@
                 });
             </script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+            <script>
+                // Check for login error
+                document.addEventListener('DOMContentLoaded', function () {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('error') === 'true') {
+                        showNotification('error', 'Sai tài khoản hoặc mật khẩu.', 'Đăng nhập thất bại');
+                    }
+                });
+            </script>
         </body>
 
         </html>

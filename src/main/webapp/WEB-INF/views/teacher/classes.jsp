@@ -91,146 +91,142 @@
 
                                 <div class="mt-4">
 
-                                    <!-- Flash Messages -->
-                                    <c:if test="${not empty success}">
-                                        <div class="alert alert-success alert-dismissible fade show">
-                                            <i class="bi bi-check-circle me-2"></i>${success}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
-                                    <c:if test="${not empty error}">
-                                        <div class="alert alert-danger alert-dismissible fade show">
-                                            <i class="bi bi-exclamation-triangle me-2"></i>${error}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
+                                    <!-- Include notification modal -->
+                                    <%@ include file="../common/notification-modal.jsp" %>
 
-                                    <!-- Class Selection -->
-                                    <div class="class-selector">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-4">
-                                                <label for="classSelect" class="form-label fw-semibold">
-                                                    <i class="bi bi-building"></i> Chọn lớp học
-                                                </label>
-                                                <select class="form-select" id="classSelect" onchange="filterByClass()">
-                                                    <option value="">Tất cả lớp</option>
-                                                    <c:forEach items="${assignedClasses}" var="classroom">
-                                                        <option value="${classroom.id}">${classroom.classCode}</option>
-                                                    </c:forEach>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="searchInput" class="form-label fw-semibold">
-                                                    <i class="bi bi-search"></i> Tìm kiếm sinh viên
-                                                </label>
-                                                <input type="text" class="form-control" id="searchInput"
-                                                    placeholder="Tìm theo MSSV hoặc tên..." onkeyup="searchStudents()">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="class-info-badge mt-4">
-                                                    <i class="bi bi-people"></i>
-                                                    <span id="studentCount">${fn:length(allStudents)}</span> sinh viên
+                                        <!-- Class Selection -->
+                                        <div class="class-selector">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-4">
+                                                    <label for="classSelect" class="form-label fw-semibold">
+                                                        <i class="bi bi-building"></i> Chọn lớp học
+                                                    </label>
+                                                    <select class="form-select" id="classSelect"
+                                                        onchange="filterByClass()">
+                                                        <option value="">Tất cả lớp</option>
+                                                        <c:forEach items="${assignedClasses}" var="classroom">
+                                                            <option value="${classroom.id}">${classroom.classCode}
+                                                            </option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="searchInput" class="form-label fw-semibold">
+                                                        <i class="bi bi-search"></i> Tìm kiếm sinh viên
+                                                    </label>
+                                                    <input type="text" class="form-control" id="searchInput"
+                                                        placeholder="Tìm theo MSSV hoặc tên..."
+                                                        onkeyup="searchStudents()">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="class-info-badge mt-4">
+                                                        <i class="bi bi-people"></i>
+                                                        <span id="studentCount">${fn:length(allStudents)}</span> sinh
+                                                        viên
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Students Table -->
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5 class="card-title mb-0">
-                                                <i class="bi bi-people"></i> Danh sách sinh viên
-                                            </h5>
-                                        </div>
-                                        <div class="card-body p-0">
-                                            <div class="table-responsive">
-                                                <table class="table table-students mb-0">
-                                                    <thead class="bg-light">
-                                                        <tr>
-                                                            <th style="width: 60px;">TT</th>
-                                                            <th>MSSV</th>
-                                                            <th>Họ và tên</th>
-                                                            <th>Email</th>
-                                                            <th>Số điện thoại</th>
-                                                            <th>Lớp</th>
-                                                            <th style="width: 80px;">Thao tác</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="studentsTable">
-                                                        <c:forEach items="${allStudents}" var="student"
-                                                            varStatus="status">
-                                                            <tr class="student-row"
-                                                                data-class-id="${student.classroom.id}"
-                                                                data-mssv="${student.user.username}"
-                                                                data-name="${student.user.fname} ${student.user.lname}"
-                                                                data-email="${student.user.email}"
-                                                                data-phone="${student.user.phone}">
-                                                                <td>
-                                                                    <div
-                                                                        class="d-flex align-items-center justify-content-center">
-                                                                        <strong class="text-primary">${status.index +
-                                                                            1}</strong>
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <strong
-                                                                        class="text-primary">${student.user.username}</strong>
-                                                                </td>
-                                                                <td>
-                                                                    <strong>${student.user.fname}
-                                                                        ${student.user.lname}</strong>
-                                                                </td>
-                                                                <td>
-                                                                    <c:choose>
-                                                                        <c:when test="${not empty student.user.email}">
-                                                                            ${student.user.email}
-                                                                        </c:when>
-                                                                        <c:otherwise>
-                                                                            <span class="text-muted">Chưa cập
-                                                                                nhật</span>
-                                                                        </c:otherwise>
-                                                                    </c:choose>
-                                                                </td>
-                                                                <td>
-                                                                    <c:choose>
-                                                                        <c:when test="${not empty student.user.phone}">
-                                                                            ${student.user.phone}
-                                                                        </c:when>
-                                                                        <c:otherwise>
-                                                                            <span class="text-muted">Chưa cập
-                                                                                nhật</span>
-                                                                        </c:otherwise>
-                                                                    </c:choose>
-                                                                </td>
-                                                                <td>
-                                                                    <span
-                                                                        class="badge bg-primary">${student.classroom.classCode}</span>
-                                                                </td>
-                                                                <td>
-                                                                    <a href="/teacher/student/${student.id}/detail"
-                                                                        class="btn btn-outline-primary btn-action"
-                                                                        title="Xem chi tiết">
-                                                                        <i class="bi bi-eye"></i>
-                                                                    </a>
-                                                                </td>
+                                        <!-- Students Table -->
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="card-title mb-0">
+                                                    <i class="bi bi-people"></i> Danh sách sinh viên
+                                                </h5>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-students mb-0">
+                                                        <thead class="bg-light">
+                                                            <tr>
+                                                                <th style="width: 60px;">TT</th>
+                                                                <th>MSSV</th>
+                                                                <th>Họ và tên</th>
+                                                                <th>Email</th>
+                                                                <th>Số điện thoại</th>
+                                                                <th>Lớp</th>
+                                                                <th style="width: 80px;">Thao tác</th>
                                                             </tr>
-                                                        </c:forEach>
-                                                    </tbody>
-                                                </table>
+                                                        </thead>
+                                                        <tbody id="studentsTable">
+                                                            <c:forEach items="${allStudents}" var="student"
+                                                                varStatus="status">
+                                                                <tr class="student-row"
+                                                                    data-class-id="${student.classroom.id}"
+                                                                    data-mssv="${student.user.username}"
+                                                                    data-name="${student.user.fname} ${student.user.lname}"
+                                                                    data-email="${student.user.email}"
+                                                                    data-phone="${student.user.phone}">
+                                                                    <td>
+                                                                        <div
+                                                                            class="d-flex align-items-center justify-content-center">
+                                                                            <strong class="text-primary">${status.index
+                                                                                +
+                                                                                1}</strong>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <strong
+                                                                            class="text-primary">${student.user.username}</strong>
+                                                                    </td>
+                                                                    <td>
+                                                                        <strong>${student.user.fname}
+                                                                            ${student.user.lname}</strong>
+                                                                    </td>
+                                                                    <td>
+                                                                        <c:choose>
+                                                                            <c:when
+                                                                                test="${not empty student.user.email}">
+                                                                                ${student.user.email}
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <span class="text-muted">Chưa cập
+                                                                                    nhật</span>
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </td>
+                                                                    <td>
+                                                                        <c:choose>
+                                                                            <c:when
+                                                                                test="${not empty student.user.phone}">
+                                                                                ${student.user.phone}
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <span class="text-muted">Chưa cập
+                                                                                    nhật</span>
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span
+                                                                            class="badge bg-primary">${student.classroom.classCode}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <a href="/teacher/student/${student.id}/detail"
+                                                                            class="btn btn-outline-primary btn-action"
+                                                                            title="Xem chi tiết">
+                                                                            <i class="bi bi-eye"></i>
+                                                                        </a>
+                                                                    </td>
+                                                                </tr>
+                                                            </c:forEach>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Empty State -->
-                                    <c:if test="${empty allStudents}">
-                                        <div class="text-center py-5">
-                                            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
-                                            <h4 class="text-muted mt-3">Chưa có sinh viên nào</h4>
-                                            <p class="text-muted">Hiện tại chưa có sinh viên trong các lớp được phân
-                                                công.
-                                            </p>
-                                        </div>
-                                    </c:if>
+                                        <!-- Empty State -->
+                                        <c:if test="${empty allStudents}">
+                                            <div class="text-center py-5">
+                                                <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+                                                <h4 class="text-muted mt-3">Chưa có sinh viên nào</h4>
+                                                <p class="text-muted">Hiện tại chưa có sinh viên trong các lớp được phân
+                                                    công.
+                                                </p>
+                                            </div>
+                                        </c:if>
                                 </div>
 
                                 <script
@@ -283,6 +279,17 @@
                                         });
 
                                         document.getElementById('studentCount').textContent = visibleCount;
+                                    }
+
+                                    // Check for flash messages on page load
+                                    const successMessage = '${success}';
+                                    if (successMessage && successMessage.trim() !== '') {
+                                        showNotification('success', successMessage, 'Thành công');
+                                    }
+
+                                    const errorMessage = '${error}';
+                                    if (errorMessage && errorMessage.trim() !== '') {
+                                        showNotification('error', errorMessage, 'Lỗi');
                                     }
                                 </script>
                     </div>

@@ -76,184 +76,176 @@
 
                             <div class="card mt-3">
                                 <div class="card-body">
-                                    <!-- Flash messages -->
-                                    <c:if test="${not empty success}">
-                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                            ${success}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
-                                    <c:if test="${not empty error}">
-                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                            ${error}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    </c:if>
+                                    <!-- Include notification modal -->
+                                    <%@ include file="../common/notification-modal.jsp" %>
 
-                                    <!-- Toolbar: tìm kiếm + Thêm mới -->
-                                    <form class="faculty-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
-                                        method="get" action="">
-                                        <div class="d-flex">
-                                            <div class="input-group search">
-                                                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                                <input name="q" id="searchInput" class="form-control"
-                                                    placeholder="Tìm tên khoa, mô tả..." value="${q}" />
-                                            </div>
-                                            <c:if test="${not empty q}">
-                                                <button type="button" class="btn search-clear-btn"
-                                                    onclick="clearSearch()" title="Xóa tìm kiếm">
-                                                    <i class="bi bi-x"></i>
-                                                </button>
-                                            </c:if>
-                                        </div>
-
-                                        <div class="ms-auto"></div>
-
-                                        <label class="me-1 text-muted small">Hiển thị</label>
-                                        <select class="form-select" name="size" style="width:100px"
-                                            onchange="this.form.submit()">
-                                            <option value="10" ${param.size=='10' ?'selected':''}>10</option>
-                                            <option value="20" ${param.size=='20' ?'selected':''}>20</option>
-                                            <option value="50" ${param.size=='50' ?'selected':''}>50</option>
-                                            <option value="100" ${param.size=='100' ?'selected':''}>100</option>
-                                        </select>
-                                        <input type="hidden" name="sort" value="${sort}">
-                                        <input type="hidden" name="dir" value="${dir}">
-
-                                        <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal"
-                                            data-bs-target="#modalCreate">
-                                            <i class="bi bi-plus-lg me-1"></i> Thêm mới
-                                        </button>
-                                    </form>
-
-                                    <!-- Bảng danh sách khoa -->
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle table-faculties">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th width="60px">STT</th>
-                                                    <th width="120px">Mã khoa
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=facultyCode&dir=${dir=='asc' && sort=='facultyCode' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th width="220px">Tên khoa
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=name&dir=${dir=='asc' && sort=='name' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th width="180px">Mô tả</th>
-                                                    <th width="100px" class="text-center">Số ngành
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=majorCount&dir=${dir=='asc' && sort=='majorCount' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th width="100px" class="text-center">Số giáo viên
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=teacherCount&dir=${dir=='asc' && sort=='teacherCount' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th width="100px" class="text-center">Số sinh viên
-                                                        <a class="sort-link"
-                                                            href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=studentCount&dir=${dir=='asc' && sort=='studentCount' ? 'desc' : 'asc'}">
-                                                            <i class="bi bi-arrow-down-up"></i>
-                                                        </a>
-                                                    </th>
-                                                    <th width="120px" class="text-center">Thao tác</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <c:if test="${page.totalElements == 0}">
-                                                    <tr>
-                                                        <td colspan="8" class="text-center text-muted py-4">Chưa có khoa
-                                                            nào.</td>
-                                                    </tr>
+                                        <!-- Toolbar: tìm kiếm + Thêm mới -->
+                                        <form class="faculty-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
+                                            method="get" action="">
+                                            <div class="d-flex">
+                                                <div class="input-group search">
+                                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                    <input name="q" id="searchInput" class="form-control"
+                                                        placeholder="Tìm tên khoa, mô tả..." value="${q}" />
+                                                </div>
+                                                <c:if test="${not empty q}">
+                                                    <button type="button" class="btn search-clear-btn"
+                                                        onclick="clearSearch()" title="Xóa tìm kiếm">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
                                                 </c:if>
+                                            </div>
 
-                                                <c:forEach var="faculty" items="${page.content}" varStatus="status">
+                                            <div class="ms-auto"></div>
+
+                                            <label class="me-1 text-muted small">Hiển thị</label>
+                                            <select class="form-select" name="size" style="width:100px"
+                                                onchange="this.form.submit()">
+                                                <option value="10" ${param.size=='10' ?'selected':''}>10</option>
+                                                <option value="20" ${param.size=='20' ?'selected':''}>20</option>
+                                                <option value="50" ${param.size=='50' ?'selected':''}>50</option>
+                                                <option value="100" ${param.size=='100' ?'selected':''}>100</option>
+                                            </select>
+                                            <input type="hidden" name="sort" value="${sort}">
+                                            <input type="hidden" name="dir" value="${dir}">
+
+                                            <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal"
+                                                data-bs-target="#modalCreate">
+                                                <i class="bi bi-plus-lg me-1"></i> Thêm mới
+                                            </button>
+                                        </form>
+
+                                        <!-- Bảng danh sách khoa -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle table-faculties">
+                                                <thead class="table-light">
                                                     <tr>
-                                                        <td class="text-center fw-semibold text-muted">${status.index +
-                                                            1 + (page.number * page.size)}</td>
-                                                        <td><span class="badge bg-primary">${faculty.facultyCode}</span>
-                                                        </td>
-                                                        <td>${faculty.name}</td>
-                                                        <td>
-                                                            <c:choose>
-                                                                <c:when test="${not empty faculty.description}">
-                                                                    ${faculty.description}
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    <span class="text-muted">Chưa có mô tả</span>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span
-                                                                class="badge faculty-badge bg-info">${facultyStats[faculty.id]['majorCount']}</span>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span
-                                                                class="badge faculty-badge bg-success">${facultyStats[faculty.id]['teacherCount']}</span>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span
-                                                                class="badge faculty-badge bg-warning">${facultyStats[faculty.id]['studentCount']}</span>
-                                                        </td>
-                                                        <td>
-                                                            <!-- Direct Action Buttons -->
-                                                            <div class="d-flex gap-1 justify-content-center">
-                                                                <button type="button"
-                                                                    class="btn btn-sm btn-outline-primary edit-faculty"
-                                                                    data-faculty-id="${faculty.id}"
-                                                                    data-faculty-code="${fn:escapeXml(faculty.facultyCode)}"
-                                                                    data-name="${fn:escapeXml(faculty.name)}"
-                                                                    data-description="${fn:escapeXml(faculty.description)}"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="Chỉnh sửa">
-                                                                    <i class="bi bi-pencil-square"></i>
-                                                                </button>
-                                                                <button type="button"
-                                                                    class="btn btn-sm btn-outline-danger delete-faculty"
-                                                                    data-faculty-id="${faculty.id}"
-                                                                    data-faculty-code="${fn:escapeXml(faculty.facultyCode)}"
-                                                                    data-name="${fn:escapeXml(faculty.name)}"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="Xóa">
-                                                                    <i class="bi bi-trash"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
+                                                        <th width="60px">STT</th>
+                                                        <th width="120px">Mã khoa
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=facultyCode&dir=${dir=='asc' && sort=='facultyCode' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th width="220px">Tên khoa
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=name&dir=${dir=='asc' && sort=='name' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th width="180px">Mô tả</th>
+                                                        <th width="100px" class="text-center">Số ngành
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=majorCount&dir=${dir=='asc' && sort=='majorCount' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th width="100px" class="text-center">Số giáo viên
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=teacherCount&dir=${dir=='asc' && sort=='teacherCount' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th width="100px" class="text-center">Số sinh viên
+                                                            <a class="sort-link"
+                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=studentCount&dir=${dir=='asc' && sort=='studentCount' ? 'desc' : 'asc'}">
+                                                                <i class="bi bi-arrow-down-up"></i>
+                                                            </a>
+                                                        </th>
+                                                        <th width="120px" class="text-center">Thao tác</th>
                                                     </tr>
-                                                </c:forEach>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                </thead>
+                                                <tbody>
+                                                    <c:if test="${page.totalElements == 0}">
+                                                        <tr>
+                                                            <td colspan="8" class="text-center text-muted py-4">Chưa có
+                                                                khoa
+                                                                nào.</td>
+                                                        </tr>
+                                                    </c:if>
 
-                                    <!-- Phân trang -->
-                                    <c:if test="${page.totalPages > 1}">
-                                        <nav class="d-flex justify-content-end">
-                                            <ul class="pagination pagination-sm mb-0">
-                                                <li class="page-item ${page.first ? 'disabled' : ''}">
-                                                    <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
-                                                </li>
-                                                <c:forEach var="i" begin="0" end="${page.totalPages-1}">
-                                                    <li class="page-item ${i==page.number ? 'active' : ''}">
+                                                    <c:forEach var="faculty" items="${page.content}" varStatus="status">
+                                                        <tr>
+                                                            <td class="text-center fw-semibold text-muted">
+                                                                ${status.index +
+                                                                1 + (page.number * page.size)}</td>
+                                                            <td><span
+                                                                    class="badge bg-primary">${faculty.facultyCode}</span>
+                                                            </td>
+                                                            <td>${faculty.name}</td>
+                                                            <td>
+                                                                <c:choose>
+                                                                    <c:when test="${not empty faculty.description}">
+                                                                        ${faculty.description}
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <span class="text-muted">Chưa có mô tả</span>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span
+                                                                    class="badge faculty-badge bg-info">${facultyStats[faculty.id]['majorCount']}</span>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span
+                                                                    class="badge faculty-badge bg-success">${facultyStats[faculty.id]['teacherCount']}</span>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span
+                                                                    class="badge faculty-badge bg-warning">${facultyStats[faculty.id]['studentCount']}</span>
+                                                            </td>
+                                                            <td>
+                                                                <!-- Direct Action Buttons -->
+                                                                <div class="d-flex gap-1 justify-content-center">
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-outline-primary edit-faculty"
+                                                                        data-faculty-id="${faculty.id}"
+                                                                        data-faculty-code="${fn:escapeXml(faculty.facultyCode)}"
+                                                                        data-name="${fn:escapeXml(faculty.name)}"
+                                                                        data-description="${fn:escapeXml(faculty.description)}"
+                                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                        title="Chỉnh sửa">
+                                                                        <i class="bi bi-pencil-square"></i>
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-outline-danger delete-faculty"
+                                                                        data-faculty-id="${faculty.id}"
+                                                                        data-faculty-code="${fn:escapeXml(faculty.facultyCode)}"
+                                                                        data-name="${fn:escapeXml(faculty.name)}"
+                                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                        title="Xóa">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Phân trang -->
+                                        <c:if test="${page.totalPages > 1}">
+                                            <nav class="d-flex justify-content-end">
+                                                <ul class="pagination pagination-sm mb-0">
+                                                    <li class="page-item ${page.first ? 'disabled' : ''}">
                                                         <a class="page-link"
-                                                            href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                            href="?q=${fn:escapeXml(q)}&page=${page.number-1}&size=${page.size}&sort=${sort}&dir=${dir}">«</a>
                                                     </li>
-                                                </c:forEach>
-                                                <li class="page-item ${page.last ? 'disabled' : ''}">
-                                                    <a class="page-link"
-                                                        href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                    </c:if>
+                                                    <c:forEach var="i" begin="0" end="${page.totalPages-1}">
+                                                        <li class="page-item ${i==page.number ? 'active' : ''}">
+                                                            <a class="page-link"
+                                                                href="?q=${fn:escapeXml(q)}&page=${i}&size=${page.size}&sort=${sort}&dir=${dir}">${i+1}</a>
+                                                        </li>
+                                                    </c:forEach>
+                                                    <li class="page-item ${page.last ? 'disabled' : ''}">
+                                                        <a class="page-link"
+                                                            href="?q=${fn:escapeXml(q)}&page=${page.number+1}&size=${page.size}&sort=${sort}&dir=${dir}">»</a>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </c:if>
                                 </div>
                             </div>
                 </div>

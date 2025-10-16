@@ -82,279 +82,267 @@
                             </ol>
                         </nav>
 
-                        <!-- Alert Messages -->
-                        <c:if test="${not empty success}">
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>
-                                ${success}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
+                        <!-- Include notification modal -->
+                        <%@ include file="../common/notification-modal.jsp" %>
 
-                        <c:if test="${not empty error}">
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                ${error}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
-
-                        <!-- Thông tin lớp -->
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-md-8">
-                                        <h4 class="card-title mb-2">
-                                            <i class="fas fa-chart-line me-2"></i>
-                                            Quản lý điểm số - Lớp ${classroom.classCode}
-                                        </h4>
-                                        <p class="mb-1"><strong>Ngành:</strong> ${classroom.major.majorName}</p>
-                                        <p class="mb-1"><strong>Khóa:</strong> ${classroom.courseYear}</p>
-                                        <p class="mb-0"><strong>Sĩ số:</strong>
-                                            ${classroom.studentCount}/${classroom.maxSize} học sinh</p>
-                                    </div>
-                                    <div class="col-md-4 text-end">
-                                        <a href="/homeroom/classroom/${classroom.id}/students"
-                                            class="btn btn-outline-primary me-2">
-                                            <i class="fas fa-users me-1"></i>
-                                            Danh sách học sinh
-                                        </a>
-                                        <button class="btn btn-success" onclick="window.print()">
-                                            <i class="fas fa-print me-1"></i>
-                                            In báo cáo
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bộ lọc -->
-                        <div class="card mb-4 filter-card">
-                            <div class="card-body">
-                                <h5 class="card-title mb-3">
-                                    <i class="fas fa-filter me-2"></i>
-                                    Bộ lọc điểm số
-                                </h5>
-                                <form method="GET" action="/homeroom/classroom/${classroom.id}/scores">
-                                    <div class="row g-3 align-items-end">
-                                        <div class="col-md-4">
-                                            <label for="subjectId" class="form-label">Môn học</label>
-                                            <select class="form-select" id="subjectId" name="subjectId">
-                                                <option value="">-- Tất cả môn học --</option>
-                                                <c:forEach var="subject" items="${subjects}">
-                                                    <option value="${subject.id}" ${selectedSubjectId==subject.id
-                                                        ? 'selected' : '' }>
-                                                        ${subject.subjectCode} - ${subject.subjectName}
-                                                    </option>
-                                                </c:forEach>
-                                            </select>
+                            <!-- Thông tin lớp -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h4 class="card-title mb-2">
+                                                <i class="fas fa-chart-line me-2"></i>
+                                                Quản lý điểm số - Lớp ${classroom.classCode}
+                                            </h4>
+                                            <p class="mb-1"><strong>Ngành:</strong> ${classroom.major.majorName}</p>
+                                            <p class="mb-1"><strong>Khóa:</strong> ${classroom.courseYear}</p>
+                                            <p class="mb-0"><strong>Sĩ số:</strong>
+                                                ${classroom.studentCount}/${classroom.maxSize} học sinh</p>
                                         </div>
-                                        <div class="col-md-4">
-                                            <button type="submit" class="btn btn-light">
-                                                <i class="fas fa-search me-1"></i>
-                                                Lọc
-                                            </button>
-                                            <a href="/homeroom/classroom/${classroom.id}/scores"
-                                                class="btn btn-outline-light ms-2">
-                                                <i class="fas fa-refresh me-1"></i>
-                                                Xóa lọc
+                                        <div class="col-md-4 text-end">
+                                            <a href="/homeroom/classroom/${classroom.id}/students"
+                                                class="btn btn-outline-primary me-2">
+                                                <i class="fas fa-users me-1"></i>
+                                                Danh sách học sinh
                                             </a>
+                                            <button class="btn btn-success" onclick="window.print()">
+                                                <i class="fas fa-print me-1"></i>
+                                                In báo cáo
+                                            </button>
                                         </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Bảng điểm -->
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <h5 class="card-title mb-0">
-                                            <i class="fas fa-table me-2"></i>
-                                            Bảng điểm
-                                            <c:if test="${not empty selectedSubjectId}">
-                                                <small class="text-muted">
-                                                    (Đã lọc)
-                                                </small>
-                                            </c:if>
-                                        </h5>
-                                    </div>
-                                    <div class="col-auto">
-                                        <small class="text-muted">
-                                            Tổng cộng: <strong>${scores.totalElements}</strong> bản ghi
-                                        </small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-body p-0">
-                                <c:if test="${empty scores.content}">
-                                    <div class="text-center py-5">
-                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                        <h5 class="text-muted">Không có dữ liệu điểm</h5>
-                                        <p class="text-muted">
-                                            <c:if test="${not empty selectedSubjectId}">
-                                                Thử thay đổi bộ lọc để xem kết quả khác.
-                                            </c:if>
-                                            <c:if test="${empty selectedSubjectId}">
-                                                Chưa có điểm nào được nhập cho lớp này.
-                                            </c:if>
-                                        </p>
-                                    </div>
-                                </c:if>
 
-                                <c:if test="${not empty scores.content}">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover mb-0">
-                                            <thead class="table-primary sticky-header">
-                                                <tr>
-                                                    <th scope="col" style="width: 50px;">#</th>
-                                                    <th scope="col" style="width: 120px;">Mã SV</th>
-                                                    <th scope="col" style="width: 200px;">Họ và tên</th>
-                                                    <th scope="col" style="width: 150px;">Môn học</th>
-                                                    <th scope="col" style="width: 100px;">Học kỳ</th>
-                                                    <th scope="col" style="width: 100px;">Điểm TB</th>
-                                                    <th scope="col">Ghi chú</th>
-                                                    <th scope="col" style="width: 120px;">Thao tác</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <c:forEach var="score" items="${scores.content}" varStatus="status">
-                                                    <tr>
-                                                        <td>
-                                                            ${(scores.number * scores.size) + status.index + 1}
-                                                        </td>
-                                                        <td>
-                                                            <strong>${score.student.studentCode}</strong>
-                                                        </td>
-                                                        <td>
-                                                            <div class="d-flex align-items-center">
-                                                                <i class="fas fa-user-graduate me-2 text-primary"></i>
-                                                                <div>
-                                                                    <div>${score.student.user.fname}
-                                                                        ${score.student.user.lname}</div>
-                                                                    <small
-                                                                        class="text-muted">${score.student.user.username}</small>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <div>
-                                                                <strong>${score.subject.subjectCode}</strong>
-                                                            </div>
-                                                            <small
-                                                                class="text-muted">${score.subject.subjectName}</small>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-secondary">
-                                                        </td>
-                                                        <td>
-                                                            <c:choose>
-                                                                <c:when test="${score.avgScore >= 8.0}">
-                                                                    <span class="badge bg-success fs-6">
-                                                                        <fmt:formatNumber value="${score.avgScore}"
-                                                                            maxFractionDigits="1" />
-                                                                    </span>
-                                                                </c:when>
-                                                                <c:when test="${score.avgScore >= 6.5}">
-                                                                    <span class="badge bg-warning fs-6">
-                                                                        <fmt:formatNumber value="${score.avgScore}"
-                                                                            maxFractionDigits="1" />
-                                                                    </span>
-                                                                </c:when>
-                                                                <c:when test="${score.avgScore >= 5.0}">
-                                                                    <span class="badge bg-info fs-6">
-                                                                        <fmt:formatNumber value="${score.avgScore}"
-                                                                            maxFractionDigits="1" />
-                                                                    </span>
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    <span class="badge bg-danger fs-6">
-                                                                        <fmt:formatNumber value="${score.avgScore}"
-                                                                            maxFractionDigits="1" />
-                                                                    </span>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </td>
-                                                        <td>
-                                                            <c:if test="${not empty score.notes}">
-                                                                <span class="text-muted" title="${score.notes}">
-                                                                    <c:choose>
-                                                                        <c:when test="${fn:length(score.notes) > 50}">
-                                                                            ${fn:substring(score.notes, 0, 50)}...
-                                                                        </c:when>
-                                                                        <c:otherwise>
-                                                                            ${score.notes}
-                                                                        </c:otherwise>
-                                                                    </c:choose>
-                                                                </span>
-                                                            </c:if>
-                                                            <c:if test="${empty score.notes}">
-                                                                <span class="text-muted fst-italic">Không có ghi
-                                                                    chú</span>
-                                                            </c:if>
-                                                        </td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-outline-primary"
-                                                                data-score-id="${score.id}"
-                                                                data-student-name="${score.student.user.fname} ${score.student.user.lname}"
-                                                                data-subject-name="${score.subject.subjectName}"
-                                                                data-avg-score="${score.avgScore}"
-                                                                data-notes="${score.notes}"
-                                                                onclick="editScoreFromData(this)">
-                                                                <i class="fas fa-edit me-1"></i>
-                                                                Sửa
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                </c:forEach>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <!-- Pagination -->
-                                    <c:if test="${scores.totalPages > 1}">
-                                        <div class="card-footer">
-                                            <nav aria-label="Page navigation">
-                                                <ul class="pagination justify-content-center mb-0">
-                                                    <c:if test="${scores.hasPrevious()}">
-                                                        <li class="page-item">
-                                                            <a class="page-link"
-                                                                href="?page=${scores.number - 1}&size=${scores.size}&subjectId=${selectedSubjectId}">
-                                                                <i class="fas fa-chevron-left"></i> Trước
-                                                            </a>
-                                                        </li>
-                                                    </c:if>
-
-                                                    <c:set var="startPage"
-                                                        value="${scores.number - 2 < 0 ? 0 : scores.number - 2}" />
-                                                    <c:set var="endPage"
-                                                        value="${startPage + 4 >= scores.totalPages ? scores.totalPages - 1 : startPage + 4}" />
-
-                                                    <c:forEach var="i" begin="${startPage}" end="${endPage}">
-                                                        <li class="page-item ${i == scores.number ? 'active' : ''}">
-                                                            <a class="page-link"
-                                                                href="?page=${i}&size=${scores.size}&subjectId=${selectedSubjectId}">
-                                                                ${i + 1}
-                                                            </a>
-                                                        </li>
+                            <!-- Bộ lọc -->
+                            <div class="card mb-4 filter-card">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-3">
+                                        <i class="fas fa-filter me-2"></i>
+                                        Bộ lọc điểm số
+                                    </h5>
+                                    <form method="GET" action="/homeroom/classroom/${classroom.id}/scores">
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-md-4">
+                                                <label for="subjectId" class="form-label">Môn học</label>
+                                                <select class="form-select" id="subjectId" name="subjectId">
+                                                    <option value="">-- Tất cả môn học --</option>
+                                                    <c:forEach var="subject" items="${subjects}">
+                                                        <option value="${subject.id}" ${selectedSubjectId==subject.id
+                                                            ? 'selected' : '' }>
+                                                            ${subject.subjectCode} - ${subject.subjectName}
+                                                        </option>
                                                     </c:forEach>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="submit" class="btn btn-light">
+                                                    <i class="fas fa-search me-1"></i>
+                                                    Lọc
+                                                </button>
+                                                <a href="/homeroom/classroom/${classroom.id}/scores"
+                                                    class="btn btn-outline-light ms-2">
+                                                    <i class="fas fa-refresh me-1"></i>
+                                                    Xóa lọc
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
 
-                                                    <c:if test="${scores.hasNext()}">
-                                                        <li class="page-item">
-                                                            <a class="page-link"
-                                                                href="?page=${scores.number + 1}&size=${scores.size}&subjectId=${selectedSubjectId}">
-                                                                Sau <i class="fas fa-chevron-right"></i>
-                                                            </a>
-                                                        </li>
-                                                    </c:if>
-                                                </ul>
-                                            </nav>
+                            <!-- Bảng điểm -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <h5 class="card-title mb-0">
+                                                <i class="fas fa-table me-2"></i>
+                                                Bảng điểm
+                                                <c:if test="${not empty selectedSubjectId}">
+                                                    <small class="text-muted">
+                                                        (Đã lọc)
+                                                    </small>
+                                                </c:if>
+                                            </h5>
+                                        </div>
+                                        <div class="col-auto">
+                                            <small class="text-muted">
+                                                Tổng cộng: <strong>${scores.totalElements}</strong> bản ghi
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <c:if test="${empty scores.content}">
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                            <h5 class="text-muted">Không có dữ liệu điểm</h5>
+                                            <p class="text-muted">
+                                                <c:if test="${not empty selectedSubjectId}">
+                                                    Thử thay đổi bộ lọc để xem kết quả khác.
+                                                </c:if>
+                                                <c:if test="${empty selectedSubjectId}">
+                                                    Chưa có điểm nào được nhập cho lớp này.
+                                                </c:if>
+                                            </p>
                                         </div>
                                     </c:if>
-                                </c:if>
+
+                                    <c:if test="${not empty scores.content}">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-primary sticky-header">
+                                                    <tr>
+                                                        <th scope="col" style="width: 50px;">#</th>
+                                                        <th scope="col" style="width: 120px;">Mã SV</th>
+                                                        <th scope="col" style="width: 200px;">Họ và tên</th>
+                                                        <th scope="col" style="width: 150px;">Môn học</th>
+                                                        <th scope="col" style="width: 100px;">Học kỳ</th>
+                                                        <th scope="col" style="width: 100px;">Điểm TB</th>
+                                                        <th scope="col">Ghi chú</th>
+                                                        <th scope="col" style="width: 120px;">Thao tác</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="score" items="${scores.content}" varStatus="status">
+                                                        <tr>
+                                                            <td>
+                                                                ${(scores.number * scores.size) + status.index + 1}
+                                                            </td>
+                                                            <td>
+                                                                <strong>${score.student.studentCode}</strong>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <i
+                                                                        class="fas fa-user-graduate me-2 text-primary"></i>
+                                                                    <div>
+                                                                        <div>${score.student.user.fname}
+                                                                            ${score.student.user.lname}</div>
+                                                                        <small
+                                                                            class="text-muted">${score.student.user.username}</small>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div>
+                                                                    <strong>${score.subject.subjectCode}</strong>
+                                                                </div>
+                                                                <small
+                                                                    class="text-muted">${score.subject.subjectName}</small>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-secondary">
+                                                            </td>
+                                                            <td>
+                                                                <c:choose>
+                                                                    <c:when test="${score.avgScore >= 8.0}">
+                                                                        <span class="badge bg-success fs-6">
+                                                                            <fmt:formatNumber value="${score.avgScore}"
+                                                                                maxFractionDigits="1" />
+                                                                        </span>
+                                                                    </c:when>
+                                                                    <c:when test="${score.avgScore >= 6.5}">
+                                                                        <span class="badge bg-warning fs-6">
+                                                                            <fmt:formatNumber value="${score.avgScore}"
+                                                                                maxFractionDigits="1" />
+                                                                        </span>
+                                                                    </c:when>
+                                                                    <c:when test="${score.avgScore >= 5.0}">
+                                                                        <span class="badge bg-info fs-6">
+                                                                            <fmt:formatNumber value="${score.avgScore}"
+                                                                                maxFractionDigits="1" />
+                                                                        </span>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <span class="badge bg-danger fs-6">
+                                                                            <fmt:formatNumber value="${score.avgScore}"
+                                                                                maxFractionDigits="1" />
+                                                                        </span>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </td>
+                                                            <td>
+                                                                <c:if test="${not empty score.notes}">
+                                                                    <span class="text-muted" title="${score.notes}">
+                                                                        <c:choose>
+                                                                            <c:when
+                                                                                test="${fn:length(score.notes) > 50}">
+                                                                                ${fn:substring(score.notes, 0, 50)}...
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                ${score.notes}
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </span>
+                                                                </c:if>
+                                                                <c:if test="${empty score.notes}">
+                                                                    <span class="text-muted fst-italic">Không có ghi
+                                                                        chú</span>
+                                                                </c:if>
+                                                            </td>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    data-score-id="${score.id}"
+                                                                    data-student-name="${score.student.user.fname} ${score.student.user.lname}"
+                                                                    data-subject-name="${score.subject.subjectName}"
+                                                                    data-avg-score="${score.avgScore}"
+                                                                    data-notes="${score.notes}"
+                                                                    onclick="editScoreFromData(this)">
+                                                                    <i class="fas fa-edit me-1"></i>
+                                                                    Sửa
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Pagination -->
+                                        <c:if test="${scores.totalPages > 1}">
+                                            <div class="card-footer">
+                                                <nav aria-label="Page navigation">
+                                                    <ul class="pagination justify-content-center mb-0">
+                                                        <c:if test="${scores.hasPrevious()}">
+                                                            <li class="page-item">
+                                                                <a class="page-link"
+                                                                    href="?page=${scores.number - 1}&size=${scores.size}&subjectId=${selectedSubjectId}">
+                                                                    <i class="fas fa-chevron-left"></i> Trước
+                                                                </a>
+                                                            </li>
+                                                        </c:if>
+
+                                                        <c:set var="startPage"
+                                                            value="${scores.number - 2 < 0 ? 0 : scores.number - 2}" />
+                                                        <c:set var="endPage"
+                                                            value="${startPage + 4 >= scores.totalPages ? scores.totalPages - 1 : startPage + 4}" />
+
+                                                        <c:forEach var="i" begin="${startPage}" end="${endPage}">
+                                                            <li class="page-item ${i == scores.number ? 'active' : ''}">
+                                                                <a class="page-link"
+                                                                    href="?page=${i}&size=${scores.size}&subjectId=${selectedSubjectId}">
+                                                                    ${i + 1}
+                                                                </a>
+                                                            </li>
+                                                        </c:forEach>
+
+                                                        <c:if test="${scores.hasNext()}">
+                                                            <li class="page-item">
+                                                                <a class="page-link"
+                                                                    href="?page=${scores.number + 1}&size=${scores.size}&subjectId=${selectedSubjectId}">
+                                                                    Sau <i class="fas fa-chevron-right"></i>
+                                                                </a>
+                                                            </li>
+                                                        </c:if>
+                                                    </ul>
+                                                </nav>
+                                            </div>
+                                        </c:if>
+                                    </c:if>
+                                </div>
                             </div>
-                        </div>
                     </div>
 
                     <!-- Modal sửa điểm -->
@@ -478,6 +466,21 @@
                             }
                         }
                     </style>
+
+                    <script>
+                        // Check for flash messages on page load
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const successMessage = '${success}';
+                            if (successMessage && successMessage.trim() !== '') {
+                                showNotification('success', successMessage, 'Thành công');
+                            }
+
+                            const errorMessage = '${error}';
+                            if (errorMessage && errorMessage.trim() !== '') {
+                                showNotification('error', errorMessage, 'Lỗi');
+                            }
+                        });
+                    </script>
                 </body>
 
                 </html>
