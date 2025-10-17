@@ -1071,14 +1071,35 @@
                                                 const majorDescription = this.getAttribute('data-description');
                                                 const facultyName = this.getAttribute('data-faculty');
 
-                                                // Show major details in modal or alert (you can customize this)
-                                                const message = `Thông tin chi tiết ngành học:\n\n` +
-                                                    `Mã ngành: ${majorCode}\n` +
-                                                    `Tên ngành: ${majorName}\n` +
-                                                    `Mô tả: ${majorDescription || 'Không có mô tả'}\n` +
-                                                    `Khoa: ${facultyName}`;
+                                                // Fill modal with major details
+                                                document.getElementById('detailMajorCode').textContent = majorCode;
+                                                document.getElementById('detailMajorName').textContent = majorName;
+                                                document.getElementById('detailFaculty').textContent = facultyName;
+                                                document.getElementById('detailDescription').textContent = majorDescription || 'Chưa có mô tả';
 
-                                                alert(message);
+                                                // Show loading and reset statistics
+                                                document.getElementById('detailLoading').classList.remove('d-none');
+                                                document.getElementById('detailSubjectCount').textContent = '...';
+                                                document.getElementById('detailTotalCredits').textContent = '...';
+
+                                                // Show modal
+                                                const detailModal = new bootstrap.Modal(document.getElementById('majorDetailModal'));
+                                                detailModal.show();
+
+                                                // Fetch subject statistics
+                                                fetch(`/admin/majors/${majorId}/statistics`)
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        document.getElementById('detailSubjectCount').textContent = data.subjectCount || 0;
+                                                        document.getElementById('detailTotalCredits').textContent = data.totalCredits || 0;
+                                                        document.getElementById('detailLoading').classList.add('d-none');
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error fetching statistics:', error);
+                                                        document.getElementById('detailSubjectCount').textContent = 'N/A';
+                                                        document.getElementById('detailTotalCredits').textContent = 'N/A';
+                                                        document.getElementById('detailLoading').classList.add('d-none');
+                                                    });
                                             });
                                         });
 

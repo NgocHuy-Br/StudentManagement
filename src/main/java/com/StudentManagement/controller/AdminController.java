@@ -1958,6 +1958,42 @@ public class AdminController {
     }
 
     /**
+     * Lấy thống kê của ngành học
+     */
+    @GetMapping("/majors/{majorId}/statistics")
+    @ResponseBody
+    public Map<String, Object> getMajorStatistics(@PathVariable Long majorId) {
+        Map<String, Object> statistics = new HashMap<>();
+
+        try {
+            Major major = majorRepository.findById(majorId).orElse(null);
+            if (major != null) {
+                // Đếm số môn học
+                int subjectCount = major.getSubjects() != null ? major.getSubjects().size() : 0;
+
+                // Tính tổng tín chỉ
+                int totalCredits = 0;
+                if (major.getSubjects() != null) {
+                    totalCredits = major.getSubjects().stream()
+                            .mapToInt(subject -> subject.getCredit() != null ? subject.getCredit() : 0)
+                            .sum();
+                }
+
+                statistics.put("subjectCount", subjectCount);
+                statistics.put("totalCredits", totalCredits);
+            } else {
+                statistics.put("subjectCount", 0);
+                statistics.put("totalCredits", 0);
+            }
+        } catch (Exception e) {
+            statistics.put("subjectCount", 0);
+            statistics.put("totalCredits", 0);
+        }
+
+        return statistics;
+    }
+
+    /**
      * Cập nhật môn học
      */
     @PostMapping("/subjects/edit")
