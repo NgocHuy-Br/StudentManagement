@@ -21,8 +21,11 @@ import com.StudentManagement.repository.TeacherRepository;
 import com.StudentManagement.repository.UserRepository;
 import com.StudentManagement.service.ClassroomTeacherService;
 import com.StudentManagement.service.OverviewService;
+import com.StudentManagement.service.PdfService;
 import com.StudentManagement.util.DateFormatHelper;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,6 +62,7 @@ public class AdminController {
     private final ClassroomRepository classroomRepository;
     private final ClassroomTeacherService classroomTeacherService;
     private final OverviewService overviewService;
+    private final PdfService pdfService;
     private final PasswordEncoder passwordEncoder;
 
     // Pattern for course year validation
@@ -75,6 +79,7 @@ public class AdminController {
             ClassroomRepository classroomRepository,
             ClassroomTeacherService classroomTeacherService,
             OverviewService overviewService,
+            PdfService pdfService,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -87,6 +92,7 @@ public class AdminController {
         this.classroomRepository = classroomRepository;
         this.classroomTeacherService = classroomTeacherService;
         this.overviewService = overviewService;
+        this.pdfService = pdfService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -1221,7 +1227,7 @@ public class AdminController {
         Subject subject = subjectRepository.findById(subjectId).orElse(null);
         if (subject == null) {
             ra.addFlashAttribute("error", "Không tìm thấy môn học.");
-            return "redirect:/admin/majors/" + majorId + "/subjects";
+            return "redirect:/admin/majors?selectedMajorId=" + majorId;
         }
 
         Major major = majorRepository.findById(majorId).orElse(null);
@@ -1237,7 +1243,7 @@ public class AdminController {
         }
 
         ra.addFlashAttribute("success", "Đã xóa môn học khỏi ngành: " + subject.getSubjectCode());
-        return "redirect:/admin/majors/" + majorId + "/subjects";
+        return "redirect:/admin/majors?selectedMajorId=" + majorId;
     }
 
     // ===========================
@@ -1694,11 +1700,18 @@ public class AdminController {
                 if (subject.getMajors() == null) {
                     subject.setMajors(new ArrayList<>());
                 }
+                if (major.getSubjects() == null) {
+                    major.setSubjects(new ArrayList<>());
+                }
                 if (!subject.getMajors().contains(major)) {
                     subject.getMajors().add(major);
-                    subjectRepository.save(subject);
+                    major.getSubjects().add(subject);
                     addedCount++;
                 }
+            }
+
+            if (addedCount > 0) {
+                majorRepository.save(major);
             }
 
             redirectAttributes.addFlashAttribute("success",
@@ -1718,7 +1731,7 @@ public class AdminController {
     @PostMapping("/subjects/{subjectId}")
     @Transactional
     public String updateSubject(@PathVariable Long subjectId,
-            @RequestParam Long majorId,
+            @RequestParam(required = false) Long majorId,
             @RequestParam String subjectCode,
             @RequestParam String subjectName,
             @RequestParam(defaultValue = "0") int credit,
@@ -1727,14 +1740,14 @@ public class AdminController {
         Subject subject = subjectRepository.findById(subjectId).orElse(null);
         if (subject == null) {
             ra.addFlashAttribute("error", "Không tìm thấy môn học.");
-            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
         }
 
         // Kiểm tra trùng mã môn học với các môn khác
         Subject existingSubject = subjectRepository.findBySubjectCode(subjectCode.trim()).orElse(null);
         if (existingSubject != null && !existingSubject.getId().equals(subjectId)) {
             ra.addFlashAttribute("error", "Mã môn học đã tồn tại.");
-            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
         }
 
         subject.setSubjectCode(subjectCode.trim());
@@ -1744,7 +1757,7 @@ public class AdminController {
         subjectRepository.save(subject);
 
         ra.addFlashAttribute("success", "Cập nhật môn học thành công.");
-        return "redirect:/admin/majors?selectedMajorId=" + majorId;
+        return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
     }
 
     /**
@@ -1794,11 +1807,11 @@ public class AdminController {
     @PostMapping("/majors/{majorId}/subjects/add-existing")
     @Transactional
     public String addExistingSubjectToMajor(@PathVariable Long majorId,
-            @RequestParam Long existingSubjectId,
+            @RequestParam Long subjectId,
             RedirectAttributes ra) {
 
         Major major = majorRepository.findById(majorId).orElse(null);
-        Subject subject = subjectRepository.findById(existingSubjectId).orElse(null);
+        Subject subject = subjectRepository.findById(subjectId).orElse(null);
 
         if (major == null || subject == null) {
             ra.addFlashAttribute("error", "Không tìm thấy ngành hoặc môn học.");
@@ -1950,7 +1963,7 @@ public class AdminController {
     @PostMapping("/subjects/edit")
     @Transactional
     public String editSubject(@RequestParam Long id,
-            @RequestParam Long majorId,
+            @RequestParam(required = false) Long majorId,
             @RequestParam String subjectCode,
             @RequestParam String subjectName,
             @RequestParam int credit,
@@ -1962,21 +1975,21 @@ public class AdminController {
             Subject subject = subjectRepository.findById(id).orElse(null);
             if (subject == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy môn học");
-                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+                return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
             }
 
             // Kiểm tra mã môn học đã tồn tại ở môn khác chưa
             Subject existingSubject = subjectRepository.findBySubjectCode(subjectCode).orElse(null);
             if (existingSubject != null && !existingSubject.getId().equals(id)) {
                 ra.addFlashAttribute("error", "Mã môn học đã tồn tại");
-                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+                return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
             }
 
             // Kiểm tra tổng hệ số
             float totalWeight = attendanceWeight + midtermWeight + finalWeight;
             if (Math.abs(totalWeight - 100.0f) > 0.1f) {
                 ra.addFlashAttribute("error", "Tổng hệ số điểm phải bằng 100%");
-                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+                return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
             }
 
             // Cập nhật thông tin môn học
@@ -1994,10 +2007,10 @@ public class AdminController {
             updateScoresForSubject(subject);
 
             ra.addFlashAttribute("success", "Cập nhật môn học thành công");
-            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
-            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
         }
     }
 
@@ -2007,38 +2020,38 @@ public class AdminController {
     @PostMapping("/subjects/delete")
     @Transactional
     public String deleteSubject(@RequestParam Long id,
-            @RequestParam Long majorId,
+            @RequestParam(required = false) Long majorId,
             RedirectAttributes ra) {
         try {
             Subject subject = subjectRepository.findById(id).orElse(null);
             if (subject == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy môn học");
-                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+                return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
+            }
+
+            // Kiểm tra xem môn học có đang thuộc ngành nào không
+            long majorCount = majorRepository.countBySubjectsContaining(subject);
+            if (majorCount > 0) {
+                ra.addFlashAttribute("error", "Không thể xóa môn học vì đang thuộc " + majorCount
+                        + " ngành học. Hãy gỡ môn học khỏi tất cả ngành trước khi xóa.");
+                return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
             }
 
             // Kiểm tra xem có điểm số nào liên quan không
             long scoreCount = scoreRepository.countBySubjectId(id);
             if (scoreCount > 0) {
                 ra.addFlashAttribute("error", "Không thể xóa môn học vì có " + scoreCount + " điểm số liên quan");
-                return "redirect:/admin/majors?selectedMajorId=" + majorId;
-            }
-
-            // Xóa môn học khỏi tất cả ngành
-            List<Major> majors = majorRepository.findAll();
-            for (Major major : majors) {
-                if (major.getSubjects() != null) {
-                    major.getSubjects().removeIf(s -> s.getId().equals(id));
-                }
+                return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
             }
 
             // Xóa môn học
             subjectRepository.delete(subject);
 
             ra.addFlashAttribute("success", "Xóa môn học thành công");
-            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
-            return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            return majorId != null ? "redirect:/admin/majors?selectedMajorId=" + majorId : "redirect:/admin/majors";
         }
     }
 
@@ -2141,6 +2154,116 @@ public class AdminController {
         model.addAttribute("roleDisplay", roleDisplay);
 
         return "admin/scores";
+    }
+
+    /**
+     * Export bảng điểm ra PDF
+     */
+    @GetMapping("/scores/export-pdf")
+    public ResponseEntity<byte[]> exportScoresPdf(
+            @RequestParam(required = false) Long classroomId,
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) String search) {
+
+        try {
+            // Lấy tất cả lớp học
+            List<Classroom> allClasses = classroomRepository.findAll();
+
+            // Lấy tất cả môn học
+            List<Subject> subjects = subjectRepository.findAll();
+
+            // Logic tương tự như manageScores để lấy dữ liệu cần export
+            List<Student> students = new ArrayList<>();
+            List<com.StudentManagement.entity.Score> scores = new ArrayList<>();
+
+            if (classroomId != null) {
+                students = studentRepository.findByClassroomId(classroomId);
+
+                if (subjectId != null) {
+                    scores = scoreRepository.findByStudentClassroomIdAndSubjectId(classroomId, subjectId);
+                } else {
+                    Page<com.StudentManagement.entity.Score> scorePages = scoreRepository.findByClassroomId(classroomId,
+                            Pageable.unpaged());
+                    scores = scorePages.getContent();
+                }
+            } else {
+                for (Classroom classroom : allClasses) {
+                    students.addAll(studentRepository.findByClassroomId(classroom.getId()));
+
+                    if (subjectId != null) {
+                        scores.addAll(
+                                scoreRepository.findByStudentClassroomIdAndSubjectId(classroom.getId(), subjectId));
+                    } else {
+                        Page<com.StudentManagement.entity.Score> scorePages = scoreRepository
+                                .findByClassroomId(classroom.getId(), Pageable.unpaged());
+                        scores.addAll(scorePages.getContent());
+                    }
+                }
+            }
+
+            // Lọc theo tìm kiếm nếu có
+            if (search != null && !search.trim().isEmpty()) {
+                String searchTerm = search.trim().toLowerCase();
+                students = students.stream()
+                        .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
+                                (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
+                                        .contains(searchTerm))
+                        .collect(java.util.stream.Collectors.toList());
+
+                List<Long> filteredStudentIds = students.stream()
+                        .map(Student::getId)
+                        .collect(java.util.stream.Collectors.toList());
+
+                scores = scores.stream()
+                        .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+
+            // Lấy tên lớp và môn học
+            String classroomName = null;
+            String subjectName = null;
+
+            if (classroomId != null) {
+                Optional<Classroom> classroom = classroomRepository.findById(classroomId);
+                if (classroom.isPresent()) {
+                    classroomName = classroom.get().getClassCode();
+                }
+            }
+
+            if (subjectId != null) {
+                Optional<Subject> subject = subjectRepository.findById(subjectId);
+                if (subject.isPresent()) {
+                    subjectName = subject.get().getSubjectName();
+                }
+            }
+
+            // Tạo PDF
+            byte[] pdfData = pdfService.generateScoresPdf(scores, classroomId, subjectId, classroomName, subjectName);
+
+            // Tạo tên file
+            String fileName = "BangDiem";
+            if (classroomName != null) {
+                fileName += "_" + classroomName.replaceAll("[^\\w\\s-]", "");
+            }
+            if (subjectName != null) {
+                fileName += "_" + subjectName.replaceAll("[^\\w\\s-]", "");
+            }
+            fileName += "_" + java.time.LocalDate.now().toString() + ".pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", fileName);
+            headers.setContentLength(pdfData.length);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfData);
+
+        } catch (Exception e) {
+            // Log error
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     /**

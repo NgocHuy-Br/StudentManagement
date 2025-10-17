@@ -183,6 +183,14 @@
                                                     </div>
                                                 </div>
                                             </form>
+
+                                            <!-- Export PDF Button -->
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-outline-danger"
+                                                    onclick="exportToPdf()">
+                                                    <i class="bi bi-file-earmark-pdf"></i> Xuất PDF
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <c:if test="${not empty students or not empty scores}">
@@ -594,6 +602,32 @@
                                     document.getElementById('historyLoading').style.display = 'none';
                                     document.getElementById('historyError').style.display = 'block';
                                 });
+                        }
+
+                        function exportToPdf() {
+                            // Lấy các giá trị filter hiện tại
+                            const classroomId = document.getElementById('classroomSelect').value;
+                            const subjectId = document.getElementById('subjectSelect').value;
+                            const search = document.getElementById('searchInput').value;
+
+                            // Tạo URL với các tham số
+                            let url = '/admin/scores/export-pdf?';
+                            const params = new URLSearchParams();
+
+                            if (classroomId) {
+                                params.append('classroomId', classroomId);
+                            }
+                            if (subjectId) {
+                                params.append('subjectId', subjectId);
+                            }
+                            if (search && search.trim() !== '') {
+                                params.append('search', search.trim());
+                            }
+
+                            url += params.toString();
+
+                            // Tải file PDF
+                            window.open(url, '_blank');
                         }
 
                         // Check for flash messages on page load

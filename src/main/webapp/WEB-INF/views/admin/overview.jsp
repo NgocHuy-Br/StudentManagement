@@ -32,24 +32,6 @@
                             <!-- Include notification modal -->
                             <%@ include file="../common/notification-modal.jsp" %>
 
-                                <!-- Test Buttons for Popup -->
-                                <div class="row mt-2">
-                                    <div class="col-12">
-                                        <button type="button" class="btn btn-success btn-sm me-2"
-                                            onclick="showNotification('success', 'Test thông báo thành công', 'Test Success')">Test
-                                            Success</button>
-                                        <button type="button" class="btn btn-danger btn-sm me-2"
-                                            onclick="showNotification('error', 'Test thông báo lỗi', 'Test Error')">Test
-                                            Error</button>
-                                        <button type="button" class="btn btn-warning btn-sm me-2"
-                                            onclick="showNotification('warning', 'Test cảnh báo', 'Test Warning')">Test
-                                            Warning</button>
-                                        <button type="button" class="btn btn-info btn-sm"
-                                            onclick="showNotification('info', 'Test thông tin', 'Test Info')">Test
-                                            Info</button>
-                                    </div>
-                                </div>
-
                                 <div class="row mt-4 content-row">
                                     <!-- Thông tin tài khoản Admin -->
                                     <div class="col-xl-4 col-lg-5 mb-4">

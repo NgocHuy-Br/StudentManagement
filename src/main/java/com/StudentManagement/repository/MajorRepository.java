@@ -81,4 +81,8 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
       ORDER BY m.majorCode ASC
       """)
   List<Major> findByFacultyIdWithSubjectCount(@Param("facultyId") Long facultyId);
+
+  // Đếm số ngành chứa môn học cụ thể
+  @Query("SELECT COUNT(m) FROM Major m JOIN m.subjects s WHERE s = :subject")
+  Long countBySubjectsContaining(@Param("subject") com.StudentManagement.entity.Subject subject);
 }

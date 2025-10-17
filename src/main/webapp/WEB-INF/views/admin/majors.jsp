@@ -349,6 +349,30 @@
                                                                             placeholder="Tìm môn học...">
                                                                         <button class="btn btn-outline-primary btn-sm"
                                                                             type="submit">Tìm</button>
+                                                                        <c:if test="${not empty param.subjectSearch}">
+                                                                            <c:choose>
+                                                                                <c:when
+                                                                                    test="${not empty selectedMajorId}">
+                                                                                    <a href="${pageContext.request.contextPath}/admin/majors?selectedMajorId=${selectedMajorId}"
+                                                                                        class="btn btn-outline-secondary btn-sm">
+                                                                                        <i class="bi bi-x-circle"></i>
+                                                                                    </a>
+                                                                                </c:when>
+                                                                                <c:when
+                                                                                    test="${param.viewAll eq 'true'}">
+                                                                                    <a href="${pageContext.request.contextPath}/admin/majors?viewAll=true"
+                                                                                        class="btn btn-outline-secondary btn-sm">
+                                                                                        <i class="bi bi-x-circle"></i>
+                                                                                    </a>
+                                                                                </c:when>
+                                                                                <c:otherwise>
+                                                                                    <a href="${pageContext.request.contextPath}/admin/majors"
+                                                                                        class="btn btn-outline-secondary btn-sm">
+                                                                                        <i class="bi bi-x-circle"></i>
+                                                                                    </a>
+                                                                                </c:otherwise>
+                                                                            </c:choose>
+                                                                        </c:if>
                                                                     </div>
                                                                     <input type="hidden" name="selectedMajorId"
                                                                         id="selectedMajorIdInput"
@@ -459,11 +483,10 @@
                                                                                                     class="bi bi-pencil"></i>
                                                                                             </button>
                                                                                             <button
-                                                                                                class="btn btn-sm btn-outline-danger delete-subject-btn"
-                                                                                                data-id="${subject.id}"
-                                                                                                data-code="${subject.subjectCode}">
+                                                                                                class="btn btn-sm btn-danger remove-subject-button"
+                                                                                                onclick="handleSubjectRemoval('${subject.id}', '${subject.subjectCode}')">
                                                                                                 <i
-                                                                                                    class="bi bi-trash"></i>
+                                                                                                    class="bi bi-x-circle"></i>
                                                                                             </button>
                                                                                         </td>
                                                                                     </tr>
@@ -499,914 +522,633 @@
                                         </div>
                                     </div>
                                 </div>
-                    </div>
-                    </div>
-                    </div>
 
-                    <!-- Add Major Modal -->
-                    <div class="modal fade" id="addMajorModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form method="post" action="${pageContext.request.contextPath}/admin/majors">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Thêm ngành học mới</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label class="form-label">Khoa</label>
-                                            <select class="form-select" name="facultyId" required>
-                                                <option value="">-- Chọn khoa --</option>
-                                                <c:forEach var="faculty" items="${faculties}">
-                                                    <option value="${faculty.id}">${faculty.facultyCode} -
-                                                        ${faculty.name}</option>
-                                                </c:forEach>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Mã ngành</label>
-                                            <input type="text" class="form-control" name="majorCode" required
-                                                placeholder="VD: CNTT">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Tên ngành</label>
-                                            <input type="text" class="form-control" name="majorName" required
-                                                placeholder="VD: Công nghệ thông tin">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Mô tả</label>
-                                            <textarea class="form-control" name="description" rows="3"
-                                                placeholder="Mô tả về ngành học"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="submit" class="btn btn-success">Thêm ngành
-                                            học</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Edit Major Modal -->
-                    <div class="modal fade" id="editMajorModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form method="post" action="${pageContext.request.contextPath}/admin/majors/edit">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Chỉnh sửa ngành học</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <input type="hidden" id="editMajorId" name="id">
-                                        <div class="mb-3">
-                                            <label class="form-label">Khoa</label>
-                                            <select class="form-select" id="editMajorFacultyId" name="facultyId"
-                                                required>
-                                                <option value="">-- Chọn khoa --</option>
-                                                <c:forEach var="faculty" items="${faculties}">
-                                                    <option value="${faculty.id}">${faculty.facultyCode} -
-                                                        ${faculty.name}</option>
-                                                </c:forEach>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Mã ngành</label>
-                                            <input type="text" class="form-control" id="editMajorCode" name="majorCode"
-                                                required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Tên ngành</label>
-                                            <input type="text" class="form-control" id="editMajorName" name="majorName"
-                                                required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Mô tả</label>
-                                            <textarea class="form-control" id="editMajorDescription" name="description"
-                                                rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="submit" class="btn btn-warning">Cập nhật</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Delete Major Modal -->
-                    <div class="modal fade" id="deleteMajorModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-danger text-white">
-                                    <h5 class="modal-title">Xác nhận xóa</h5>
-                                    <button type="button" class="btn-close btn-close-white"
-                                        data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Bạn có chắc chắn muốn xóa ngành học <strong id="deleteMajorName"></strong>?
-                                    </p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <form method="post" action="${pageContext.request.contextPath}/admin/majors/delete"
-                                        style="display: inline;">
-                                        <input type="hidden" id="deleteMajorId" name="id">
-                                        <button type="submit" class="btn btn-danger">Xóa</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Major Detail Modal -->
-                    <div class="modal fade" id="majorDetailModal" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header bg-info text-white">
-                                    <h5 class="modal-title">
-                                        <i class="bi bi-info-circle me-2"></i>Chi tiết ngành học
-                                    </h5>
-                                    <button type="button" class="btn-close btn-close-white"
-                                        data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="card h-100">
-                                                <div class="card-header bg-light">
-                                                    <h6 class="card-title mb-0">
-                                                        <i class="bi bi-mortarboard me-2"></i>Thông tin cơ
-                                                        bản
-                                                    </h6>
+                                <!-- Add Major Modal -->
+                                <div class="modal fade" id="addMajorModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post"
+                                                action="${pageContext.request.contextPath}/admin/majors">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Thêm ngành học mới</h5>
+                                                    <button type="button" class="btn-close"
+                                                        data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <div class="card-body">
-                                                    <table class="table table-borderless">
-                                                        <tr>
-                                                            <td><strong>Mã ngành:</strong></td>
-                                                            <td><span id="detailMajorCode"
-                                                                    class="badge bg-primary"></span></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><strong>Tên ngành:</strong></td>
-                                                            <td id="detailMajorName"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><strong>Thuộc khoa:</strong></td>
-                                                            <td><span id="detailFaculty"
-                                                                    class="badge bg-secondary"></span></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><strong>Mô tả:</strong></td>
-                                                            <td id="detailDescription" class="text-muted">
-                                                            </td>
-                                                        </tr>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Khoa</label>
+                                                        <select class="form-select" name="facultyId" required>
+                                                            <option value="">-- Chọn khoa --</option>
+                                                            <c:forEach var="faculty" items="${faculties}">
+                                                                <option value="${faculty.id}">${faculty.facultyCode} -
+                                                                    ${faculty.name}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Mã ngành</label>
+                                                        <input type="text" class="form-control" name="majorCode"
+                                                            required placeholder="VD: CNTT">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Tên ngành</label>
+                                                        <input type="text" class="form-control" name="majorName"
+                                                            required placeholder="VD: Công nghệ thông tin">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Mô tả</label>
+                                                        <textarea class="form-control" name="description" rows="3"
+                                                            placeholder="Mô tả về ngành học"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-success">Thêm ngành
+                                                        học</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Edit Major Modal -->
+                                <div class="modal fade" id="editMajorModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post"
+                                                action="${pageContext.request.contextPath}/admin/majors/edit">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Chỉnh sửa ngành học</h5>
+                                                    <button type="button" class="btn-close"
+                                                        data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <input type="hidden" id="editMajorId" name="id">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Khoa</label>
+                                                        <select class="form-select" id="editMajorFacultyId"
+                                                            name="facultyId" required>
+                                                            <option value="">-- Chọn khoa --</option>
+                                                            <c:forEach var="faculty" items="${faculties}">
+                                                                <option value="${faculty.id}">${faculty.facultyCode} -
+                                                                    ${faculty.name}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Mã ngành</label>
+                                                        <input type="text" class="form-control" id="editMajorCode"
+                                                            name="majorCode" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Tên ngành</label>
+                                                        <input type="text" class="form-control" id="editMajorName"
+                                                            name="majorName" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Mô tả</label>
+                                                        <textarea class="form-control" id="editMajorDescription"
+                                                            name="description" rows="3"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Delete Major Modal -->
+                                <div class="modal fade" id="deleteMajorModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">Xác nhận xóa</h5>
+                                                <button type="button" class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Bạn có chắc chắn muốn xóa ngành học <strong
+                                                        id="deleteMajorName"></strong>?
+                                                </p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Hủy</button>
+                                                <form method="post"
+                                                    action="${pageContext.request.contextPath}/admin/majors/delete"
+                                                    style="display: inline;">
+                                                    <input type="hidden" id="deleteMajorId" name="id">
+                                                    <button type="submit" class="btn btn-danger">Xóa</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Major Detail Modal -->
+                                <div class="modal fade" id="majorDetailModal" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-info text-white">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-info-circle me-2"></i>Chi tiết ngành học
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100">
+                                                            <div class="card-header bg-light">
+                                                                <h6 class="card-title mb-0">
+                                                                    <i class="bi bi-mortarboard me-2"></i>Thông tin cơ
+                                                                    bản
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <table class="table table-borderless">
+                                                                    <tr>
+                                                                        <td><strong>Mã ngành:</strong></td>
+                                                                        <td><span id="detailMajorCode"
+                                                                                class="badge bg-primary"></span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Tên ngành:</strong></td>
+                                                                        <td id="detailMajorName"></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Thuộc khoa:</strong></td>
+                                                                        <td><span id="detailFaculty"
+                                                                                class="badge bg-secondary"></span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Mô tả:</strong></td>
+                                                                        <td id="detailDescription" class="text-muted">
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100">
+                                                            <div class="card-header bg-light">
+                                                                <h6 class="card-title mb-0">
+                                                                    <i class="bi bi-graph-up me-2"></i>Thống kê
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="row text-center">
+                                                                    <div class="col-6">
+                                                                        <div class="border rounded p-3 mb-3">
+                                                                            <h3 class="text-info mb-1"
+                                                                                id="detailSubjectCount">0
+                                                                            </h3>
+                                                                            <small class="text-muted">Tổng môn
+                                                                                học</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <div class="border rounded p-3 mb-3">
+                                                                            <h3 class="text-success mb-1"
+                                                                                id="detailTotalCredits">0
+                                                                            </h3>
+                                                                            <small class="text-muted">Tổng tín
+                                                                                chỉ</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div id="detailLoading" class="text-center d-none">
+                                                                    <div class="spinner-border spinner-border-sm"
+                                                                        role="status">
+                                                                        <span class="visually-hidden">Loading...</span>
+                                                                    </div>
+                                                                    <p class="mt-2 mb-0">Đang tải dữ liệu...</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Đóng</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add Subject Modal -->
+                                <div class="modal fade" id="addSubjectModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post" id="addSubjectForm"
+                                                action="${pageContext.request.contextPath}/admin/subjects">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Thêm môn học mới</h5>
+                                                    <button type="button" class="btn-close"
+                                                        data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Mã môn học</label>
+                                                        <input type="text" class="form-control" name="subjectCode"
+                                                            required placeholder="VD: IT101">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Tên môn học</label>
+                                                        <input type="text" class="form-control" name="subjectName"
+                                                            required placeholder="VD: Lập trình cơ bản">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Số tín chỉ</label>
+                                                        <input type="number" class="form-control" name="credit" min="1"
+                                                            max="10" value="3" required>
+                                                    </div>
+
+                                                    <!-- Hệ số điểm -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Hệ số điểm</label>
+                                                        <div class="row g-2">
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small">Chuyên cần (%)</label>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm"
+                                                                    name="attendanceWeight" min="0" max="100" value="10"
+                                                                    placeholder="10" step="5">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small">Giữa kỳ (%)</label>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm"
+                                                                    name="midtermWeight" min="0" max="100" value="30"
+                                                                    placeholder="30" step="5">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small">Cuối kỳ (%)</label>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm"
+                                                                    name="finalWeight" min="0" max="100" value="60"
+                                                                    placeholder="60" step="5">
+                                                            </div>
+                                                        </div>
+                                                        <small class="text-muted">Tổng hệ số phải bằng 100%</small>
+                                                    </div>
+                                                    <c:if test="${param.viewAll ne 'true' and not empty selectedMajor}">
+                                                        <div class="alert alert-info">
+                                                            <i class="fas fa-info-circle"></i>
+                                                            Môn học sẽ được tự động gán vào ngành:
+                                                            <strong>${selectedMajor.majorName}</strong>
+                                                        </div>
+                                                    </c:if>
+                                                    <c:if test="${param.viewAll eq 'true' or empty selectedMajor}">
+                                                        <div class="alert alert-warning">
+                                                            <i class="fas fa-exclamation-triangle"></i>
+                                                            Môn học sẽ được tạo độc lập, chưa gán vào ngành nào. Bạn có
+                                                            thể gán vào ngành sau.
+                                                        </div>
+                                                    </c:if>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-primary">Thêm môn học</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Edit Subject Modal -->
+                                <div class="modal fade" id="editSubjectModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post"
+                                                action="${pageContext.request.contextPath}/admin/subjects/edit"
+                                                id="editSubjectForm">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Chỉnh sửa môn học</h5>
+                                                    <button type="button" class="btn-close"
+                                                        data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <input type="hidden" id="editSubjectId" name="id">
+                                                    <input type="hidden" name="majorId" value="${selectedMajorId}">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Mã môn học</label>
+                                                        <input type="text" class="form-control" id="editSubjectCode"
+                                                            name="subjectCode" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Tên môn học</label>
+                                                        <input type="text" class="form-control" id="editSubjectName"
+                                                            name="subjectName" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Số tín chỉ</label>
+                                                        <input type="number" class="form-control" id="editSubjectCredit"
+                                                            name="credit" min="1" max="10" required>
+                                                    </div>
+
+                                                    <!-- Hệ số điểm -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Hệ số điểm</label>
+                                                        <div class="row g-2">
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small">Chuyên cần (%)</label>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm"
+                                                                    id="editAttendanceWeight" name="attendanceWeight"
+                                                                    min="0" max="100" placeholder="10" step="5">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small">Giữa kỳ (%)</label>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm"
+                                                                    id="editMidtermWeight" name="midtermWeight" min="0"
+                                                                    max="100" placeholder="30" step="5">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label small">Cuối kỳ (%)</label>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm"
+                                                                    id="editFinalWeight" name="finalWeight" min="0"
+                                                                    max="100" placeholder="60" step="5">
+                                                            </div>
+                                                        </div>
+                                                        <small class="text-muted">Tổng hệ số phải bằng 100%</small>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Delete Subject Modal -->
+                                <div class="modal fade" id="deleteSubjectModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">Xác nhận xóa</h5>
+                                                <button type="button" class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p id="deleteSubjectMessage">Bạn có chắc chắn muốn xóa môn học <strong
+                                                        id="deleteSubjectName"></strong>?</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Hủy</button>
+                                                <form method="post" id="deleteSubjectForm"
+                                                    action="${pageContext.request.contextPath}/admin/subjects/delete"
+                                                    style="display: inline;">
+                                                    <input type="hidden" id="deleteSubjectId" name="id">
+                                                    <input type="hidden" id="deleteSubjectIdParam" name="subjectId">
+                                                    <input type="hidden" name="majorId" value="${selectedMajorId}">
+                                                    <button type="submit" class="btn btn-danger"
+                                                        id="deleteSubjectButton">Xóa</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add Existing Subject to Major Modal -->
+                                <div class="modal fade" id="addExistingSubjectModal" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-plus-square me-2"></i>
+                                                    Thêm môn học có sẵn vào ngành: <span
+                                                        class="text-primary">${selectedMajor.majorName}</span>
+                                                </h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tìm kiếm môn học:</label>
+                                                    <input type="text" class="form-control" id="searchExistingSubject"
+                                                        placeholder="Nhập mã môn hoặc tên môn học...">
+                                                </div>
+
+                                                <div class="table-responsive"
+                                                    style="max-height: 400px; overflow-y: auto;">
+                                                    <table class="table table-hover table-sm">
+                                                        <thead class="table-light sticky-top">
+                                                            <tr>
+                                                                <th width="60px">Chọn</th>
+                                                                <th>Mã môn</th>
+                                                                <th>Tên môn học</th>
+                                                                <th>Tín chỉ</th>
+                                                                <th>Trạng thái</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="existingSubjectsTable">
+                                                            <!-- Will be populated by JavaScript -->
+                                                        </tbody>
                                                     </table>
                                                 </div>
+
+                                                <div class="mt-3">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-info-circle me-1"></i>
+                                                        Chỉ hiển thị các môn học chưa có trong ngành này
+                                                    </small>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="card h-100">
-                                                <div class="card-header bg-light">
-                                                    <h6 class="card-title mb-0">
-                                                        <i class="bi bi-graph-up me-2"></i>Thống kê
-                                                    </h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="row text-center">
-                                                        <div class="col-6">
-                                                            <div class="border rounded p-3 mb-3">
-                                                                <h3 class="text-info mb-1" id="detailSubjectCount">0
-                                                                </h3>
-                                                                <small class="text-muted">Tổng môn
-                                                                    học</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <div class="border rounded p-3 mb-3">
-                                                                <h3 class="text-success mb-1" id="detailTotalCredits">0
-                                                                </h3>
-                                                                <small class="text-muted">Tổng tín
-                                                                    chỉ</small>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div id="detailLoading" class="text-center d-none">
-                                                        <div class="spinner-border spinner-border-sm" role="status">
-                                                            <span class="visually-hidden">Loading...</span>
-                                                        </div>
-                                                        <p class="mt-2 mb-0">Đang tải dữ liệu...</p>
-                                                    </div>
-                                                </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Đóng</button>
+                                                <button type="button" class="btn btn-success" id="addSelectedSubjects"
+                                                    disabled>
+                                                    <i class="bi bi-check-lg me-1"></i>Thêm môn học đã chọn
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-bs-dismiss="modal">Đóng</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Add Subject Modal -->
-                    <div class="modal fade" id="addSubjectModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form method="post" id="addSubjectForm"
-                                    action="${pageContext.request.contextPath}/admin/subjects">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Thêm môn học mới</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label class="form-label">Mã môn học</label>
-                                            <input type="text" class="form-control" name="subjectCode" required
-                                                placeholder="VD: IT101">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Tên môn học</label>
-                                            <input type="text" class="form-control" name="subjectName" required
-                                                placeholder="VD: Lập trình cơ bản">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Số tín chỉ</label>
-                                            <input type="number" class="form-control" name="credit" min="1" max="10"
-                                                value="3" required>
-                                        </div>
-
-                                        <!-- Hệ số điểm -->
-                                        <div class="mb-3">
-                                            <label class="form-label">Hệ số điểm</label>
-                                            <div class="row g-2">
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">Chuyên cần (%)</label>
-                                                    <input type="number" class="form-control form-control-sm"
-                                                        name="attendanceWeight" min="0" max="100" value="10"
-                                                        placeholder="10" step="5">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">Giữa kỳ (%)</label>
-                                                    <input type="number" class="form-control form-control-sm"
-                                                        name="midtermWeight" min="0" max="100" value="30"
-                                                        placeholder="30" step="5">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">Cuối kỳ (%)</label>
-                                                    <input type="number" class="form-control form-control-sm"
-                                                        name="finalWeight" min="0" max="100" value="60" placeholder="60"
-                                                        step="5">
-                                                </div>
-                                            </div>
-                                            <small class="text-muted">Tổng hệ số phải bằng 100%</small>
-                                        </div>
-                                        <c:if test="${param.viewAll ne 'true' and not empty selectedMajor}">
-                                            <div class="alert alert-info">
-                                                <i class="fas fa-info-circle"></i>
-                                                Môn học sẽ được tự động gán vào ngành:
-                                                <strong>${selectedMajor.majorName}</strong>
-                                            </div>
-                                        </c:if>
-                                        <c:if test="${param.viewAll eq 'true' or empty selectedMajor}">
-                                            <div class="alert alert-warning">
-                                                <i class="fas fa-exclamation-triangle"></i>
-                                                Môn học sẽ được tạo độc lập, chưa gán vào ngành nào. Bạn có
-                                                thể gán vào ngành sau.
-                                            </div>
-                                        </c:if>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="submit" class="btn btn-primary">Thêm môn học</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Edit Subject Modal -->
-                    <div class="modal fade" id="editSubjectModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form method="post" action="${pageContext.request.contextPath}/admin/subjects/edit"
-                                    id="editSubjectForm">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Chỉnh sửa môn học</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <input type="hidden" id="editSubjectId" name="id">
-                                        <input type="hidden" name="majorId" value="${selectedMajorId}">
-                                        <div class="mb-3">
-                                            <label class="form-label">Mã môn học</label>
-                                            <input type="text" class="form-control" id="editSubjectCode"
-                                                name="subjectCode" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Tên môn học</label>
-                                            <input type="text" class="form-control" id="editSubjectName"
-                                                name="subjectName" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Số tín chỉ</label>
-                                            <input type="number" class="form-control" id="editSubjectCredit"
-                                                name="credit" min="1" max="10" required>
-                                        </div>
-
-                                        <!-- Hệ số điểm -->
-                                        <div class="mb-3">
-                                            <label class="form-label">Hệ số điểm</label>
-                                            <div class="row g-2">
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">Chuyên cần (%)</label>
-                                                    <input type="number" class="form-control form-control-sm"
-                                                        id="editAttendanceWeight" name="attendanceWeight" min="0"
-                                                        max="100" placeholder="10" step="5">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">Giữa kỳ (%)</label>
-                                                    <input type="number" class="form-control form-control-sm"
-                                                        id="editMidtermWeight" name="midtermWeight" min="0" max="100"
-                                                        placeholder="30" step="5">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">Cuối kỳ (%)</label>
-                                                    <input type="number" class="form-control form-control-sm"
-                                                        id="editFinalWeight" name="finalWeight" min="0" max="100"
-                                                        placeholder="60" step="5">
-                                                </div>
-                                            </div>
-                                            <small class="text-muted">Tổng hệ số phải bằng 100%</small>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="submit" class="btn btn-warning">Cập nhật</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Delete Subject Modal -->
-                    <div class="modal fade" id="deleteSubjectModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-danger text-white">
-                                    <h5 class="modal-title">Xác nhận xóa</h5>
-                                    <button type="button" class="btn-close btn-close-white"
-                                        data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Bạn có chắc chắn muốn xóa môn học <strong id="deleteSubjectName"></strong>?
-                                    </p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <form method="post"
-                                        action="${pageContext.request.contextPath}/admin/subjects/delete"
-                                        style="display: inline;">
-                                        <input type="hidden" id="deleteSubjectId" name="id">
-                                        <input type="hidden" name="majorId" value="${selectedMajorId}">
-                                        <button type="submit" class="btn btn-danger">Xóa</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Add Existing Subject to Major Modal -->
-                    <div class="modal fade" id="addExistingSubjectModal" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="bi bi-plus-square me-2"></i>
-                                        Thêm môn học có sẵn vào ngành: <span
-                                            class="text-primary">${selectedMajor.majorName}</span>
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Tìm kiếm môn học:</label>
-                                        <input type="text" class="form-control" id="searchExistingSubject"
-                                            placeholder="Nhập mã môn hoặc tên môn học...">
-                                    </div>
-
-                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                        <table class="table table-hover table-sm">
-                                            <thead class="table-light sticky-top">
-                                                <tr>
-                                                    <th width="60px">Chọn</th>
-                                                    <th>Mã môn</th>
-                                                    <th>Tên môn học</th>
-                                                    <th>Tín chỉ</th>
-                                                    <th>Trạng thái</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="existingSubjectsTable">
-                                                <!-- Will be populated by JavaScript -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <small class="text-muted">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            Chỉ hiển thị các môn học chưa có trong ngành này
-                                        </small>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-bs-dismiss="modal">Đóng</button>
-                                    <button type="button" class="btn btn-success" id="addSelectedSubjects" disabled>
-                                        <i class="bi bi-check-lg me-1"></i>Thêm môn học đã chọn
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function () {
-                            // Check if buttons exist
-                            const editBtns = document.querySelectorAll('.edit-major-btn');
-                            const deleteBtns = document.querySelectorAll('.delete-major-btn');
-
-                            // Add direct event listeners to each button
-                            editBtns.forEach(btn => {
-                                btn.addEventListener('click', function (e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-
-                                    // Show modal logic here
-                                    const id = this.dataset.id;
-                                    const code = this.dataset.code;
-                                    const name = this.dataset.name;
-                                    const description = this.dataset.description || '';
-                                    const facultyId = this.dataset.facultyId || this.getAttribute('data-faculty-id');
-
-                                    document.getElementById('editMajorId').value = id;
-                                    document.getElementById('editMajorFacultyId').value = facultyId;
-                                    document.getElementById('editMajorCode').value = code;
-                                    document.getElementById('editMajorName').value = name;
-                                    document.getElementById('editMajorDescription').value = description;
-
-                                    const editModal = new bootstrap.Modal(document.getElementById('editMajorModal'));
-                                    editModal.show();
-                                });
-                            });
-
-                            // View detail buttons
-                            const viewDetailBtns = document.querySelectorAll('.view-detail-btn');
-                            viewDetailBtns.forEach(btn => {
-                                btn.addEventListener('click', function (e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-
-                                    const majorId = this.dataset.id;
-                                    const majorCode = this.dataset.code;
-                                    const majorName = this.dataset.name;
-                                    const description = this.dataset.description || 'Không có mô tả';
-                                    const faculty = this.dataset.faculty;
-
-                                    // Fill basic information
-                                    document.getElementById('detailMajorCode').textContent = majorCode;
-                                    document.getElementById('detailMajorName').textContent = majorName;
-                                    document.getElementById('detailFaculty').textContent = faculty;
-                                    document.getElementById('detailDescription').textContent = description;
-
-                                    // Show loading
-                                    document.getElementById('detailLoading').classList.remove('d-none');
-                                    document.getElementById('detailSubjectCount').textContent = '0';
-                                    document.getElementById('detailTotalCredits').textContent = '0';
-
-                                    // Load major details via API
-                                    loadMajorDetails(majorId);
-
-                                    // Show modal
-                                    const detailModal = new bootstrap.Modal(document.getElementById('majorDetailModal'));
-                                    detailModal.show();
-                                });
-                            });
-
-                            deleteBtns.forEach(btn => {
-                                btn.addEventListener('click', function (e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-
-                                    // Show modal logic here
-                                    const id = this.dataset.id;
-                                    const code = this.dataset.code;
-
-                                    document.getElementById('deleteMajorId').value = id;
-                                    document.getElementById('deleteMajorName').textContent = code;
-
-                                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteMajorModal'));
-                                    deleteModal.show();
-                                });
-                            });
-
-                            // Function to load major details
-                            function loadMajorDetails(majorId) {
-                                fetch('${pageContext.request.contextPath}/admin/api/major-details/' + majorId)
-                                    .then(response => {
-                                        if (!response.ok) {
-                                            throw new Error('Failed to load major details');
-                                        }
-                                        return response.json();
-                                    })
-                                    .then(data => {
-                                        // Hide loading
-                                        document.getElementById('detailLoading').classList.add('d-none');
-
-                                        // Update statistics
-                                        document.getElementById('detailSubjectCount').textContent = data.subjectCount || 0;
-                                        document.getElementById('detailTotalCredits').textContent = data.totalCredits || 0;
-                                    })
-                                    .catch(error => {
-                                        console.error('Error loading major details:', error);
-                                        // Hide loading and show error
-                                        document.getElementById('detailLoading').classList.add('d-none');
-                                    });
-                            }
-
-                            // Select Major Function (global scope needed for onclick)
-                            window.selectMajor = function (majorId) {
-                                // Cập nhật dropdown khi click ngành từ danh sách bên trái
-                                const majorSelect = document.getElementById('majorSelect');
-                                if (majorSelect) {
-                                    majorSelect.value = majorId;
-                                }
-
-                                const url = new URL(window.location);
-                                url.searchParams.set('selectedMajorId', majorId);
-                                url.searchParams.delete('viewAll'); // Xóa viewAll khi chọn ngành cụ thể
-                                window.location.href = url.toString();
-                            }
-
-                            // Major Selection Dropdown Handler
-                            const majorSelect = document.getElementById('majorSelect');
-                            if (majorSelect) {
-                                majorSelect.addEventListener('change', function () {
-                                    const url = new URL(window.location);
-                                    const selectedValue = this.value;
-
-                                    if (selectedValue === 'all') {
-                                        // Chuyển sang chế độ xem tất cả môn học
-                                        url.searchParams.set('viewAll', 'true');
-                                        url.searchParams.delete('selectedMajorId');
-                                    } else {
-                                        // Chuyển về chế độ xem theo ngành cụ thể
-                                        url.searchParams.set('selectedMajorId', selectedValue);
-                                        url.searchParams.delete('viewAll');
-                                    }
-
-                                    // Xóa search để tránh conflict
-                                    url.searchParams.delete('subjectSearch');
-
-                                    window.location.href = url.toString();
-                                });
-                            }
-
-
-                            // Subject handlers and other functionality
-                            document.addEventListener('click', function (e) {
-                                // Edit Subject
-                                if (e.target.closest('.edit-subject-btn')) {
-                                    e.stopPropagation();
-                                    const btn = e.target.closest('.edit-subject-btn');
-                                    const id = btn.dataset.id;
-                                    const code = btn.dataset.code;
-                                    const name = btn.dataset.name;
-                                    const credit = btn.dataset.credit;
-                                    const attendanceWeight = btn.dataset.attendanceWeight || '10';
-                                    const midtermWeight = btn.dataset.midtermWeight || '30';
-                                    const finalWeight = btn.dataset.finalWeight || '60';
-
-                                    document.getElementById('editSubjectId').value = id;
-                                    document.getElementById('editSubjectCode').value = code;
-                                    document.getElementById('editSubjectName').value = name;
-                                    document.getElementById('editSubjectCredit').value = credit;
-                                    document.getElementById('editAttendanceWeight').value = attendanceWeight;
-                                    document.getElementById('editMidtermWeight').value = midtermWeight;
-                                    document.getElementById('editFinalWeight').value = finalWeight;
-
-                                    const editModal = new bootstrap.Modal(document.getElementById('editSubjectModal'));
-                                    editModal.show();
-                                }
-
-                                // Delete Subject
-                                if (e.target.closest('.delete-subject-btn')) {
-                                    e.stopPropagation();
-                                    const btn = e.target.closest('.delete-subject-btn');
-                                    const id = btn.dataset.id;
-                                    const code = btn.dataset.code;
-
-                                    document.getElementById('deleteSubjectId').value = id;
-                                    document.getElementById('deleteSubjectName').textContent = code;
-
-                                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteSubjectModal'));
-                                    deleteModal.show();
-                                }
-                            });
-
-                            // Enter key search
-                            document.querySelectorAll('input[name="q"], input[name="subjectSearch"]').forEach(input => {
-                                input.addEventListener('keypress', function (e) {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        this.form.submit();
-                                    }
-                                });
-                            });
-
-                            // Faculty Filter Handler
-                            const facultyFilter = document.getElementById('facultyFilter');
-                            if (facultyFilter) {
-                                facultyFilter.addEventListener('change', function () {
-                                    // Auto-submit form when selection changes
-                                    document.getElementById('filterSearchForm').submit();
-                                });
-                            }
-
-                            // Handle add subject modal
-                            const addSubjectModal = document.getElementById('addSubjectModal');
-                            if (addSubjectModal) {
-                                addSubjectModal.addEventListener('show.bs.modal', function () {
-                                    const form = document.getElementById('addSubjectForm');
-                                    const urlParams = new URLSearchParams(window.location.search);
-                                    const viewAll = urlParams.get('viewAll');
-                                    const selectedMajorId = urlParams.get('selectedMajorId');
-
-                                    // Update form action based on current state
-                                    if (viewAll === 'true' || !selectedMajorId) {
-                                        // Create independent subject
-                                        form.action = '${pageContext.request.contextPath}/admin/subjects';
-                                    } else {
-                                        // Create subject and assign to major
-                                        form.action = '${pageContext.request.contextPath}/admin/majors/' + selectedMajorId + '/subjects';
-                                    }
-                                });
-                            }
-
-                            // Handle Add Existing Subject Modal
-                            const addExistingModal = document.getElementById('addExistingSubjectModal');
-                            if (addExistingModal) {
-                                addExistingModal.addEventListener('show.bs.modal', function () {
-                                    loadAvailableSubjects();
-                                });
-                            }
-
-                            // Load available subjects for current major
-                            function loadAvailableSubjects() {
-                                const selectedMajorId = new URLSearchParams(window.location.search).get('selectedMajorId');
-                                if (!selectedMajorId) return;
-
-                                fetch(window.location.origin + '/admin/majors/' + selectedMajorId + '/available-subjects')
-                                    .then(response => response.json())
-                                    .then(subjects => {
-                                        renderAvailableSubjects(subjects);
-                                    })
-                                    .catch(error => {
-                                        console.error('Error loading available subjects:', error);
-                                        document.getElementById('existingSubjectsTable').innerHTML =
-                                            '<tr><td colspan="5" class="text-center text-muted">Lỗi khi tải dữ liệu</td></tr>';
-                                    });
-                            }
-
-                            // Render available subjects table
-                            function renderAvailableSubjects(subjects) {
-                                const tbody = document.getElementById('existingSubjectsTable');
-
-                                if (subjects.length === 0) {
-                                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Không có môn học nào khả dụng</td></tr>';
-                                    return;
-                                }
-
-                                tbody.innerHTML = subjects.map(subject => {
-                                    const statusBadge = subject.majors && subject.majors.length > 0
-                                        ? '<span class="badge bg-info">' + subject.majors.map(m => m.majorCode).join(', ') + '</span>'
-                                        : '<span class="badge bg-secondary">Chưa gán ngành</span>';
-
-                                    return '<tr>' +
-                                        '<td class="text-center">' +
-                                        '<input type="checkbox" class="form-check-input subject-checkbox" ' +
-                                        'value="' + subject.id + '" data-code="' + subject.subjectCode + '">' +
-                                        '</td>' +
-                                        '<td class="fw-semibold text-success">' + subject.subjectCode + '</td>' +
-                                        '<td>' + subject.subjectName + '</td>' +
-                                        '<td class="text-center"><span class="badge bg-secondary">' + subject.credit + '</span></td>' +
-                                        '<td>' + statusBadge + '</td>' +
-                                        '</tr>';
-                                }).join('');
-
-                                // Add event listeners to checkboxes
-                                document.querySelectorAll('.subject-checkbox').forEach(checkbox => {
-                                    checkbox.addEventListener('change', updateAddButton);
-                                });
-                            }
-
-                            // Update add button state
-                            function updateAddButton() {
-                                const selectedCheckboxes = document.querySelectorAll('.subject-checkbox:checked');
-                                const addButton = document.getElementById('addSelectedSubjects');
-
-                                addButton.disabled = selectedCheckboxes.length === 0;
-                                addButton.innerHTML = selectedCheckboxes.length > 0
-                                    ? '<i class="bi bi-check-lg me-1"></i>Thêm ' + selectedCheckboxes.length + ' môn học'
-                                    : '<i class="bi bi-check-lg me-1"></i>Thêm môn học đã chọn';
-                            }
-
-                            // Handle adding selected subjects
-                            document.getElementById('addSelectedSubjects')?.addEventListener('click', function () {
-                                const selectedIds = Array.from(document.querySelectorAll('.subject-checkbox:checked'))
-                                    .map(cb => cb.value);
-
-                                if (selectedIds.length === 0) return;
-
-                                const selectedMajorId = new URLSearchParams(window.location.search).get('selectedMajorId');
-
-                                // Send POST request to add subjects to major
-                                const form = document.createElement('form');
-                                form.method = 'POST';
-                                form.action = window.location.origin + '/admin/majors/' + selectedMajorId + '/add-subjects';
-
-                                selectedIds.forEach(id => {
-                                    const input = document.createElement('input');
-                                    input.type = 'hidden';
-                                    input.name = 'subjectIds';
-                                    input.value = id;
-                                    form.appendChild(input);
-                                });
-
-                                document.body.appendChild(form);
-                                form.submit();
-                            });
-
-                            // Search functionality for existing subjects
-                            document.getElementById('searchExistingSubject')?.addEventListener('input', function () {
-                                const searchTerm = this.value.toLowerCase();
-                                const rows = document.querySelectorAll('#existingSubjectsTable tr');
-
-                                rows.forEach(row => {
-                                    const text = row.textContent.toLowerCase();
-                                    row.style.display = text.includes(searchTerm) ? '' : 'none';
-                                });
-                            });
-
-                            // Table sorting functionality
-                            const sortableHeaders = document.querySelectorAll('.sortable');
-                            let currentSort = { column: null, direction: 'asc' };
-
-                            sortableHeaders.forEach(header => {
-                                header.addEventListener('click', function () {
-                                    const sortField = this.dataset.sort;
-                                    const table = this.closest('table');
-                                    const tbody = table.querySelector('tbody');
-                                    const rows = Array.from(tbody.querySelectorAll('tr'));
-
-                                    // Skip if no data rows
-                                    if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length === 1)) {
-                                        return;
-                                    }
-
-                                    // Determine sort direction
-                                    if (currentSort.column === sortField) {
-                                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-                                    } else {
-                                        currentSort.direction = 'asc';
-                                    }
-                                    currentSort.column = sortField;
-
-                                    // Update header styles (no icon changes)
-                                    const tableHeaders = table.querySelectorAll('.sortable');
-                                    tableHeaders.forEach(h => {
-                                        h.classList.remove('asc', 'desc');
-                                    });
-                                    this.classList.add(currentSort.direction);
-
-                                    // Sort rows
-                                    rows.sort((a, b) => {
-                                        let aValue, bValue;
-
-                                        // For subjects table
-                                        if (sortField === 'subjectCode') {
-                                            aValue = a.cells[0].textContent.trim();
-                                            bValue = b.cells[0].textContent.trim();
-                                        } else if (sortField === 'subjectName') {
-                                            aValue = a.cells[1].textContent.trim();
-                                            bValue = b.cells[1].textContent.trim();
-                                        } else if (sortField === 'credit') {
-                                            // Handle both regular and "all majors" view
-                                            const creditColIndex = document.querySelector('[data-sort="credit"]').cellIndex;
-                                            aValue = parseInt(a.cells[creditColIndex].textContent.trim()) || 0;
-                                            bValue = parseInt(b.cells[creditColIndex].textContent.trim()) || 0;
-                                        }
-                                        // For majors table
-                                        else if (sortField === 'majorCode') {
-                                            aValue = a.cells[0].textContent.trim();
-                                            bValue = b.cells[0].textContent.trim();
-                                        } else if (sortField === 'majorName') {
-                                            aValue = a.cells[1].textContent.trim();
-                                            bValue = b.cells[1].textContent.trim();
-                                        } else if (sortField === 'academicYear') {
-                                            aValue = a.cells[2].textContent.trim();
-                                            bValue = b.cells[2].textContent.trim();
-                                        } else if (sortField === 'subjectCount') {
-                                            aValue = parseInt(a.cells[3].textContent.trim()) || 0;
-                                            bValue = parseInt(b.cells[3].textContent.trim()) || 0;
-                                        }
-
-                                        // Sort numeric fields
-                                        if (sortField === 'credit' || sortField === 'subjectCount') {
-                                            return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
+                                <script
+                                    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                                <script>
+                                    // SIMPLE SUBJECT REMOVAL FUNCTION
+                                    function handleSubjectRemoval(subjectId, subjectCode) {
+                                        console.log('🔥 NEW handleSubjectRemoval called with:', subjectId, subjectCode);
+
+                                        // Get current context
+                                        const urlParams = new URLSearchParams(window.location.search);
+                                        const isViewAll = urlParams.get('viewAll') === 'true';
+                                        const selectedMajorId = '${selectedMajorId}';
+
+                                        // Set up modal content based on context
+                                        const modal = document.getElementById('deleteSubjectModal');
+                                        const form = document.getElementById('deleteSubjectForm');
+                                        const message = document.getElementById('deleteSubjectMessage');
+                                        const button = document.getElementById('deleteSubjectButton');
+                                        const nameSpan = document.getElementById('deleteSubjectName');
+
+                                        // Set subject name
+                                        nameSpan.textContent = subjectCode;
+
+                                        if (isViewAll || !selectedMajorId || selectedMajorId === '' || selectedMajorId === 'null') {
+                                            // Complete deletion
+                                            form.action = '${pageContext.request.contextPath}/admin/subjects/delete';
+                                            document.getElementById('deleteSubjectId').value = subjectId;
+                                            document.getElementById('deleteSubjectIdParam').value = '';
+                                            message.innerHTML = 'Bạn có chắc chắn muốn <strong>xóa hoàn toàn</strong> môn học <strong>' + subjectCode + '</strong>?<br><small class="text-danger">Lưu ý: Môn học sẽ bị xóa khỏi tất cả ngành học.</small>';
+                                            button.textContent = 'Xóa hoàn toàn';
+                                            button.className = 'btn btn-danger';
                                         } else {
-                                            // Sort text fields
-                                            if (currentSort.direction === 'asc') {
-                                                return aValue.localeCompare(bValue, 'vi', { numeric: true });
-                                            } else {
-                                                return bValue.localeCompare(aValue, 'vi', { numeric: true });
-                                            }
+                                            // Remove from major only
+                                            form.action = '${pageContext.request.contextPath}/admin/majors/' + selectedMajorId + '/subjects/delete';
+                                            document.getElementById('deleteSubjectId').value = '';
+                                            document.getElementById('deleteSubjectIdParam').value = subjectId;
+                                            message.innerHTML = 'Bạn có chắc chắn muốn <strong>gỡ môn học</strong> <strong>' + subjectCode + '</strong> khỏi ngành này?<br><small class="text-info">Lưu ý: Môn học sẽ chỉ bị gỡ khỏi ngành này, không bị xóa hoàn toàn.</small>';
+                                            button.textContent = 'Gỡ khỏi ngành';
+                                            button.className = 'btn btn-warning';
                                         }
+
+                                        // Show modal
+                                        const bsModal = new bootstrap.Modal(modal);
+                                        bsModal.show();
+                                    }
+
+                                    // MAJOR MANAGEMENT
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        console.log('🚀 New simple script loaded!');
+
+                                        // Major Selection function
+                                        window.selectMajor = function (majorId) {
+                                            const url = new URL(window.location);
+                                            url.searchParams.set('selectedMajorId', majorId);
+                                            url.searchParams.delete('viewAll');
+                                            url.searchParams.delete('subjectSearch');
+                                            window.location.href = url.toString();
+                                        };
+
+                                        // Major Selection Dropdown
+                                        const majorSelect = document.getElementById('majorSelect');
+                                        if (majorSelect) {
+                                            majorSelect.addEventListener('change', function () {
+                                                const selectedValue = this.value;
+                                                const url = new URL(window.location);
+
+                                                if (selectedValue === 'all') {
+                                                    url.searchParams.set('viewAll', 'true');
+                                                    url.searchParams.delete('selectedMajorId');
+                                                } else {
+                                                    url.searchParams.set('selectedMajorId', selectedValue);
+                                                    url.searchParams.delete('viewAll');
+                                                }
+
+                                                url.searchParams.delete('subjectSearch');
+                                                window.location.href = url.toString();
+                                            });
+                                        }
+
+                                        // View Detail Major Button
+                                        document.querySelectorAll('.view-detail-btn').forEach(function (button) {
+                                            button.addEventListener('click', function (e) {
+                                                e.stopPropagation(); // Prevent row selection
+
+                                                const majorId = this.getAttribute('data-id');
+                                                const majorCode = this.getAttribute('data-code');
+                                                const majorName = this.getAttribute('data-name');
+                                                const majorDescription = this.getAttribute('data-description');
+                                                const facultyName = this.getAttribute('data-faculty');
+
+                                                // Show major details in modal or alert (you can customize this)
+                                                const message = `Thông tin chi tiết ngành học:\n\n` +
+                                                    `Mã ngành: ${majorCode}\n` +
+                                                    `Tên ngành: ${majorName}\n` +
+                                                    `Mô tả: ${majorDescription || 'Không có mô tả'}\n` +
+                                                    `Khoa: ${facultyName}`;
+
+                                                alert(message);
+                                            });
+                                        });
+
+                                        // Edit Major Button
+                                        document.querySelectorAll('.edit-major-btn').forEach(function (button) {
+                                            button.addEventListener('click', function (e) {
+                                                e.stopPropagation(); // Prevent row selection
+
+                                                const majorId = this.getAttribute('data-id');
+                                                const majorCode = this.getAttribute('data-code');
+                                                const majorName = this.getAttribute('data-name');
+                                                const majorDescription = this.getAttribute('data-description');
+                                                const facultyId = this.getAttribute('data-faculty-id');
+
+                                                // Fill edit form
+                                                document.getElementById('editMajorId').value = majorId;
+                                                document.getElementById('editMajorCode').value = majorCode;
+                                                document.getElementById('editMajorName').value = majorName;
+                                                document.getElementById('editMajorDescription').value = majorDescription || '';
+
+                                                // Select faculty
+                                                const facultySelect = document.getElementById('editMajorFacultyId');
+                                                if (facultySelect && facultyId) {
+                                                    facultySelect.value = facultyId;
+                                                }
+
+                                                // Show edit modal
+                                                const editModal = new bootstrap.Modal(document.getElementById('editMajorModal'));
+                                                editModal.show();
+                                            });
+                                        });
+
+                                        // Delete Major Button
+                                        document.querySelectorAll('.delete-major-btn').forEach(function (button) {
+                                            button.addEventListener('click', function (e) {
+                                                e.stopPropagation(); // Prevent row selection
+
+                                                const majorId = this.getAttribute('data-id');
+                                                const majorCode = this.getAttribute('data-code');
+
+                                                if (confirm(`Bạn có chắc chắn muốn xóa ngành "${majorCode}"?\n\nLưu ý: Thao tác này không thể hoàn tác!`)) {
+                                                    // Create and submit delete form
+                                                    const form = document.createElement('form');
+                                                    form.method = 'POST';
+                                                    form.action = '/admin/majors/delete';
+
+                                                    // Add major ID parameter
+                                                    const idInput = document.createElement('input');
+                                                    idInput.type = 'hidden';
+                                                    idInput.name = 'id';
+                                                    idInput.value = majorId;
+                                                    form.appendChild(idInput);
+
+                                                    // Add CSRF token if available
+                                                    const csrfToken = document.querySelector('meta[name="_csrf"]');
+                                                    if (csrfToken) {
+                                                        const csrfInput = document.createElement('input');
+                                                        csrfInput.type = 'hidden';
+                                                        csrfInput.name = '_token';
+                                                        csrfInput.value = csrfToken.content;
+                                                        form.appendChild(csrfInput);
+                                                    }
+
+                                                    document.body.appendChild(form);
+                                                    form.submit();
+                                                }
+                                            });
+                                        });
                                     });
-
-                                    // Re-append sorted rows
-                                    rows.forEach(row => tbody.appendChild(row));
-                                });
-                            });
-
-                            // Validation hệ số điểm
-                            function validateWeights(attendanceWeight, midtermWeight, finalWeight) {
-                                const total = parseFloat(attendanceWeight || 0) + parseFloat(midtermWeight || 0) + parseFloat(finalWeight || 0);
-                                return Math.abs(total - 100) < 0.1; // Cho phép sai số nhỏ
-                            }
-
-                            function showWeightError(message) {
-                                // Tạo alert hiển thị lỗi
-                                const alertDiv = document.createElement('div');
-                                alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-2';
-                                alertDiv.innerHTML = `
-                                    <i class="bi bi-exclamation-triangle-fill"></i> ${message}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                `;
-
-                                // Tìm vị trí để chèn alert
-                                const weightContainer = document.querySelector('.modal.show .row.g-2');
-                                if (weightContainer) {
-                                    const parent = weightContainer.parentNode;
-                                    // Xóa alert cũ nếu có
-                                    const oldAlert = parent.querySelector('.alert-danger');
-                                    if (oldAlert) oldAlert.remove();
-                                    // Thêm alert mới
-                                    parent.insertBefore(alertDiv, weightContainer.nextSibling);
-                                }
-                            }
-
-                            // Validation cho form thêm môn học
-                            const addSubjectForm = document.querySelector('#addSubjectForm');
-                            if (addSubjectForm) {
-                                addSubjectForm.addEventListener('submit', function (e) {
-                                    const attendance = this.querySelector('input[name="attendanceWeight"]').value;
-                                    const midterm = this.querySelector('input[name="midtermWeight"]').value;
-                                    const final = this.querySelector('input[name="finalWeight"]').value;
-
-                                    if (!validateWeights(attendance, midterm, final)) {
-                                        e.preventDefault();
-                                        showWeightError('Tổng hệ số điểm phải bằng 100%. Hiện tại: ' +
-                                            (parseFloat(attendance || 0) + parseFloat(midterm || 0) + parseFloat(final || 0)) + '%');
-                                    }
-                                });
-                            }
-
-                            // Validation cho form sửa môn học  
-                            const editSubjectForm = document.querySelector('#editSubjectForm');
-                            if (editSubjectForm) {
-                                editSubjectForm.addEventListener('submit', function (e) {
-                                    const attendance = this.querySelector('#editAttendanceWeight').value;
-                                    const midterm = this.querySelector('#editMidtermWeight').value;
-                                    const final = this.querySelector('#editFinalWeight').value;
-
-                                    if (!validateWeights(attendance, midterm, final)) {
-                                        e.preventDefault();
-                                        showWeightError('Tổng hệ số điểm phải bằng 100%. Hiện tại: ' +
-                                            (parseFloat(attendance || 0) + parseFloat(midterm || 0) + parseFloat(final || 0)) + '%');
-                                    }
-                                });
-                            }
-                        });
-                    </script>
+                                </script>
                 </body>
 
                 </html>
