@@ -294,12 +294,10 @@
                                                                     <c:choose>
                                                                         <c:when
                                                                             test="${param.viewAll eq 'true' or empty selectedMajorId}">
-                                                                            Tổng: ${fn:length(subjects)} môn học (tất cả
-                                                                            ngành)
+                                                                            Tổng: ${fn:length(subjects)} môn học
                                                                         </c:when>
                                                                         <c:otherwise>
                                                                             Tổng: ${fn:length(subjects)} môn học
-                                                                            (${selectedMajor.majorName})
                                                                         </c:otherwise>
                                                                     </c:choose>
                                                                     <br>
@@ -312,79 +310,83 @@
                                                                 </small>
                                                             </div>
 
-                                                            <!-- Action Buttons -->
-                                                            <div class="mb-3 d-flex justify-content-end">
-                                                                <div class="btn-group" role="group">
+                                                            <!-- Action Buttons and Search in one row -->
+                                                            <div
+                                                                class="mb-3 d-flex justify-content-between align-items-center">
+                                                                <!-- Left side: Action Buttons -->
+                                                                <div class="d-flex gap-2">
                                                                     <!-- Always show "Add New Subject" button -->
                                                                     <button type="button" class="btn btn-primary btn-sm"
                                                                         data-bs-toggle="modal"
                                                                         data-bs-target="#addSubjectModal">
-                                                                        <i class="bi bi-plus-lg me-1"></i>Thêm môn học
+                                                                        <i class="bi bi-plus-lg me-1"></i>Thêm môn mới
                                                                     </button>
 
                                                                     <!-- Show "Add Existing Subject" only when specific major is selected -->
                                                                     <c:if
                                                                         test="${param.viewAll ne 'true' and not empty selectedMajor}">
                                                                         <button type="button"
-                                                                            class="btn btn-success btn-sm ms-2"
+                                                                            class="btn btn-success btn-sm"
                                                                             data-bs-toggle="modal"
                                                                             data-bs-target="#addExistingSubjectModal">
                                                                             <i class="bi bi-plus-square me-1"></i>Thêm
-                                                                            môn
-                                                                            có sẵn
+                                                                            môn có sẵn
                                                                         </button>
                                                                     </c:if>
                                                                 </div>
-                                                            </div>
 
-                                                            <!-- Search for Subjects -->
-                                                            <div class="mb-3">
-                                                                <form method="get" class="d-flex">
-                                                                    <div class="input-group input-group-sm">
-                                                                        <span class="input-group-text">
-                                                                            <i class="bi bi-search"></i>
-                                                                        </span>
-                                                                        <input type="text" name="subjectSearch"
-                                                                            value="${param.subjectSearch}"
-                                                                            class="form-control form-control-sm"
-                                                                            placeholder="Tìm môn học...">
-                                                                        <button class="btn btn-outline-primary btn-sm"
-                                                                            type="submit">Tìm</button>
-                                                                        <c:if test="${not empty param.subjectSearch}">
-                                                                            <c:choose>
-                                                                                <c:when
-                                                                                    test="${not empty selectedMajorId}">
-                                                                                    <a href="${pageContext.request.contextPath}/admin/majors?selectedMajorId=${selectedMajorId}"
-                                                                                        class="btn btn-outline-secondary btn-sm">
-                                                                                        <i class="bi bi-x-circle"></i>
-                                                                                    </a>
-                                                                                </c:when>
-                                                                                <c:when
-                                                                                    test="${param.viewAll eq 'true'}">
-                                                                                    <a href="${pageContext.request.contextPath}/admin/majors?viewAll=true"
-                                                                                        class="btn btn-outline-secondary btn-sm">
-                                                                                        <i class="bi bi-x-circle"></i>
-                                                                                    </a>
-                                                                                </c:when>
-                                                                                <c:otherwise>
-                                                                                    <a href="${pageContext.request.contextPath}/admin/majors"
-                                                                                        class="btn btn-outline-secondary btn-sm">
-                                                                                        <i class="bi bi-x-circle"></i>
-                                                                                    </a>
-                                                                                </c:otherwise>
-                                                                            </c:choose>
+                                                                <!-- Right side: Search -->
+                                                                <div class="flex-shrink-0">
+                                                                    <form method="get" class="d-flex">
+                                                                        <div class="input-group input-group-sm">
+                                                                            <span class="input-group-text">
+                                                                                <i class="bi bi-search"></i>
+                                                                            </span>
+                                                                            <input type="text" name="subjectSearch"
+                                                                                value="${param.subjectSearch}"
+                                                                                class="form-control form-control-sm"
+                                                                                placeholder="Tìm môn học..."
+                                                                                style="width: 280px;">
+                                                                            <c:if
+                                                                                test="${not empty param.subjectSearch}">
+                                                                                <c:choose>
+                                                                                    <c:when
+                                                                                        test="${not empty selectedMajorId}">
+                                                                                        <a href="${pageContext.request.contextPath}/admin/majors?selectedMajorId=${selectedMajorId}"
+                                                                                            class="btn btn-outline-secondary btn-sm">
+                                                                                            <i
+                                                                                                class="bi bi-x-circle"></i>
+                                                                                        </a>
+                                                                                    </c:when>
+                                                                                    <c:when
+                                                                                        test="${param.viewAll eq 'true'}">
+                                                                                        <a href="${pageContext.request.contextPath}/admin/majors?viewAll=true"
+                                                                                            class="btn btn-outline-secondary btn-sm">
+                                                                                            <i
+                                                                                                class="bi bi-x-circle"></i>
+                                                                                        </a>
+                                                                                    </c:when>
+                                                                                    <c:otherwise>
+                                                                                        <a href="${pageContext.request.contextPath}/admin/majors"
+                                                                                            class="btn btn-outline-secondary btn-sm">
+                                                                                            <i
+                                                                                                class="bi bi-x-circle"></i>
+                                                                                        </a>
+                                                                                    </c:otherwise>
+                                                                                </c:choose>
+                                                                            </c:if>
+                                                                        </div>
+                                                                        <input type="hidden" name="selectedMajorId"
+                                                                            id="selectedMajorIdInput"
+                                                                            value="${selectedMajorId}">
+                                                                        <input type="hidden" name="viewAll"
+                                                                            id="viewAllInput"
+                                                                            value="${param.viewAll eq 'true' ? 'true' : 'false'}">
+                                                                        <c:if test="${not empty q}">
+                                                                            <input type="hidden" name="q" value="${q}">
                                                                         </c:if>
-                                                                    </div>
-                                                                    <input type="hidden" name="selectedMajorId"
-                                                                        id="selectedMajorIdInput"
-                                                                        value="${selectedMajorId}">
-                                                                    <input type="hidden" name="viewAll"
-                                                                        id="viewAllInput"
-                                                                        value="${param.viewAll eq 'true' ? 'true' : 'false'}">
-                                                                    <c:if test="${not empty q}">
-                                                                        <input type="hidden" name="q" value="${q}">
-                                                                    </c:if>
-                                                                </form>
+                                                                    </form>
+                                                                </div>
                                                             </div>
 
                                                             <!-- Subjects Table -->
@@ -860,7 +862,7 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary"
                                                         data-bs-dismiss="modal">Hủy</button>
-                                                    <button type="submit" class="btn btn-primary">Thêm môn học</button>
+                                                    <button type="submit" class="btn btn-primary">Thêm môn mới</button>
                                                 </div>
                                             </form>
                                         </div>
