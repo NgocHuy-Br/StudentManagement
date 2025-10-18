@@ -792,6 +792,12 @@
                                                         data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body">
+                                                    <!-- Hidden field để truyền majorId khi đang ở ngành cụ thể -->
+                                                    <c:if
+                                                        test="${param.viewAll ne 'true' and not empty selectedMajorId}">
+                                                        <input type="hidden" name="majorId" value="${selectedMajorId}">
+                                                    </c:if>
+
                                                     <div class="mb-3">
                                                         <label class="form-label">Mã môn học</label>
                                                         <input type="text" class="form-control" name="subjectCode"

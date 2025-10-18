@@ -1137,12 +1137,14 @@ public class AdminController {
 
     // Thêm môn học
     @PostMapping("/subjects")
+    @Transactional
     public String createSubject(@RequestParam String subjectCode,
             @RequestParam String subjectName,
             @RequestParam int credit,
             @RequestParam(required = false, defaultValue = "10") Float attendanceWeight,
             @RequestParam(required = false, defaultValue = "30") Float midtermWeight,
             @RequestParam(required = false, defaultValue = "60") Float finalWeight,
+            @RequestParam(required = false) Long majorId,
             RedirectAttributes ra) {
 
         String code = subjectCode.trim();
@@ -1173,11 +1175,30 @@ public class AdminController {
         subject.setMidtermWeight(midtermWeight / 100.0f);
         subject.setFinalWeight(finalWeight / 100.0f);
 
-        subjectRepository.save(subject);
+        Subject savedSubject = subjectRepository.save(subject);
 
-        ra.addFlashAttribute("success",
-                "Đã tạo môn học độc lập: " + code + " - " + name + ". Bạn có thể gán vào ngành sau.");
-        return "redirect:/admin/majors?viewAll=true";
+        // Nếu có majorId, tự động gán môn học vào ngành
+        if (majorId != null) {
+            Optional<Major> majorOptional = majorRepository.findById(majorId);
+            if (majorOptional.isPresent()) {
+                Major major = majorOptional.get();
+                // Thêm môn học vào ngành
+                major.getSubjects().add(savedSubject);
+                majorRepository.save(major);
+
+                ra.addFlashAttribute("success",
+                        "Đã tạo và gán môn học " + code + " - " + name + " vào ngành " + major.getMajorName());
+                return "redirect:/admin/majors?selectedMajorId=" + majorId;
+            } else {
+                ra.addFlashAttribute("warning",
+                        "Đã tạo môn học " + code + " - " + name + " nhưng không tìm thấy ngành để gán");
+                return "redirect:/admin/majors?viewAll=true";
+            }
+        } else {
+            ra.addFlashAttribute("success",
+                    "Đã tạo môn học độc lập: " + code + " - " + name + ". Bạn có thể gán vào ngành sau.");
+            return "redirect:/admin/majors?viewAll=true";
+        }
     }
 
     // Xem chi tiết ngành học và các môn học
