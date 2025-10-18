@@ -1561,23 +1561,29 @@ public class AdminController {
             @RequestParam(defaultValue = "") String subjectSearch,
             @RequestParam(defaultValue = "subjectCode") String subjectSort,
             @RequestParam(defaultValue = "asc") String subjectDir,
+            @RequestParam(defaultValue = "majorCode") String sort,
+            @RequestParam(defaultValue = "asc") String dir,
             @RequestParam(defaultValue = "false") String viewAll) {
         addUserInfo(auth, model);
         model.addAttribute("activeTab", "majors");
 
-        // Lấy danh sách ngành với filter
+        // Tạo Sort object cho majors
+        Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort majorSort = Sort.by(direction, sort);
+
+        // Lấy danh sách ngành với filter và sort
         List<Major> majors;
         if (q != null && !q.isBlank()) {
             if (facultyId != null) {
-                majors = majorRepository.searchByCodeOrNameAndFaculty(q.trim(), facultyId);
+                majors = majorRepository.searchByCodeOrNameAndFaculty(q.trim(), facultyId, majorSort);
             } else {
-                majors = majorRepository.searchByCodeOrName(q.trim());
+                majors = majorRepository.searchByCodeOrName(q.trim(), majorSort);
             }
         } else {
             if (facultyId != null) {
-                majors = majorRepository.findByFacultyIdWithSubjectCount(facultyId);
+                majors = majorRepository.findByFacultyIdWithSubjectCount(facultyId, majorSort);
             } else {
-                majors = majorRepository.findAllWithSubjectCount();
+                majors = majorRepository.findAllWithSubjectCount(majorSort);
             }
         }
 
@@ -1600,9 +1606,9 @@ public class AdminController {
             }
 
             // Lấy danh sách môn học với sắp xếp
-            Sort.Direction direction = "desc".equalsIgnoreCase(subjectDir) ? Sort.Direction.DESC
+            Sort.Direction subjectDirection = "desc".equalsIgnoreCase(subjectDir) ? Sort.Direction.DESC
                     : Sort.Direction.ASC;
-            Sort sort = Sort.by(direction, subjectSort);
+            Sort subjectSortObj = Sort.by(subjectDirection, subjectSort);
 
             List<Subject> subjects;
 
@@ -1610,17 +1616,17 @@ public class AdminController {
             if ("true".equals(viewAll)) {
                 // Chế độ xem tất cả môn học
                 if (subjectSearch != null && !subjectSearch.isBlank()) {
-                    subjects = subjectRepository.findAllBySearchWithSort(subjectSearch.trim(), sort);
+                    subjects = subjectRepository.findAllBySearchWithSort(subjectSearch.trim(), subjectSortObj);
                 } else {
-                    subjects = subjectRepository.findAll(sort);
+                    subjects = subjectRepository.findAll(subjectSortObj);
                 }
             } else if (selectedMajor != null) {
                 // Chế độ xem theo ngành đã chọn
                 if (subjectSearch != null && !subjectSearch.isBlank()) {
                     subjects = subjectRepository.findByMajorIdAndSearchWithSort(selectedMajorId,
-                            subjectSearch.trim(), sort);
+                            subjectSearch.trim(), subjectSortObj);
                 } else {
-                    subjects = subjectRepository.findByMajorId(selectedMajorId, sort);
+                    subjects = subjectRepository.findByMajorId(selectedMajorId, subjectSortObj);
                 }
             } else {
                 // Trường hợp không có ngành được chọn
@@ -1634,6 +1640,12 @@ public class AdminController {
             System.out.println("DEBUG: viewAll=" + viewAll + ", selectedMajorId=" + selectedMajorId + ", subjects.size="
                     + subjects.size());
         }
+
+        // Add sort parameters to model
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+        model.addAttribute("subjectSort", subjectSort);
+        model.addAttribute("subjectDir", subjectDir);
 
         return "admin/majors";
     }
@@ -1952,17 +1964,21 @@ public class AdminController {
             long studentCount = studentRepository.countByMajorId(id);
             if (studentCount > 0) {
                 ra.addFlashAttribute("error",
-                        "Không thể xóa ngành học vì có " + studentCount + " sinh viên thuộc ngành này");
+                        "Không thể xóa ngành học '" + major.getMajorName() + "' vì có " + studentCount
+                                + " sinh viên đang thuộc ngành này. Hãy chuyển các sinh viên sang ngành khác trước.");
                 return "redirect:/admin/majors";
             }
 
-            // Xóa các mối quan hệ với môn học trước
-            if (major.getSubjects() != null) {
-                major.getSubjects().clear();
-                majorRepository.save(major);
+            // Kiểm tra xem có môn học nào thuộc ngành này không
+            long subjectCount = subjectRepository.countByMajorId(id);
+            if (subjectCount > 0) {
+                ra.addFlashAttribute("error",
+                        "Không thể xóa ngành học '" + major.getMajorName() + "' vì có " + subjectCount
+                                + " môn học đang thuộc ngành này. Hãy xóa hoặc chuyển các môn học sang ngành khác trước.");
+                return "redirect:/admin/majors";
             }
 
-            // Xóa ngành học
+            // Xóa ngành học (vì đã chắc chắn không có sinh viên và môn học nào)
             majorRepository.delete(major);
 
             ra.addFlashAttribute("success", "Xóa ngành học thành công");

@@ -346,31 +346,32 @@
                                                                                 value="${param.subjectSearch}"
                                                                                 class="form-control form-control-sm"
                                                                                 placeholder="Tìm môn học..."
-                                                                                style="width: 280px;">
+                                                                                style="width: 280px;"
+                                                                                id="subjectSearchInput">
                                                                             <c:if
                                                                                 test="${not empty param.subjectSearch}">
                                                                                 <c:choose>
                                                                                     <c:when
                                                                                         test="${not empty selectedMajorId}">
                                                                                         <a href="${pageContext.request.contextPath}/admin/majors?selectedMajorId=${selectedMajorId}"
-                                                                                            class="btn btn-outline-secondary btn-sm">
-                                                                                            <i
-                                                                                                class="bi bi-x-circle"></i>
+                                                                                            class="btn btn-outline-secondary btn-sm"
+                                                                                            title="Xóa tìm kiếm">
+                                                                                            <i class="bi bi-x"></i>
                                                                                         </a>
                                                                                     </c:when>
                                                                                     <c:when
                                                                                         test="${param.viewAll eq 'true'}">
                                                                                         <a href="${pageContext.request.contextPath}/admin/majors?viewAll=true"
-                                                                                            class="btn btn-outline-secondary btn-sm">
-                                                                                            <i
-                                                                                                class="bi bi-x-circle"></i>
+                                                                                            class="btn btn-outline-secondary btn-sm"
+                                                                                            title="Xóa tìm kiếm">
+                                                                                            <i class="bi bi-x"></i>
                                                                                         </a>
                                                                                     </c:when>
                                                                                     <c:otherwise>
                                                                                         <a href="${pageContext.request.contextPath}/admin/majors"
-                                                                                            class="btn btn-outline-secondary btn-sm">
-                                                                                            <i
-                                                                                                class="bi bi-x-circle"></i>
+                                                                                            class="btn btn-outline-secondary btn-sm"
+                                                                                            title="Xóa tìm kiếm">
+                                                                                            <i class="bi bi-x"></i>
                                                                                         </a>
                                                                                     </c:otherwise>
                                                                                 </c:choose>
@@ -485,7 +486,8 @@
                                                                                             </button>
                                                                                             <button
                                                                                                 class="btn btn-sm btn-danger remove-subject-button"
-                                                                                                onclick="handleSubjectRemoval('${subject.id}', '${subject.subjectCode}')">
+                                                                                                data-subject-id="${subject.id}"
+                                                                                                data-subject-code="${subject.subjectCode}">
                                                                                                 <i
                                                                                                     class="bi bi-x-circle"></i>
                                                                                             </button>
@@ -937,36 +939,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Delete Subject Modal -->
-                                <div class="modal fade" id="deleteSubjectModal" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title">Xác nhận xóa</h5>
-                                                <button type="button" class="btn-close btn-close-white"
-                                                    data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p id="deleteSubjectMessage">Bạn có chắc chắn muốn xóa môn học <strong
-                                                        id="deleteSubjectName"></strong>?</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Hủy</button>
-                                                <form method="post" id="deleteSubjectForm"
-                                                    action="${pageContext.request.contextPath}/admin/subjects/delete"
-                                                    style="display: inline;">
-                                                    <input type="hidden" id="deleteSubjectId" name="id">
-                                                    <input type="hidden" id="deleteSubjectIdParam" name="subjectId">
-                                                    <input type="hidden" name="majorId" value="${selectedMajorId}">
-                                                    <button type="submit" class="btn btn-danger"
-                                                        id="deleteSubjectButton">Xóa</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!-- Add Existing Subject to Major Modal -->
                                 <div class="modal fade" id="addExistingSubjectModal" tabindex="-1">
                                     <div class="modal-dialog modal-lg">
@@ -983,8 +955,19 @@
                                             <div class="modal-body">
                                                 <div class="mb-3">
                                                     <label class="form-label">Tìm kiếm môn học:</label>
-                                                    <input type="text" class="form-control" id="searchExistingSubject"
-                                                        placeholder="Nhập mã môn hoặc tên môn học...">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">
+                                                            <i class="bi bi-search"></i>
+                                                        </span>
+                                                        <input type="text" class="form-control"
+                                                            id="searchExistingSubject"
+                                                            placeholder="Nhập mã môn hoặc tên môn học...">
+                                                        <button type="button" class="btn btn-outline-secondary"
+                                                            id="clearSearchExistingSubject" style="display: none;"
+                                                            title="Xóa tìm kiếm">
+                                                            <i class="bi bi-x"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
 
                                                 <div class="table-responsive"
@@ -1004,13 +987,6 @@
                                                         </tbody>
                                                     </table>
                                                 </div>
-
-                                                <div class="mt-3">
-                                                    <small class="text-muted">
-                                                        <i class="bi bi-info-circle me-1"></i>
-                                                        Chỉ hiển thị các môn học chưa có trong ngành này
-                                                    </small>
-                                                </div>
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary"
@@ -1024,50 +1000,45 @@
                                     </div>
                                 </div>
 
+                                <!-- NEW Simple Delete Subject Confirmation Modal -->
+                                <div class="modal fade" id="confirmDeleteSubjectModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                                    Xác nhận xóa môn học
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="text-center mb-3">
+                                                    <i class="bi bi-exclamation-triangle text-danger"
+                                                        style="font-size: 3rem;"></i>
+                                                </div>
+                                                <div id="deleteConfirmMessage" class="text-center">
+                                                    <!-- Message will be set dynamically -->
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    <i class="bi bi-x-circle me-1"></i>Hủy
+                                                </button>
+                                                <form id="confirmDeleteForm" method="POST" style="display: inline;">
+                                                    <button type="submit" id="confirmDeleteButton"
+                                                        class="btn btn-danger">
+                                                        <i class="bi bi-trash me-1"></i>Xóa
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <script
                                     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                                 <script>
-                                    // SIMPLE SUBJECT REMOVAL FUNCTION
-                                    function handleSubjectRemoval(subjectId, subjectCode) {
-                                        console.log('🔥 NEW handleSubjectRemoval called with:', subjectId, subjectCode);
-
-                                        // Get current context
-                                        const urlParams = new URLSearchParams(window.location.search);
-                                        const isViewAll = urlParams.get('viewAll') === 'true';
-                                        const selectedMajorId = '${selectedMajorId}';
-
-                                        // Set up modal content based on context
-                                        const modal = document.getElementById('deleteSubjectModal');
-                                        const form = document.getElementById('deleteSubjectForm');
-                                        const message = document.getElementById('deleteSubjectMessage');
-                                        const button = document.getElementById('deleteSubjectButton');
-                                        const nameSpan = document.getElementById('deleteSubjectName');
-
-                                        // Set subject name
-                                        nameSpan.textContent = subjectCode;
-
-                                        if (isViewAll || !selectedMajorId || selectedMajorId === '' || selectedMajorId === 'null') {
-                                            // Complete deletion
-                                            form.action = '${pageContext.request.contextPath}/admin/subjects/delete';
-                                            document.getElementById('deleteSubjectId').value = subjectId;
-                                            document.getElementById('deleteSubjectIdParam').value = '';
-                                            message.innerHTML = 'Bạn có chắc chắn muốn <strong>xóa hoàn toàn</strong> môn học <strong>' + subjectCode + '</strong>?<br><small class="text-danger">Lưu ý: Môn học sẽ bị xóa khỏi tất cả ngành học.</small>';
-                                            button.textContent = 'Xóa hoàn toàn';
-                                            button.className = 'btn btn-danger';
-                                        } else {
-                                            // Remove from major only
-                                            form.action = '${pageContext.request.contextPath}/admin/majors/' + selectedMajorId + '/subjects/delete';
-                                            document.getElementById('deleteSubjectId').value = '';
-                                            document.getElementById('deleteSubjectIdParam').value = subjectId;
-                                            message.innerHTML = 'Bạn có chắc chắn muốn <strong>gỡ môn học</strong> <strong>' + subjectCode + '</strong> khỏi ngành này?<br><small class="text-info">Lưu ý: Môn học sẽ chỉ bị gỡ khỏi ngành này, không bị xóa hoàn toàn.</small>';
-                                            button.textContent = 'Gỡ khỏi ngành';
-                                            button.className = 'btn btn-warning';
-                                        }
-
-                                        // Show modal
-                                        const bsModal = new bootstrap.Modal(modal);
-                                        bsModal.show();
-                                    }
 
                                     // Notification Modal Function
                                     window.showNotification = function (type, title, message, details) {
@@ -1367,9 +1338,15 @@
                                         }
 
                                         // Search existing subjects
-                                        document.getElementById('searchExistingSubject').addEventListener('input', function () {
+                                        const searchInput = document.getElementById('searchExistingSubject');
+                                        const clearButton = document.getElementById('clearSearchExistingSubject');
+
+                                        searchInput.addEventListener('input', function () {
                                             const filter = this.value.toLowerCase();
                                             const rows = document.querySelectorAll('#existingSubjectsTable tr');
+
+                                            // Show/hide clear button
+                                            clearButton.style.display = this.value.trim() ? 'block' : 'none';
 
                                             rows.forEach(row => {
                                                 const cells = row.querySelectorAll('td');
@@ -1379,6 +1356,18 @@
                                                     const show = code.includes(filter) || name.includes(filter);
                                                     row.style.display = show ? '' : 'none';
                                                 }
+                                            });
+                                        });
+
+                                        // Clear search button
+                                        clearButton.addEventListener('click', function () {
+                                            searchInput.value = '';
+                                            clearButton.style.display = 'none';
+
+                                            // Show all rows
+                                            const rows = document.querySelectorAll('#existingSubjectsTable tr');
+                                            rows.forEach(row => {
+                                                row.style.display = '';
                                             });
                                         });
 
@@ -1443,6 +1432,145 @@
                                                 editModal.show();
                                             });
                                         });
+
+                                        // Handle table sorting
+                                        function setupTableSorting() {
+                                            const sortableHeaders = document.querySelectorAll('.sortable');
+
+                                            sortableHeaders.forEach(header => {
+                                                header.style.cursor = 'pointer';
+                                                header.addEventListener('click', function () {
+                                                    const sortField = this.getAttribute('data-sort');
+                                                    const currentUrl = new URL(window.location);
+
+                                                    // Determine if this is in subjects table or majors table
+                                                    const isSubjectSort = ['subjectCode', 'subjectName', 'major', 'credit'].includes(sortField);
+
+                                                    let currentSort, currentDir, sortParam, dirParam;
+
+                                                    if (isSubjectSort) {
+                                                        // Subject sorting
+                                                        currentSort = currentUrl.searchParams.get('subjectSort') || 'subjectCode';
+                                                        currentDir = currentUrl.searchParams.get('subjectDir') || 'asc';
+                                                        sortParam = 'subjectSort';
+                                                        dirParam = 'subjectDir';
+                                                    } else {
+                                                        // Major sorting  
+                                                        currentSort = currentUrl.searchParams.get('sort') || 'majorCode';
+                                                        currentDir = currentUrl.searchParams.get('dir') || 'asc';
+                                                        sortParam = 'sort';
+                                                        dirParam = 'dir';
+                                                    }
+
+                                                    // Toggle sort direction
+                                                    let newDir = 'asc';
+                                                    if (currentSort === sortField && currentDir === 'asc') {
+                                                        newDir = 'desc';
+                                                    }
+
+                                                    // Update URL parameters
+                                                    currentUrl.searchParams.set(sortParam, sortField);
+                                                    currentUrl.searchParams.set(dirParam, newDir);
+
+                                                    // Redirect to sorted URL
+                                                    window.location.href = currentUrl.toString();
+                                                });
+                                            });
+
+                                            // Update sort icons based on current sort
+                                            const currentUrl = new URL(window.location);
+                                            const majorSort = currentUrl.searchParams.get('sort') || 'majorCode';
+                                            const majorDir = currentUrl.searchParams.get('dir') || 'asc';
+                                            const subjectSort = currentUrl.searchParams.get('subjectSort') || 'subjectCode';
+                                            const subjectDir = currentUrl.searchParams.get('subjectDir') || 'asc';
+
+                                            sortableHeaders.forEach(header => {
+                                                const sortField = header.getAttribute('data-sort');
+                                                const icon = header.querySelector('.sort-icon');
+
+                                                if (icon) {
+                                                    // Always keep the double arrow icon, only change color
+                                                    icon.className = 'bi bi-arrow-down-up sort-icon text-muted';
+
+                                                    // Determine which sort applies to this field
+                                                    const isSubjectSort = ['subjectCode', 'subjectName', 'major', 'credit'].includes(sortField);
+                                                    const currentSort = isSubjectSort ? subjectSort : majorSort;
+                                                    const currentDir = isSubjectSort ? subjectDir : majorDir;
+
+                                                    // Set active state - only change color to primary
+                                                    if (currentSort === sortField) {
+                                                        icon.className = 'bi bi-arrow-down-up sort-icon text-primary';
+                                                    }
+                                                }
+                                            });
+                                        }
+
+                                        // Initialize sorting when page loads
+                                        setupTableSorting();
+
+                                        // NEW Delete Subject Functionality
+                                        document.querySelectorAll('.remove-subject-button').forEach(function (button) {
+                                            button.addEventListener('click', function (e) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+
+                                                const subjectId = this.getAttribute('data-subject-id');
+                                                const subjectCode = this.getAttribute('data-subject-code');
+
+                                                // Get current context
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                const isViewAll = urlParams.get('viewAll') === 'true';
+                                                const selectedMajorId = '${selectedMajorId}';
+
+                                                // Setup modal content
+                                                const messageDiv = document.getElementById('deleteConfirmMessage');
+                                                const form = document.getElementById('confirmDeleteForm');
+                                                const button = document.getElementById('confirmDeleteButton');
+
+                                                if (isViewAll || !selectedMajorId || selectedMajorId === '' || selectedMajorId === 'null') {
+                                                    // Complete deletion
+                                                    messageDiv.innerHTML = `
+                                                        <p>Bạn có chắc chắn muốn <strong class="text-danger">xóa hoàn toàn</strong> môn học:</p>
+                                                        <h5 class="text-primary">${subjectCode}</h5>
+                                                        <div class="alert alert-warning mt-3">
+                                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                                            <strong>Lưu ý:</strong> Môn học sẽ bị xóa khỏi tất cả ngành học và không thể khôi phục.
+                                                        </div>
+                                                    `;
+                                                    form.action = '${pageContext.request.contextPath}/admin/subjects/delete';
+                                                    form.innerHTML = `
+                                                        <input type="hidden" name="id" value="${subjectId}">
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="bi bi-trash me-1"></i>Xóa hoàn toàn
+                                                        </button>
+                                                    `;
+                                                } else {
+                                                    // Remove from major only
+                                                    messageDiv.innerHTML = `
+                                                        <p>Bạn có chắc chắn muốn <strong class="text-warning">gỡ môn học</strong>:</p>
+                                                        <h5 class="text-primary">${subjectCode}</h5>
+                                                        <p>khỏi ngành này?</p>
+                                                        <div class="alert alert-info mt-3">
+                                                            <i class="bi bi-info-circle me-2"></i>
+                                                            <strong>Lưu ý:</strong> Môn học chỉ bị gỡ khỏi ngành này, không bị xóa hoàn toàn.
+                                                        </div>
+                                                    `;
+                                                    form.action = '${pageContext.request.contextPath}/admin/majors/' + selectedMajorId + '/subjects/delete';
+                                                    form.innerHTML = `
+                                                        <input type="hidden" name="subjectId" value="${subjectId}">
+                                                        <button type="submit" class="btn btn-warning">
+                                                            <i class="bi bi-x-circle me-1"></i>Gỡ khỏi ngành
+                                                        </button>
+                                                    `;
+                                                }
+
+                                                // Show modal using Bootstrap
+                                                const modal = new bootstrap.Modal(document.getElementById('confirmDeleteSubjectModal'));
+                                                modal.show();
+                                            });
+                                        });
+
+
 
                                         // Check for flash messages and show notifications
                                         <c:if test="${not empty success}">

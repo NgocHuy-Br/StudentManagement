@@ -85,4 +85,39 @@ public interface MajorRepository extends JpaRepository<Major, Long> {
   // Đếm số ngành chứa môn học cụ thể
   @Query("SELECT COUNT(m) FROM Major m JOIN m.subjects s WHERE s = :subject")
   Long countBySubjectsContaining(@Param("subject") com.StudentManagement.entity.Subject subject);
+
+  // Methods with Sort support
+  @Query("""
+      SELECT DISTINCT m FROM Major m
+      LEFT JOIN FETCH m.faculty
+      LEFT JOIN FETCH m.subjects
+      """)
+  List<Major> findAllWithSubjectCount(org.springframework.data.domain.Sort sort);
+
+  @Query("""
+      SELECT DISTINCT m FROM Major m
+      LEFT JOIN FETCH m.faculty
+      LEFT JOIN FETCH m.subjects
+      WHERE m.faculty.id = :facultyId
+      """)
+  List<Major> findByFacultyIdWithSubjectCount(@Param("facultyId") Long facultyId,
+      org.springframework.data.domain.Sort sort);
+
+  @Query("""
+      SELECT m FROM Major m
+      LEFT JOIN FETCH m.faculty
+      WHERE lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
+         OR lower(m.majorName) LIKE lower(concat('%', :search, '%'))
+      """)
+  List<Major> searchByCodeOrName(@Param("search") String search, org.springframework.data.domain.Sort sort);
+
+  @Query("""
+      SELECT m FROM Major m
+      LEFT JOIN FETCH m.faculty
+      WHERE m.faculty.id = :facultyId
+        AND (lower(m.majorCode) LIKE lower(concat('%', :search, '%'))
+         OR lower(m.majorName) LIKE lower(concat('%', :search, '%')))
+      """)
+  List<Major> searchByCodeOrNameAndFaculty(@Param("search") String search, @Param("facultyId") Long facultyId,
+      org.springframework.data.domain.Sort sort);
 }
