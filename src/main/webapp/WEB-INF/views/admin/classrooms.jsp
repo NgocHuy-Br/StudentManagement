@@ -458,8 +458,10 @@
                                 <div class="modal fade" id="addClassroomModal" tabindex="-1">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
-                                            <form method="post"
+                                            <form id="addClassroomForm" method="post"
                                                 action="${pageContext.request.contextPath}/admin/classrooms">
+                                                <input type="hidden" name="${_csrf.parameterName}"
+                                                    value="${_csrf.token}" />
                                                 <div class="modal-header">
                                                     <h5 class="modal-title">Thêm lớp học mới</h5>
                                                     <button type="button" class="btn-close"
@@ -521,6 +523,8 @@
                                             <div class="modal-content">
                                                 <form method="post"
                                                     action="${pageContext.request.contextPath}/admin/classrooms/${selectedClass.id}/students/add">
+                                                    <input type="hidden" name="${_csrf.parameterName}"
+                                                        value="${_csrf.token}" />
                                                     <div class="modal-header">
                                                         <h5 class="modal-title">Thêm sinh viên vào lớp
                                                             ${selectedClass.classCode}
@@ -568,6 +572,8 @@
                                             <div class="modal-content">
                                                 <form method="post"
                                                     action="${pageContext.request.contextPath}/admin/classrooms/${selectedClass.id}/students/create">
+                                                    <input type="hidden" name="${_csrf.parameterName}"
+                                                        value="${_csrf.token}" />
                                                     <div class="modal-header">
                                                         <h5 class="modal-title">Tạo sinh viên mới cho lớp
                                                             ${selectedClass.classCode}
@@ -658,6 +664,8 @@
                                                 <form id="editClassroomForm"
                                                     action="${pageContext.request.contextPath}/admin/classrooms/update"
                                                     method="post">
+                                                    <input type="hidden" name="${_csrf.parameterName}"
+                                                        value="${_csrf.token}" />
                                                     <input type="hidden" id="editClassroomId" name="id">
 
                                                     <!-- Warning message for classes with students -->
@@ -1062,9 +1070,12 @@
                                         }
 
                                         // Form submit validation for Add Form
-                                        const addForm = document.querySelector('#addClassroomModal form');
+                                        const addForm = document.querySelector('#addClassroomForm');
                                         if (addForm) {
                                             addForm.addEventListener('submit', function (e) {
+                                                console.log('Form action:', this.action);
+                                                console.log('Form method:', this.method);
+
                                                 const courseYear = addCourseYearInput.value;
                                                 const validation = validateCourseYear(courseYear);
 

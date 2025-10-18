@@ -301,18 +301,34 @@ public class AdminController {
         return "admin/classrooms/create";
     }
 
+    // Fallback mapping for incorrect URL
+    @PostMapping("/classrooms/add")
+    public String createClassroomFallback(@RequestParam String classCode,
+            @RequestParam String courseYear,
+            @RequestParam Long majorId,
+            @RequestParam(required = false) Long teacherId,
+            RedirectAttributes ra) {
+        // Redirect to the correct endpoint
+        return createClassroom(classCode, courseYear, majorId, teacherId, ra);
+    }
+
     // Thêm lớp học mới
     @PostMapping("/classrooms")
     @Transactional
     public String createClassroom(@RequestParam String classCode,
             @RequestParam String courseYear,
-            @RequestParam String majorCode,
+            @RequestParam Long majorId,
             @RequestParam(required = false) Long teacherId,
             RedirectAttributes ra) {
 
+        System.out.println("=== CREATE CLASSROOM REQUEST ===");
+        System.out.println("Class Code: " + classCode);
+        System.out.println("Course Year: " + courseYear);
+        System.out.println("Major ID: " + majorId);
+        System.out.println("Teacher ID: " + teacherId);
+
         String code = classCode.trim().toUpperCase();
         String year = courseYear.trim();
-        String majCode = majorCode.trim();
 
         if (code.isEmpty()) {
             ra.addFlashAttribute("error", "Vui lòng nhập mã lớp.");
@@ -331,13 +347,12 @@ public class AdminController {
             return "redirect:/admin/classrooms";
         }
 
-        // Tìm ngành theo mã ngành
-        List<Major> majors = majorRepository.findByMajorCode(majCode);
-        if (majors.isEmpty()) {
-            ra.addFlashAttribute("error", "Không tìm thấy ngành " + majCode);
+        // Tìm ngành theo ID
+        Major major = majorRepository.findById(majorId).orElse(null);
+        if (major == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy ngành với ID: " + majorId);
             return "redirect:/admin/classrooms";
         }
-        Major major = majors.get(0);
 
         Teacher teacher = null;
         if (teacherId != null) {
