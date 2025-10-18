@@ -230,6 +230,7 @@
                                                                                         class="btn btn-sm btn-outline-danger delete-major-btn"
                                                                                         data-id="${major.id}"
                                                                                         data-code="${major.majorCode}"
+                                                                                        data-name="${major.majorName}"
                                                                                         type="button">
                                                                                         <i class="bi bi-trash"></i>
                                                                                     </button>
@@ -624,26 +625,49 @@
 
                                 <!-- Delete Major Modal -->
                                 <div class="modal fade" id="deleteMajorModal" tabindex="-1">
-                                    <div class="modal-dialog">
+                                    <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title">Xác nhận xóa</h5>
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa ngành
+                                                    học
+                                                </h5>
                                                 <button type="button" class="btn-close btn-close-white"
                                                     data-bs-dismiss="modal"></button>
                                             </div>
-                                            <div class="modal-body">
-                                                <p>Bạn có chắc chắn muốn xóa ngành học <strong
-                                                        id="deleteMajorName"></strong>?
-                                                </p>
+                                            <div class="modal-body text-center">
+                                                <div class="mb-4">
+                                                    <i class="bi bi-trash text-danger" style="font-size: 4rem;"></i>
+                                                </div>
+                                                <h5 class="mb-3">Bạn có chắc chắn muốn xóa ngành học này?</h5>
+                                                <div class="alert alert-warning">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <div>
+                                                            <strong>Ngành:</strong> <span id="deleteConfirmMajorCode"
+                                                                class="fw-bold text-primary"></span> -
+                                                            <span id="deleteConfirmMajorName"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="alert alert-danger mb-0">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                                    <strong>Cảnh báo:</strong> Thao tác này không thể hoàn tác!
+                                                    <br><small>Tất cả dữ liệu liên quan đến ngành này sẽ bị xóa vĩnh
+                                                        viễn.</small>
+                                                </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Hủy</button>
+                                            <div class="modal-footer justify-content-center">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    <i class="bi bi-x-lg me-1"></i>Hủy bỏ
+                                                </button>
                                                 <form method="post"
                                                     action="${pageContext.request.contextPath}/admin/majors/delete"
                                                     style="display: inline;">
                                                     <input type="hidden" id="deleteMajorId" name="id">
-                                                    <button type="submit" class="btn btn-danger">Xóa</button>
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="bi bi-trash me-1"></i>Xác nhận xóa
+                                                    </button>
                                                 </form>
                                             </div>
                                         </div>
@@ -1139,33 +1163,16 @@
 
                                                 const majorId = this.getAttribute('data-id');
                                                 const majorCode = this.getAttribute('data-code');
+                                                const majorName = this.getAttribute('data-name');
 
-                                                if (confirm(`Bạn có chắc chắn muốn xóa ngành "${majorCode}"?\n\nLưu ý: Thao tác này không thể hoàn tác!`)) {
-                                                    // Create and submit delete form
-                                                    const form = document.createElement('form');
-                                                    form.method = 'POST';
-                                                    form.action = '/admin/majors/delete';
+                                                // Fill delete confirmation modal
+                                                document.getElementById('deleteConfirmMajorCode').textContent = majorCode;
+                                                document.getElementById('deleteConfirmMajorName').textContent = majorName;
+                                                document.getElementById('deleteMajorId').value = majorId;
 
-                                                    // Add major ID parameter
-                                                    const idInput = document.createElement('input');
-                                                    idInput.type = 'hidden';
-                                                    idInput.name = 'id';
-                                                    idInput.value = majorId;
-                                                    form.appendChild(idInput);
-
-                                                    // Add CSRF token if available
-                                                    const csrfToken = document.querySelector('meta[name="_csrf"]');
-                                                    if (csrfToken) {
-                                                        const csrfInput = document.createElement('input');
-                                                        csrfInput.type = 'hidden';
-                                                        csrfInput.name = '_token';
-                                                        csrfInput.value = csrfToken.content;
-                                                        form.appendChild(csrfInput);
-                                                    }
-
-                                                    document.body.appendChild(form);
-                                                    form.submit();
-                                                }
+                                                // Show delete confirmation modal
+                                                const deleteModal = new bootstrap.Modal(document.getElementById('deleteMajorModal'));
+                                                deleteModal.show();
                                             });
                                         });
                                     });
