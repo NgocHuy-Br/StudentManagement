@@ -193,9 +193,7 @@
                                                                                         <c:when
                                                                                             test="${not empty major.faculty}">
                                                                                             <span
-                                                                                                class="badge bg-primary">${major.faculty.facultyCode}
-                                                                                                -
-                                                                                                ${major.faculty.name}</span>
+                                                                                                class="badge bg-primary">${major.faculty.name}</span>
                                                                                         </c:when>
                                                                                         <c:otherwise>
                                                                                             <span
@@ -284,8 +282,7 @@
                                                                                 ${selectedMajorId eq major.id and
                                                                                 param.viewAll ne 'true' ? 'selected'
                                                                                 : '' }>
-                                                                                🎓 ${major.majorCode} -
-                                                                                ${major.majorName}
+                                                                                🎓 ${major.majorName}
                                                                             </option>
                                                                         </c:forEach>
                                                                     </select>
@@ -1013,10 +1010,6 @@
                                                     data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body">
-                                                <div class="text-center mb-3">
-                                                    <i class="bi bi-exclamation-triangle text-danger"
-                                                        style="font-size: 3rem;"></i>
-                                                </div>
                                                 <div id="deleteConfirmMessage" class="text-center">
                                                     <!-- Message will be set dynamically -->
                                                 </div>
@@ -1532,10 +1525,6 @@
                                                     messageDiv.innerHTML = `
                                                         <p>Bạn có chắc chắn muốn <strong class="text-danger">xóa hoàn toàn</strong> môn học:</p>
                                                         <h5 class="text-primary">${subjectCode}</h5>
-                                                        <div class="alert alert-warning mt-3">
-                                                            <i class="bi bi-exclamation-triangle me-2"></i>
-                                                            <strong>Lưu ý:</strong> Môn học sẽ bị xóa khỏi tất cả ngành học và không thể khôi phục.
-                                                        </div>
                                                     `;
                                                     form.action = '${pageContext.request.contextPath}/admin/subjects/delete';
                                                     form.innerHTML = `
@@ -1550,10 +1539,6 @@
                                                         <p>Bạn có chắc chắn muốn <strong class="text-warning">gỡ môn học</strong>:</p>
                                                         <h5 class="text-primary">${subjectCode}</h5>
                                                         <p>khỏi ngành này?</p>
-                                                        <div class="alert alert-info mt-3">
-                                                            <i class="bi bi-info-circle me-2"></i>
-                                                            <strong>Lưu ý:</strong> Môn học chỉ bị gỡ khỏi ngành này, không bị xóa hoàn toàn.
-                                                        </div>
                                                     `;
                                                     form.action = '${pageContext.request.contextPath}/admin/majors/' + selectedMajorId + '/subjects/delete';
                                                     form.innerHTML = `
