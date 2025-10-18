@@ -1237,6 +1237,207 @@
                                             });
                                         });
 
+                                        // Function to get selectedMajorId from URL or JSP
+                                        function getSelectedMajorIdFromUrl() {
+                                            const urlParams = new URLSearchParams(window.location.search);
+                                            const urlMajorId = urlParams.get('selectedMajorId');
+                                            const jspMajorId = '${selectedMajorId}';
+
+                                            console.log('URL search params:', window.location.search);
+                                            console.log('URL majorId:', urlMajorId);
+                                            console.log('JSP majorId:', jspMajorId);
+
+                                            // Use URL majorId first, then fallback to JSP majorId
+                                            return urlMajorId || (jspMajorId && jspMajorId !== 'null' ? jspMajorId : null);
+                                        }
+
+                                        // Add Existing Subject Modal Event
+                                        const addExistingSubjectModal = document.getElementById('addExistingSubjectModal');
+                                        if (addExistingSubjectModal) {
+                                            addExistingSubjectModal.addEventListener('shown.bs.modal', function () {
+                                                const majorId = getSelectedMajorIdFromUrl();
+                                                console.log('Modal opened with majorId from URL:', majorId);
+                                                console.log('JSP selectedMajorId:', '${selectedMajorId}');
+                                                if (majorId && majorId.trim() !== '' && majorId !== 'null') {
+                                                    loadAvailableSubjects(majorId);
+                                                } else {
+                                                    const tableBody = document.getElementById('existingSubjectsTable');
+                                                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-warning">Vui lòng chọn một ngành để thêm môn học</td></tr>';
+                                                }
+                                            });
+                                        }
+
+                                        // Function to load available subjects
+                                        function loadAvailableSubjects(majorId) {
+                                            console.log('=== loadAvailableSubjects called ===');
+                                            console.log('majorId parameter:', majorId, typeof majorId);
+
+                                            const tableBody = document.getElementById('existingSubjectsTable');
+                                            const addButton = document.getElementById('addSelectedSubjects');
+
+                                            if (!majorId || majorId === 'null' || majorId.toString().trim() === '') {
+                                                console.error('Invalid majorId provided:', majorId);
+                                                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">ID ngành không hợp lệ</td></tr>';
+                                                return;
+                                            }
+
+                                            // Show loading
+                                            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Đang tải...</td></tr>';
+
+                                            console.log('Loading subjects for major ID:', majorId);
+                                            const url = '${pageContext.request.contextPath}/admin/majors/' + majorId + '/available-subjects';
+                                            console.log('Fetch URL:', url);
+
+                                            fetch(url)
+                                                .then(response => {
+                                                    console.log('Response status:', response.status);
+                                                    console.log('Response headers:', response.headers.get('content-type'));
+
+                                                    if (!response.ok) {
+                                                        return response.text().then(text => {
+                                                            console.error('Error response body:', text);
+                                                            throw new Error('HTTP ' + response.status + ': ' + text.substring(0, 200));
+                                                        });
+                                                    }
+
+                                                    // Check if response is JSON
+                                                    const contentType = response.headers.get('content-type');
+                                                    if (!contentType || !contentType.includes('application/json')) {
+                                                        return response.text().then(text => {
+                                                            console.error('Non-JSON response:', text);
+                                                            throw new Error('Server returned non-JSON response');
+                                                        });
+                                                    }
+
+                                                    return response.json();
+                                                })
+                                                .then(subjects => {
+                                                    console.log('Received subjects:', subjects);
+                                                    if (subjects.length === 0) {
+                                                        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Không có môn học nào khả dụng</td></tr>';
+                                                        return;
+                                                    }
+
+                                                    let html = '';
+                                                    subjects.forEach(subject => {
+                                                        html += `
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input subject-checkbox" 
+                                                                               type="checkbox" 
+                                                                               value="\${subject.id}">
+                                                                    </div>
+                                                                </td>
+                                                                <td>\${subject.subjectCode}</td>
+                                                                <td>\${subject.subjectName}</td>
+                                                                <td>\${subject.credit}</td>
+                                                                <td>
+                                                                    <span class="badge bg-success">Khả dụng</span>
+                                                                </td>
+                                                            </tr>
+                                                        `;
+                                                    });
+                                                    tableBody.innerHTML = html;
+
+                                                    // Add event listeners to checkboxes after HTML is created
+                                                    document.querySelectorAll('.subject-checkbox').forEach(checkbox => {
+                                                        checkbox.addEventListener('change', toggleAddButton);
+                                                    });
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error loading subjects:', error);
+                                                    console.error('Error details:', error.message);
+                                                    console.error('Fetch URL was:', url);
+                                                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Lỗi khi tải dữ liệu: ' + error.message + '</td></tr>';
+                                                });
+                                        }
+
+                                        // Toggle add button based on checkbox selection
+                                        function toggleAddButton() {
+                                            const checkboxes = document.querySelectorAll('.subject-checkbox:checked');
+                                            const addButton = document.getElementById('addSelectedSubjects');
+                                            addButton.disabled = checkboxes.length === 0;
+                                        }
+
+                                        // Search existing subjects
+                                        document.getElementById('searchExistingSubject').addEventListener('input', function () {
+                                            const filter = this.value.toLowerCase();
+                                            const rows = document.querySelectorAll('#existingSubjectsTable tr');
+
+                                            rows.forEach(row => {
+                                                const cells = row.querySelectorAll('td');
+                                                if (cells.length > 1) {
+                                                    const code = cells[1].textContent.toLowerCase();
+                                                    const name = cells[2].textContent.toLowerCase();
+                                                    const show = code.includes(filter) || name.includes(filter);
+                                                    row.style.display = show ? '' : 'none';
+                                                }
+                                            });
+                                        });
+
+                                        // Add selected subjects to major
+                                        document.getElementById('addSelectedSubjects').addEventListener('click', function () {
+                                            const checkboxes = document.querySelectorAll('.subject-checkbox:checked');
+                                            const subjectIds = Array.from(checkboxes).map(cb => cb.value);
+                                            const majorId = getSelectedMajorIdFromUrl();
+
+                                            if (subjectIds.length === 0 || !majorId || majorId.trim() === '' || majorId === 'null') {
+                                                alert('Vui lòng chọn môn học và đảm bảo đã chọn ngành');
+                                                return;
+                                            }
+
+                                            // Create form and submit
+                                            const form = document.createElement('form');
+                                            form.method = 'POST';
+                                            form.action = '${pageContext.request.contextPath}/admin/majors/' + majorId + '/add-subjects';
+
+                                            subjectIds.forEach(id => {
+                                                const input = document.createElement('input');
+                                                input.type = 'hidden';
+                                                input.name = 'subjectIds';
+                                                input.value = id;
+                                                form.appendChild(input);
+                                            });
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        });
+
+                                        // Edit Subject Button
+                                        document.querySelectorAll('.edit-subject-btn').forEach(function (button) {
+                                            button.addEventListener('click', function (e) {
+                                                e.stopPropagation(); // Prevent row selection
+
+                                                const subjectId = this.getAttribute('data-id');
+                                                const subjectCode = this.getAttribute('data-code');
+                                                const subjectName = this.getAttribute('data-name');
+                                                const subjectCredit = this.getAttribute('data-credit');
+                                                const attendanceWeight = this.getAttribute('data-attendance-weight');
+                                                const midtermWeight = this.getAttribute('data-midterm-weight');
+                                                const finalWeight = this.getAttribute('data-final-weight');
+
+                                                // Fill edit form
+                                                document.getElementById('editSubjectId').value = subjectId;
+                                                document.getElementById('editSubjectCode').value = subjectCode;
+                                                document.getElementById('editSubjectName').value = subjectName;
+                                                document.getElementById('editSubjectCredit').value = subjectCredit;
+
+                                                // Set weight values if they exist
+                                                const attendanceWeightField = document.getElementById('editAttendanceWeight');
+                                                const midtermWeightField = document.getElementById('editMidtermWeight');
+                                                const finalWeightField = document.getElementById('editFinalWeight');
+
+                                                if (attendanceWeightField) attendanceWeightField.value = attendanceWeight || 10;
+                                                if (midtermWeightField) midtermWeightField.value = midtermWeight || 30;
+                                                if (finalWeightField) finalWeightField.value = finalWeight || 60;
+
+                                                // Show edit modal
+                                                const editModal = new bootstrap.Modal(document.getElementById('editSubjectModal'));
+                                                editModal.show();
+                                            });
+                                        });
+
                                         // Check for flash messages and show notifications
                                         <c:if test="${not empty success}">
                                             setTimeout(function() {

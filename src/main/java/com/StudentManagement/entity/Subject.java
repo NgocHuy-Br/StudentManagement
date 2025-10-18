@@ -1,5 +1,6 @@
 package com.StudentManagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -29,10 +30,12 @@ public class Subject {
     private Float finalWeight = 0.6f; // Hệ số điểm cuối kỳ (TP3)
 
     // Quan hệ Many-to-Many với Major (1 môn có thể thuộc nhiều ngành)
+    @JsonIgnore
     @ManyToMany(mappedBy = "subjects", fetch = FetchType.LAZY)
     private List<Major> majors;
 
     // Quan hệ với Score (1 môn có nhiều điểm)
+    @JsonIgnore
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Score> scores;
 

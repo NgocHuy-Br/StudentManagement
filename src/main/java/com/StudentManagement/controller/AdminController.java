@@ -1673,10 +1673,22 @@ public class AdminController {
     @ResponseBody
     public List<Subject> getAvailableSubjects(@PathVariable Long majorId) {
         try {
+            logger.info("Getting available subjects for major ID: {}", majorId);
+
+            // Check if major exists
+            Optional<Major> majorOptional = majorRepository.findById(majorId);
+            if (!majorOptional.isPresent()) {
+                logger.warn("Major with ID {} not found", majorId);
+                return new ArrayList<>();
+            }
+
             // Get all subjects that are not in this major
-            return subjectRepository.findSubjectsNotInMajor(majorId);
+            List<Subject> availableSubjects = subjectRepository.findSubjectsNotInMajor(majorId);
+            logger.info("Found {} available subjects for major ID: {}", availableSubjects.size(), majorId);
+
+            return availableSubjects;
         } catch (Exception e) {
-            logger.error("Error getting available subjects for major {}: {}", majorId, e.getMessage());
+            logger.error("Error getting available subjects for major {}: {}", majorId, e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -1863,10 +1875,10 @@ public class AdminController {
             major.setDescription(description);
             major.setFaculty(faculty);
 
-            majorRepository.save(major);
+            Major savedMajor = majorRepository.save(major);
 
             ra.addFlashAttribute("success", "Thêm ngành học thành công");
-            return "redirect:/admin/majors";
+            return "redirect:/admin/majors?selectedMajorId=" + savedMajor.getId();
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/admin/majors";
