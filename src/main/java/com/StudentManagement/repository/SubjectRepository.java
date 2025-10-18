@@ -14,82 +14,73 @@ import java.util.Optional;
 
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
-  boolean existsBySubjectCode(String subjectCode);
+    boolean existsBySubjectCode(String subjectCode);
 
-  Optional<Subject> findBySubjectCode(String subjectCode);
+    Optional<Subject> findBySubjectCode(String subjectCode);
 
-  // Lấy danh sách môn học kèm ngành để phân trang/sắp xếp
-  @EntityGraph(attributePaths = { "majors" })
-  Page<Subject> findAll(Pageable pageable);
+    // Lấy danh sách môn học kèm ngành để phân trang/sắp xếp
+    @EntityGraph(attributePaths = { "major" })
+    Page<Subject> findAll(Pageable pageable);
 
-  // Tìm kiếm theo mã môn, tên môn
-  @EntityGraph(attributePaths = { "majors" })
-  @Query("""
-      select distinct s from Subject s left join s.majors m
-      where
-        lower(s.subjectCode) like lower(concat('%', :q, '%'))
-        or lower(s.subjectName) like lower(concat('%', :q, '%'))
-      """)
-  Page<Subject> search(@Param("q") String q, Pageable pageable);
+    // Tìm kiếm theo mã môn, tên môn
+    @EntityGraph(attributePaths = { "major" })
+    @Query("""
+            select s from Subject s
+            where lower(s.subjectCode) like lower(concat('%', :q, '%'))
+              or lower(s.subjectName) like lower(concat('%', :q, '%'))
+            """)
+    Page<Subject> search(@Param("q") String q, Pageable pageable);
 
-  // Lấy môn học theo ngành (Many-to-Many) - Pageable version
-  @EntityGraph(attributePaths = { "majors" })
-  @Query("select distinct s from Subject s join s.majors m where m.id = :majorId")
-  Page<Subject> findByMajorId(Long majorId, Pageable pageable);
+    // Lấy môn học theo ngành (One-to-Many) - Pageable version
+    @EntityGraph(attributePaths = { "major" })
+    Page<Subject> findByMajorId(Long majorId, Pageable pageable);
 
-  // Lấy môn học theo ngành (Many-to-Many) - List version
-  @EntityGraph(attributePaths = { "majors" })
-  @Query("select distinct s from Subject s join s.majors m where m.id = :majorId")
-  List<Subject> findByMajorId(Long majorId);
+    // Lấy môn học theo ngành (One-to-Many) - List version
+    @EntityGraph(attributePaths = { "major" })
+    List<Subject> findByMajorId(Long majorId);
 
-  // Tìm kiếm môn học trong một ngành cụ thể
-  @EntityGraph(attributePaths = { "majors" })
-  @Query("""
-      select distinct s from Subject s join s.majors m
-      where m.id = :majorId
-        and (lower(s.subjectCode) like lower(concat('%', :q, '%'))
-             or lower(s.subjectName) like lower(concat('%', :q, '%')))
-      """)
-  Page<Subject> searchByMajorId(@Param("majorId") Long majorId, @Param("q") String q, Pageable pageable);
+    // Tìm kiếm môn học trong một ngành cụ thể
+    @EntityGraph(attributePaths = { "major" })
+    @Query("""
+            select s from Subject s
+            where s.major.id = :majorId
+              and (lower(s.subjectCode) like lower(concat('%', :q, '%'))
+                   or lower(s.subjectName) like lower(concat('%', :q, '%')))
+            """)
+    Page<Subject> searchByMajorId(@Param("majorId") Long majorId, @Param("q") String q, Pageable pageable);
 
-  // Đếm số môn học theo ngành (Many-to-Many)
-  @Query("select count(distinct s) from Subject s join s.majors m where m.id = :majorId")
-  long countByMajorId(@Param("majorId") Long majorId);
+    // Đếm số môn học theo ngành (One-to-Many)
+    long countByMajorId(Long majorId);
 
-  // Lấy môn học theo ngành với sắp xếp
-  @EntityGraph(attributePaths = { "majors" })
-  @Query("select distinct s from Subject s join s.majors m where m.id = :majorId")
-  List<Subject> findByMajorIdWithSort(@Param("majorId") Long majorId, org.springframework.data.domain.Sort sort);
+    // Lấy môn học theo ngành với sắp xếp
+    @EntityGraph(attributePaths = { "major" })
+    List<Subject> findByMajorId(Long majorId, org.springframework.data.domain.Sort sort);
 
-  // Tìm kiếm môn học trong ngành với sắp xếp
-  @EntityGraph(attributePaths = { "majors" })
-  @Query("""
-      select distinct s from Subject s join s.majors m
-      where m.id = :majorId
-        and (lower(s.subjectCode) like lower(concat('%', :q, '%'))
-             or lower(s.subjectName) like lower(concat('%', :q, '%')))
-      """)
-  List<Subject> findByMajorIdAndSearchWithSort(@Param("majorId") Long majorId, @Param("q") String q,
-      org.springframework.data.domain.Sort sort);
+    // Tìm kiếm môn học trong ngành với sắp xếp
+    @EntityGraph(attributePaths = { "major" })
+    @Query("""
+            select s from Subject s
+            where s.major.id = :majorId
+              and (lower(s.subjectCode) like lower(concat('%', :q, '%'))
+                   or lower(s.subjectName) like lower(concat('%', :q, '%')))
+            """)
+    List<Subject> findByMajorIdAndSearchWithSort(@Param("majorId") Long majorId, @Param("q") String q,
+            org.springframework.data.domain.Sort sort);
 
-  // Lấy danh sách môn học chưa thuộc ngành
-  @Query("""
-      SELECT s FROM Subject s
-      WHERE s.id NOT IN (
-          SELECT DISTINCT sub.id FROM Subject sub
-          JOIN sub.majors m
-          WHERE m.id = :majorId
-      )
-      ORDER BY s.subjectCode ASC
-      """)
-  List<Subject> findSubjectsNotInMajor(@Param("majorId") Long majorId);
+    // Lấy danh sách môn học chưa thuộc ngành nào (để thêm vào ngành)
+    @Query("SELECT s FROM Subject s WHERE s.major IS NULL ORDER BY s.subjectCode ASC")
+    List<Subject> findSubjectsWithoutMajor();
 
-  // Tìm kiếm tất cả môn học (không phụ thuộc ngành)
-  @EntityGraph(attributePaths = { "majors" })
-  @Query("""
-      select distinct s from Subject s
-      where lower(s.subjectCode) like lower(concat('%', :q, '%'))
-         or lower(s.subjectName) like lower(concat('%', :q, '%'))
-      """)
-  List<Subject> findAllBySearchWithSort(@Param("q") String q, org.springframework.data.domain.Sort sort);
+    // Tìm kiếm tất cả môn học (không phụ thuộc ngành)
+    @EntityGraph(attributePaths = { "major" })
+    @Query("""
+            select s from Subject s
+            where lower(s.subjectCode) like lower(concat('%', :q, '%'))
+               or lower(s.subjectName) like lower(concat('%', :q, '%'))
+            """)
+    List<Subject> findAllBySearchWithSort(@Param("q") String q, org.springframework.data.domain.Sort sort);
+
+    // Helper method for data migration - get major IDs from old many-to-many table
+    @Query(value = "SELECT major_id FROM major_subjects WHERE subject_id = :subjectId", nativeQuery = true)
+    List<Long> findMajorIdsBySubjectId(@Param("subjectId") Long subjectId);
 }

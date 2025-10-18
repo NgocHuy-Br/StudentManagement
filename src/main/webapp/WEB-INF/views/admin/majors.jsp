@@ -407,8 +407,8 @@
                                                                                     class="bi bi-arrow-down-up sort-icon"></i>
                                                                             </th>
                                                                             <c:if test="${param.viewAll eq 'true'}">
-                                                                                <th class="sortable" data-sort="majors">
-                                                                                    Các ngành <i
+                                                                                <th class="sortable" data-sort="major">
+                                                                                    Ngành <i
                                                                                         class="bi bi-arrow-down-up sort-icon"></i>
                                                                                 </th>
                                                                             </c:if>
@@ -446,15 +446,13 @@
                                                                                         <c:if
                                                                                             test="${param.viewAll eq 'true'}">
                                                                                             <td>
-                                                                                                <c:forEach
-                                                                                                    items="${subject.majors}"
-                                                                                                    var="major"
-                                                                                                    varStatus="status">
-                                                                                                    <span
-                                                                                                        class="badge bg-info me-1 mb-1">${major.majorCode}</span>
-                                                                                                </c:forEach>
                                                                                                 <c:if
-                                                                                                    test="${empty subject.majors}">
+                                                                                                    test="${not empty subject.major}">
+                                                                                                    <span
+                                                                                                        class="badge bg-info me-1 mb-1">${subject.major.majorCode}</span>
+                                                                                                </c:if>
+                                                                                                <c:if
+                                                                                                    test="${empty subject.major}">
                                                                                                     <small
                                                                                                         class="text-muted">Chưa
                                                                                                         gán

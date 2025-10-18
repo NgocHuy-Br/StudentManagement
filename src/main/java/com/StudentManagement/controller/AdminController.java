@@ -1175,26 +1175,26 @@ public class AdminController {
         subject.setMidtermWeight(midtermWeight / 100.0f);
         subject.setFinalWeight(finalWeight / 100.0f);
 
-        Subject savedSubject = subjectRepository.save(subject);
-
         // Nếu có majorId, tự động gán môn học vào ngành
         if (majorId != null) {
             Optional<Major> majorOptional = majorRepository.findById(majorId);
             if (majorOptional.isPresent()) {
                 Major major = majorOptional.get();
-                // Thêm môn học vào ngành
-                major.getSubjects().add(savedSubject);
-                majorRepository.save(major);
+                // Gán ngành cho môn học
+                subject.setMajor(major);
+                Subject savedSubject = subjectRepository.save(subject);
 
                 ra.addFlashAttribute("success",
                         "Đã tạo và gán môn học " + code + " - " + name + " vào ngành " + major.getMajorName());
                 return "redirect:/admin/majors?selectedMajorId=" + majorId;
             } else {
                 ra.addFlashAttribute("warning",
-                        "Đã tạo môn học " + code + " - " + name + " nhưng không tìm thấy ngành để gán");
+                        "Không tìm thấy ngành để gán. Môn học được tạo nhưng chưa thuộc ngành nào.");
+                Subject savedSubject = subjectRepository.save(subject);
                 return "redirect:/admin/majors?viewAll=true";
             }
         } else {
+            Subject savedSubject = subjectRepository.save(subject);
             ra.addFlashAttribute("success",
                     "Đã tạo môn học độc lập: " + code + " - " + name + ". Bạn có thể gán vào ngành sau.");
             return "redirect:/admin/majors?viewAll=true";
@@ -1223,11 +1223,8 @@ public class AdminController {
                 ? subjectRepository.findByMajorId(id, pageable)
                 : subjectRepository.searchByMajorId(id, q.trim(), pageable);
 
-        // Lấy danh sách môn học chưa thuộc ngành này để có thể thêm vào
-        List<Subject> availableSubjects = subjectRepository.findAll();
-        if (major.getSubjects() != null) {
-            availableSubjects.removeAll(major.getSubjects());
-        }
+        // Lấy danh sách môn học chưa thuộc ngành nào để có thể thêm vào
+        List<Subject> availableSubjects = subjectRepository.findSubjectsWithoutMajor();
 
         model.addAttribute("major", major);
         model.addAttribute("page", subjects);
@@ -1257,11 +1254,9 @@ public class AdminController {
             return "redirect:/admin/majors";
         }
 
-        // Chỉ xóa liên kết giữa ngành và môn học, không xóa môn học
-        if (major.getSubjects() != null) {
-            major.getSubjects().remove(subject);
-            majorRepository.save(major);
-        }
+        // Xóa liên kết giữa ngành và môn học - set major của subject thành null
+        subject.setMajor(null);
+        subjectRepository.save(subject);
 
         ra.addFlashAttribute("success", "Đã xóa môn học khỏi ngành: " + subject.getSubjectCode());
         return "redirect:/admin/majors?selectedMajorId=" + majorId;
@@ -1625,7 +1620,7 @@ public class AdminController {
                     subjects = subjectRepository.findByMajorIdAndSearchWithSort(selectedMajorId,
                             subjectSearch.trim(), sort);
                 } else {
-                    subjects = subjectRepository.findByMajorIdWithSort(selectedMajorId, sort);
+                    subjects = subjectRepository.findByMajorId(selectedMajorId, sort);
                 }
             } else {
                 // Trường hợp không có ngành được chọn
@@ -1688,13 +1683,13 @@ public class AdminController {
     }
 
     /**
-     * Get available subjects that are not in the specified major
+     * Get available subjects that are not assigned to any major yet
      */
     @GetMapping("/majors/{majorId}/available-subjects")
     @ResponseBody
     public List<Subject> getAvailableSubjects(@PathVariable Long majorId) {
         try {
-            logger.info("Getting available subjects for major ID: {}", majorId);
+            logger.info("Getting available subjects (without major) for major ID: {}", majorId);
 
             // Check if major exists
             Optional<Major> majorOptional = majorRepository.findById(majorId);
@@ -1703,9 +1698,9 @@ public class AdminController {
                 return new ArrayList<>();
             }
 
-            // Get all subjects that are not in this major
-            List<Subject> availableSubjects = subjectRepository.findSubjectsNotInMajor(majorId);
-            logger.info("Found {} available subjects for major ID: {}", availableSubjects.size(), majorId);
+            // Get all subjects that don't belong to any major yet
+            List<Subject> availableSubjects = subjectRepository.findSubjectsWithoutMajor();
+            logger.info("Found {} available subjects without major", availableSubjects.size());
 
             return availableSubjects;
         } catch (Exception e) {
@@ -1730,15 +1725,9 @@ public class AdminController {
             int addedCount = 0;
 
             for (Subject subject : subjects) {
-                if (subject.getMajors() == null) {
-                    subject.setMajors(new ArrayList<>());
-                }
-                if (major.getSubjects() == null) {
-                    major.setSubjects(new ArrayList<>());
-                }
-                if (!subject.getMajors().contains(major)) {
-                    subject.getMajors().add(major);
-                    major.getSubjects().add(subject);
+                // Kiểm tra xem môn học đã có ngành chưa
+                if (subject.getMajor() == null) {
+                    subject.setMajor(major);
                     addedCount++;
                 }
             }
@@ -1817,18 +1806,9 @@ public class AdminController {
             return "redirect:/admin/majors?selectedMajorId=" + majorId;
         }
 
-        // Xóa môn học khỏi ngành
-        major.getSubjects().remove(subject);
-        subject.getMajors().remove(major);
-
-        majorRepository.save(major);
-
-        // Nếu môn học không còn thuộc ngành nào thì xóa hoàn toàn
-        if (subject.getMajors().isEmpty()) {
-            subjectRepository.delete(subject);
-        } else {
-            subjectRepository.save(subject);
-        }
+        // Xóa liên kết ngành khỏi môn học
+        subject.setMajor(null);
+        subjectRepository.save(subject);
 
         ra.addFlashAttribute("success", "Xóa môn học khỏi ngành thành công.");
         return "redirect:/admin/majors?selectedMajorId=" + majorId;
@@ -1851,16 +1831,19 @@ public class AdminController {
             return "redirect:/admin/majors?selectedMajorId=" + majorId;
         }
 
-        // Kiểm tra xem môn học đã thuộc ngành chưa
-        if (major.getSubjects().contains(subject)) {
-            ra.addFlashAttribute("error", "Môn học đã thuộc ngành này.");
+        // Kiểm tra xem môn học đã thuộc ngành nào chưa
+        if (subject.getMajor() != null) {
+            if (subject.getMajor().getId().equals(majorId)) {
+                ra.addFlashAttribute("error", "Môn học đã thuộc ngành này.");
+            } else {
+                ra.addFlashAttribute("error", "Môn học đã thuộc ngành \"" + subject.getMajor().getMajorName() + "\".");
+            }
             return "redirect:/admin/majors?selectedMajorId=" + majorId;
         }
 
-        major.getSubjects().add(subject);
-        subject.getMajors().add(major);
-
-        majorRepository.save(major);
+        // Gán môn học vào ngành
+        subject.setMajor(major);
+        subjectRepository.save(subject);
 
         ra.addFlashAttribute("success", "Thêm môn học vào ngành thành công.");
         return "redirect:/admin/majors?selectedMajorId=" + majorId;
@@ -2008,7 +1991,7 @@ public class AdminController {
                 int totalCredits = 0;
                 if (major.getSubjects() != null) {
                     totalCredits = major.getSubjects().stream()
-                            .mapToInt(subject -> subject.getCredit() != null ? subject.getCredit() : 0)
+                            .mapToInt(Subject::getCredit)
                             .sum();
                 }
 

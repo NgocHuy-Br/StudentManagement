@@ -29,10 +29,10 @@ public class Subject {
     @Column(name = "final_weight")
     private Float finalWeight = 0.6f; // Hệ số điểm cuối kỳ (TP3)
 
-    // Quan hệ Many-to-Many với Major (1 môn có thể thuộc nhiều ngành)
-    @JsonIgnore
-    @ManyToMany(mappedBy = "subjects", fetch = FetchType.LAZY)
-    private List<Major> majors;
+    // Quan hệ Many-to-One với Major (1 môn chỉ thuộc 1 ngành)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "major_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private Major major;
 
     // Quan hệ với Score (1 môn có nhiều điểm)
     @JsonIgnore
@@ -72,12 +72,12 @@ public class Subject {
         this.credit = credit;
     }
 
-    public List<Major> getMajors() {
-        return majors;
+    public Major getMajor() {
+        return major;
     }
 
-    public void setMajors(List<Major> majors) {
-        this.majors = majors;
+    public void setMajor(Major major) {
+        this.major = major;
     }
 
     public List<Score> getScores() {
