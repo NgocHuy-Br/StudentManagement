@@ -887,18 +887,19 @@ public class AdminController {
             RedirectAttributes ra) {
 
         String u = username.trim();
-        String e = email.trim();
+        String e = email != null ? email.trim() : "";
         String fn = fullName.trim();
 
-        if (u.isEmpty() || fn.isEmpty() || e.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã GV, Họ Tên, Email.");
+        if (u.isEmpty() || fn.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã GV, Họ Tên.");
             return "redirect:/admin/teachers";
         }
         if (userRepository.existsByUsername(u)) {
             ra.addFlashAttribute("error", "Mã GV/Username đã tồn tại: " + u);
             return "redirect:/admin/teachers";
         }
-        if (userRepository.existsByEmail(e)) {
+        // Chỉ kiểm tra email nếu có nhập
+        if (!e.isEmpty() && userRepository.existsByEmail(e)) {
             ra.addFlashAttribute("error", "Email đã tồn tại: " + e);
             return "redirect:/admin/teachers";
         }
@@ -927,7 +928,7 @@ public class AdminController {
         teacherUser.setPassword(passwordEncoder.encode(u)); // Mật khẩu mặc định = mã giáo viên
         teacherUser.setFname(firstName);
         teacherUser.setLname(lastName);
-        teacherUser.setEmail(e);
+        teacherUser.setEmail(!e.isEmpty() ? e : null); // Chỉ set email nếu có giá trị
         teacherUser.setPhone(phone);
         teacherUser.setAddress(address);
         teacherUser.setNationalId(nationalId != null && !nationalId.trim().isEmpty() ? nationalId.trim() : null);
@@ -985,16 +986,24 @@ public class AdminController {
         }
 
         User user = teacher.getUser();
-        String e = email.trim();
+        String u = username != null ? username.trim() : "";
+        String e = email != null ? email.trim() : "";
         String fn = fullName.trim();
 
-        if (fn.isEmpty() || e.isEmpty()) {
-            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Họ Tên, Email.");
+        if (fn.isEmpty() || u.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ: Mã GV, Họ Tên.");
             return "redirect:/admin/teachers";
         }
 
-        // Kiểm tra email trùng (trừ user hiện tại)
-        if (!user.getEmail().equals(e) && userRepository.existsByEmail(e)) {
+        // Kiểm tra username trùng (trừ user hiện tại)
+        if (!user.getUsername().equals(u) && userRepository.existsByUsername(u)) {
+            ra.addFlashAttribute("error", "Mã GV/Username đã tồn tại: " + u);
+            return "redirect:/admin/teachers";
+        }
+
+        // Kiểm tra email trùng (trừ user hiện tại) - chỉ khi có email
+        String currentEmail = user.getEmail() != null ? user.getEmail() : "";
+        if (!e.isEmpty() && !currentEmail.equals(e) && userRepository.existsByEmail(e)) {
             ra.addFlashAttribute("error", "Email đã tồn tại: " + e);
             return "redirect:/admin/teachers";
         }
@@ -1019,9 +1028,10 @@ public class AdminController {
         String lastName = nameParts.length > 1 ? nameParts[1] : "";
 
         // Cập nhật thông tin
+        user.setUsername(u); // Cập nhật username
         user.setFname(firstName);
         user.setLname(lastName);
-        user.setEmail(e);
+        user.setEmail(!e.isEmpty() ? e : null); // Chỉ set email nếu có giá trị
         user.setPhone(phone);
         user.setAddress(address);
         user.setNationalId(nationalId != null && !nationalId.trim().isEmpty() ? nationalId.trim() : null);
@@ -1594,8 +1604,8 @@ public class AdminController {
         // Thêm danh sách các khoa để tạo/sửa ngành
         model.addAttribute("faculties", facultyRepository.findAllOrderByName());
 
-        // Xử lý chế độ xem môn học
-        if (selectedMajorId != null || "true".equals(viewAll)) {
+        // Xử lý chế độ xem môn học - luôn hiển thị môn học
+        {
             Major selectedMajor = null;
             if (selectedMajorId != null) {
                 selectedMajor = majorRepository.findById(selectedMajorId).orElse(null);
@@ -1613,13 +1623,16 @@ public class AdminController {
             List<Subject> subjects;
 
             // Kiểm tra chế độ xem: theo ngành hoặc tất cả môn học
-            if ("true".equals(viewAll)) {
-                // Chế độ xem tất cả môn học
+            if ("true".equals(viewAll) || selectedMajorId == null) {
+                // Chế độ xem tất cả môn học (mặc định khi mới vào trang hoặc chọn "Tất cả
+                // ngành")
                 if (subjectSearch != null && !subjectSearch.isBlank()) {
                     subjects = subjectRepository.findAllBySearchWithSort(subjectSearch.trim(), subjectSortObj);
                 } else {
                     subjects = subjectRepository.findAll(subjectSortObj);
                 }
+                // Set viewAll = true để dropdown hiển thị đúng
+                model.addAttribute("viewAll", "true");
             } else if (selectedMajor != null) {
                 // Chế độ xem theo ngành đã chọn
                 if (subjectSearch != null && !subjectSearch.isBlank()) {
@@ -1634,7 +1647,6 @@ public class AdminController {
             }
 
             model.addAttribute("subjects", subjects);
-            model.addAttribute("viewAll", viewAll);
 
             // Debug log
             System.out.println("DEBUG: viewAll=" + viewAll + ", selectedMajorId=" + selectedMajorId + ", subjects.size="
@@ -1646,6 +1658,11 @@ public class AdminController {
         model.addAttribute("dir", dir);
         model.addAttribute("subjectSort", subjectSort);
         model.addAttribute("subjectDir", subjectDir);
+
+        // Ensure viewAll is always in model
+        if (!model.containsAttribute("viewAll")) {
+            model.addAttribute("viewAll", viewAll);
+        }
 
         return "admin/majors";
     }

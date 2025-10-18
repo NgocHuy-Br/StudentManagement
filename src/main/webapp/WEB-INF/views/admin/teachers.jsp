@@ -66,42 +66,43 @@
                                     <!-- Include notification modal -->
                                     <%@ include file="../common/notification-modal.jsp" %>
 
-                                        <!-- Toolbar: tìm kiếm + lọc khoa + Thêm mới -->
-                                        <form class="teacher-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
-                                            method="get" action="">
-                                            <div class="input-group search">
-                                                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                                <input name="q" class="form-control"
-                                                    placeholder="Tìm mã GV, họ tên, email, SĐT, khoa..." value="${q}" />
-                                            </div>
+                                        <!-- Toolbar: Nút thêm mới ở trên -->
+                                        <div class="d-flex justify-content-start mb-3">
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#modalCreate">
+                                                <i class="bi bi-plus-lg me-1"></i> Thêm mới
+                                            </button>
+                                        </div>
 
+                                        <!-- Form tìm kiếm và lọc -->
+                                        <form class="teacher-toolbar d-flex flex-wrap align-items-center gap-3 mb-3"
+                                            method="get" action="">
                                             <!-- Dropdown lọc khoa -->
-                                            <select name="faculty" class="form-select" style="width: 200px;"
+                                            <select name="faculty" class="form-select" style="width: 250px;"
                                                 onchange="this.form.submit()">
                                                 <option value="">Tất cả khoa</option>
                                                 <c:forEach var="f" items="${faculties}">
                                                     <option value="${f.id}" ${param.faculty==f.id ? 'selected' : '' }>
-                                                        ${f.facultyCode} - ${f.name}</option>
+                                                        ${f.name}</option>
                                                 </c:forEach>
                                             </select>
 
-                                            <div class="ms-auto"></div>
+                                            <!-- Ô tìm kiếm với nút clear -->
+                                            <div class="position-relative" style="flex: 1; max-width: 400px;">
+                                                <div class="input-group search">
+                                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                    <input name="q" id="teacherSearchInput" class="form-control"
+                                                        placeholder="Tìm mã GV, họ tên, email, SĐT..." value="${q}" />
+                                                </div>
+                                                <button type="button" id="clearTeacherSearch"
+                                                    class="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2 p-1"
+                                                    style="display: ${not empty q ? 'block' : 'none'}; z-index: 10; margin-right: 8px !important;">
+                                                    <i class="bi bi-x-circle text-muted"></i>
+                                                </button>
+                                            </div>
 
-                                            <label class="me-1 text-muted small">Hiển thị</label>
-                                            <select class="form-select" name="size" style="width:100px"
-                                                onchange="this.form.submit()">
-                                                <option value="10" ${param.size=='10' ?'selected':''}>10</option>
-                                                <option value="20" ${param.size=='20' ?'selected':''}>20</option>
-                                                <option value="50" ${param.size=='50' ?'selected':''}>50</option>
-                                                <option value="100" ${param.size=='100' ?'selected':''}>100</option>
-                                            </select>
                                             <input type="hidden" name="sort" value="${sort}">
                                             <input type="hidden" name="dir" value="${dir}">
-
-                                            <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal"
-                                                data-bs-target="#modalCreate">
-                                                <i class="bi bi-plus-lg me-1"></i> Thêm mới
-                                            </button>
                                         </form>
 
 
@@ -183,8 +184,7 @@
                                                                 <c:choose>
                                                                     <c:when test="${not empty t.faculty}">
                                                                         <span
-                                                                            class="badge faculty-badge bg-primary">${t.faculty.facultyCode}
-                                                                            - ${t.faculty.name}</span>
+                                                                            class="badge faculty-badge bg-primary">${t.faculty.name}</span>
                                                                     </c:when>
                                                                     <c:when test="${not empty t.department}">
                                                                         <span
@@ -301,8 +301,8 @@
                                             placeholder="VD: Nguyễn Văn An">
                                     </div>
                                     <div class="col-sm-6">
-                                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                                        <input name="email" type="email" class="form-control" required>
+                                        <label class="form-label">Email</label>
+                                        <input name="email" type="text" class="form-control">
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="form-label">SĐT</label>
@@ -311,7 +311,8 @@
                                     <div class="col-sm-6">
                                         <label class="form-label">CCCD</label>
                                         <input name="nationalId" type="text" class="form-control"
-                                            placeholder="Nhập 12 số" maxlength="12" pattern="[0-9]{12}">
+                                            placeholder="Nhập 12 số" maxlength="12" pattern="[0-9]{12}"
+                                            title="Vui lòng nhập 12 số">
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="form-label">Ngày sinh</label>
@@ -447,12 +448,11 @@
                                         <div class="col-sm-6">
                                             <label class="form-label">Mã GV (Username) <span
                                                     class="text-danger">*</span></label>
-                                            <input name="username" id="editUsername" class="form-control" readonly>
+                                            <input name="username" id="editUsername" class="form-control">
                                         </div>
                                         <div class="col-sm-6">
-                                            <label class="form-label">Email <span class="text-danger">*</span></label>
-                                            <input name="email" id="editEmail" type="email" class="form-control"
-                                                required>
+                                            <label class="form-label">Email</label>
+                                            <input name="email" id="editEmail" type="text" class="form-control">
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">Họ Tên <span class="text-danger">*</span></label>
@@ -467,7 +467,7 @@
                                             <label class="form-label">CCCD</label>
                                             <input name="nationalId" id="editNationalId" type="text"
                                                 class="form-control" maxlength="12" pattern="[0-9]{12}"
-                                                placeholder="Nhập 12 số">
+                                                placeholder="Nhập 12 số" title="Vui lòng nhập 12 số">
                                         </div>
                                         <div class="col-sm-6">
                                             <label class="form-label">Ngày sinh</label>
@@ -517,10 +517,6 @@
                             <div class="modal-body">
                                 <p>Bạn có chắc chắn muốn xóa giáo viên <strong id="deleteTeacherName"></strong>
                                     không?</p>
-                                <div class="alert alert-warning">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    Hành động này không thể hoàn tác!
-                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -977,6 +973,32 @@
                     // Setup CCCD formatting when page loads
                     setupCCCDFormatting();
 
+                    // Handle search clear button
+                    const searchInput = document.getElementById('teacherSearchInput');
+                    const clearButton = document.getElementById('clearTeacherSearch');
+
+                    if (searchInput && clearButton) {
+                        // Show/hide clear button based on input content
+                        searchInput.addEventListener('input', function () {
+                            if (this.value.trim()) {
+                                clearButton.style.display = 'block';
+                            } else {
+                                clearButton.style.display = 'none';
+                            }
+                        });
+
+                        // Clear search when button is clicked
+                        clearButton.addEventListener('click', function () {
+                            searchInput.value = '';
+                            clearButton.style.display = 'none';
+
+                            // Submit form to refresh results
+                            const form = searchInput.closest('form');
+                            if (form) {
+                                form.submit();
+                            }
+                        });
+                    }
 
                 </script>
             </body>
