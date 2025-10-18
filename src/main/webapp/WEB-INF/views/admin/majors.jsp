@@ -62,15 +62,15 @@
                             <%@include file="_nav.jsp" %>
 
                                 <div class="mt-4">
-                                    <!-- Flash Messages -->
+                                    <!-- Flash Messages (Hidden - now using modal notifications) -->
                                     <c:if test="${not empty success}">
-                                        <div class="alert alert-success alert-dismissible fade show">
+                                        <div class="alert alert-success alert-dismissible fade show d-none">
                                             <i class="bi bi-check-circle me-2"></i>${success}
                                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                         </div>
                                     </c:if>
                                     <c:if test="${not empty error}">
-                                        <div class="alert alert-danger alert-dismissible fade show">
+                                        <div class="alert alert-danger alert-dismissible fade show d-none">
                                             <i class="bi bi-exclamation-triangle me-2"></i>${error}
                                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                         </div>
@@ -628,47 +628,59 @@
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa ngành
-                                                    học
-                                                </h5>
+                                                <h5 class="modal-title">Xác nhận xóa ngành học</h5>
                                                 <button type="button" class="btn-close btn-close-white"
                                                     data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body text-center">
-                                                <div class="mb-4">
-                                                    <i class="bi bi-trash text-danger" style="font-size: 4rem;"></i>
-                                                </div>
                                                 <h5 class="mb-3">Bạn có chắc chắn muốn xóa ngành học này?</h5>
-                                                <div class="alert alert-warning">
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="bi bi-info-circle me-2"></i>
-                                                        <div>
-                                                            <strong>Ngành:</strong> <span id="deleteConfirmMajorCode"
-                                                                class="fw-bold text-primary"></span> -
-                                                            <span id="deleteConfirmMajorName"></span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="alert alert-danger mb-0">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    <strong>Cảnh báo:</strong> Thao tác này không thể hoàn tác!
-                                                    <br><small>Tất cả dữ liệu liên quan đến ngành này sẽ bị xóa vĩnh
-                                                        viễn.</small>
+                                                <div class="alert alert-light border">
+                                                    <strong>Ngành:</strong> <span id="deleteConfirmMajorCode"
+                                                        class="fw-bold text-primary"></span> -
+                                                    <span id="deleteConfirmMajorName"></span>
                                                 </div>
                                             </div>
                                             <div class="modal-footer justify-content-center">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                    <i class="bi bi-x-lg me-1"></i>Hủy bỏ
+                                                    Hủy bỏ
                                                 </button>
                                                 <form method="post"
                                                     action="${pageContext.request.contextPath}/admin/majors/delete"
                                                     style="display: inline;">
                                                     <input type="hidden" id="deleteMajorId" name="id">
                                                     <button type="submit" class="btn btn-danger">
-                                                        <i class="bi bi-trash me-1"></i>Xác nhận xóa
+                                                        Xác nhận xóa
                                                     </button>
                                                 </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Notification Modal -->
+                                <div class="modal fade" id="notificationModal" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header" id="notificationHeader">
+                                                <h5 class="modal-title" id="notificationTitle">
+                                                    <i id="notificationIcon" class="me-2"></i>
+                                                    <span id="notificationTitleText">Thông báo</span>
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    id="notificationCloseBtn"></button>
+                                            </div>
+                                            <div class="modal-body text-center">
+                                                <div class="mb-3">
+                                                    <i id="notificationMainIcon" style="font-size: 3rem;"></i>
+                                                </div>
+                                                <h5 id="notificationMessage" class="mb-3"></h5>
+                                                <p id="notificationDetails" class="text-muted mb-0"></p>
+                                            </div>
+                                            <div class="modal-footer justify-content-center">
+                                                <button type="button" class="btn" data-bs-dismiss="modal"
+                                                    id="notificationOkBtn">
+                                                    Đóng
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1051,6 +1063,55 @@
                                         bsModal.show();
                                     }
 
+                                    // Notification Modal Function
+                                    window.showNotification = function (type, title, message, details) {
+                                        const modal = document.getElementById('notificationModal');
+                                        const header = document.getElementById('notificationHeader');
+                                        const titleIcon = document.getElementById('notificationIcon');
+                                        const titleText = document.getElementById('notificationTitleText');
+                                        const mainIcon = document.getElementById('notificationMainIcon');
+                                        const messageEl = document.getElementById('notificationMessage');
+                                        const detailsEl = document.getElementById('notificationDetails');
+                                        const okBtn = document.getElementById('notificationOkBtn');
+                                        const closeBtn = document.getElementById('notificationCloseBtn');
+
+                                        // Configure based on type
+                                        if (type === 'success') {
+                                            header.className = 'modal-header bg-success text-white';
+                                            titleIcon.className = 'bi bi-check-circle me-2';
+                                            mainIcon.className = 'bi bi-check-circle text-success';
+                                            okBtn.className = 'btn btn-success';
+                                            closeBtn.className = 'btn-close btn-close-white';
+                                        } else if (type === 'error') {
+                                            header.className = 'modal-header bg-danger text-white';
+                                            titleIcon.className = 'bi bi-exclamation-triangle me-2';
+                                            mainIcon.className = 'bi bi-exclamation-triangle text-danger';
+                                            okBtn.className = 'btn btn-danger';
+                                            closeBtn.className = 'btn-close btn-close-white';
+                                        } else if (type === 'warning') {
+                                            header.className = 'modal-header bg-warning text-dark';
+                                            titleIcon.className = 'bi bi-exclamation-triangle me-2';
+                                            mainIcon.className = 'bi bi-exclamation-triangle text-warning';
+                                            okBtn.className = 'btn btn-warning';
+                                            closeBtn.className = 'btn-close';
+                                        } else { // info
+                                            header.className = 'modal-header bg-info text-white';
+                                            titleIcon.className = 'bi bi-info-circle me-2';
+                                            mainIcon.className = 'bi bi-info-circle text-info';
+                                            okBtn.className = 'btn btn-info';
+                                            closeBtn.className = 'btn-close btn-close-white';
+                                        }
+
+                                        titleText.textContent = title;
+                                        messageEl.textContent = message;
+                                        detailsEl.textContent = details || '';
+                                        detailsEl.style.display = details ? 'block' : 'none';
+
+                                        // Show modal
+                                        const bsModal = new bootstrap.Modal(modal);
+                                        bsModal.show();
+                                    };
+
                                     // MAJOR MANAGEMENT
                                     document.addEventListener('DOMContentLoaded', function () {
                                         console.log('🚀 New simple script loaded!');
@@ -1175,6 +1236,31 @@
                                                 deleteModal.show();
                                             });
                                         });
+
+                                        // Check for flash messages and show notifications
+                                        <c:if test="${not empty success}">
+                                            setTimeout(function() {
+                                                showNotification('success', 'Thành công', '${success}');
+                                            }, 500);
+                                        </c:if>
+
+                                        <c:if test="${not empty error}">
+                                            setTimeout(function() {
+                                                showNotification('error', 'Lỗi', '${error}');
+                                            }, 500);
+                                        </c:if>
+
+                                        <c:if test="${not empty warning}">
+                                            setTimeout(function() {
+                                                showNotification('warning', 'Cảnh báo', '${warning}');
+                                            }, 500);
+                                        </c:if>
+
+                                        <c:if test="${not empty info}">
+                                            setTimeout(function() {
+                                                showNotification('info', 'Thông tin', '${info}');
+                                            }, 500);
+                                        </c:if>
                                     });
                                 </script>
                 </body>
