@@ -110,43 +110,6 @@ public class AdminController {
         if (!COURSE_YEAR_PATTERN.matcher(trimmed).matches()) {
             return "Định dạng khóa học phải là YYYY-YYYY (ví dụ: 2025-2029)";
         }
-    @GetMapping("/students/add")
-    public String showAddStudentForm(@RequestParam(value = "classId", required = false) Long classId, Model model) {
-        Major major = null;
-        if (classId != null) {
-            Classroom classroom = classroomRepository.findById(classId).orElse(null);
-            if (classroom != null) {
-                major = classroom.getMajor();
-                model.addAttribute("selectedClassroom", classroom);
-            }
-        }
-        model.addAttribute("majors", majorRepository.findAll());
-        model.addAttribute("classrooms", classroomRepository.findAll());
-        model.addAttribute("selectedMajor", major);
-        model.addAttribute("disableMajorSelect", major != null);
-        return "admin/add-student";
-    }
-
-    @PostMapping("/students/add")
-    public String addStudent(@RequestParam String name,
-                             @RequestParam(required = false) Long classId,
-                             @RequestParam(required = false) Long majorId,
-                             Model model) {
-        Major major = null;
-        if (classId != null) {
-            Classroom classroom = classroomRepository.findById(classId).orElse(null);
-            if (classroom != null) {
-                major = classroom.getMajor();
-            }
-        }
-        if (major == null && majorId != null) {
-            major = majorRepository.findById(majorId).orElse(null);
-        }
-        // TODO: Tạo mới Student entity, gán major, gán classroom nếu có
-        // studentRepository.save(newStudent);
-        // model.addAttribute("message", "Thêm sinh viên thành công!");
-        return "redirect:/admin/students";
-    }
 
         try {
             String[] years = trimmed.split("-");
@@ -176,6 +139,162 @@ public class AdminController {
         return null; // No error
     }
 
+    @GetMapping("/students/add")
+    public String showAddStudentForm(@RequestParam(value = "classId", required = false) Long classId,
+            Model model, Authentication auth) {
+        Major major = null;
+        if (classId != null) {
+            Classroom classroom = classroomRepository.findById(classId).orElse(null);
+            if (classroom != null) {
+                major = classroom.getMajor();
+                model.addAttribute("selectedClassroom", classroom);
+            }
+        }
+
+        model.addAttribute("majors", majorRepository.findAll());
+        model.addAttribute("classrooms", classroomRepository.findAll());
+        model.addAttribute("selectedMajor", major);
+        model.addAttribute("disableMajorSelect", major != null);
+        addUserInfo(auth, model);
+        return "admin/add-student";
+    }
+
+    @PostMapping("/students/add")
+    @Transactional
+    public String addStudent(@RequestParam String username,
+            @RequestParam(required = false) String password,
+            @RequestParam(name = "fullName", required = false) String fullName,
+            @RequestParam(name = "fname", required = false) String fname,
+            @RequestParam(name = "lname", required = false) String lname,
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String birthDate,
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) Long majorId,
+            RedirectAttributes ra) {
+
+        String trimmedUsername = username != null ? username.trim() : "";
+        String trimmedEmail = (email != null && !email.trim().isEmpty()) ? email.trim() : null;
+        String trimmedFullName = fullName != null ? fullName.trim() : "";
+        String trimmedFname = fname != null ? fname.trim() : "";
+        String trimmedLname = lname != null ? lname.trim() : "";
+
+        // Build full name from parts if needed
+        StringBuilder nameBuilder = new StringBuilder();
+        if (!trimmedFullName.isEmpty()) {
+            nameBuilder.append(trimmedFullName);
+        } else {
+            if (!trimmedFname.isEmpty()) {
+                nameBuilder.append(trimmedFname);
+            }
+            if (!trimmedLname.isEmpty()) {
+                if (nameBuilder.length() > 0) {
+                    nameBuilder.append(" ");
+                }
+                nameBuilder.append(trimmedLname);
+            }
+        }
+        String resolvedFullName = nameBuilder.toString().trim();
+
+        if (trimmedUsername.isEmpty() || resolvedFullName.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ MSSV và Họ tên.");
+            return "redirect:/admin/students/add" + (classId != null ? "?classId=" + classId : "");
+        }
+
+        if (userRepository.existsByUsername(trimmedUsername)) {
+            ra.addFlashAttribute("error", "Mã SV/Username đã tồn tại: " + trimmedUsername);
+            return "redirect:/admin/students/add" + (classId != null ? "?classId=" + classId : "");
+        }
+
+        if (trimmedEmail != null && userRepository.existsByEmail(trimmedEmail)) {
+            ra.addFlashAttribute("error", "Email đã tồn tại: " + trimmedEmail);
+            return "redirect:/admin/students/add" + (classId != null ? "?classId=" + classId : "");
+        }
+
+        // Get classroom and major
+        Classroom classroom = null;
+        if (classId != null) {
+            classroom = classroomRepository.findById(classId).orElse(null);
+            if (classroom == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy lớp với ID: " + classId);
+                return "redirect:/admin/students/add";
+            }
+        }
+
+        Major major = null;
+        if (classroom != null) {
+            major = classroom.getMajor();
+        } else if (majorId != null) {
+            major = majorRepository.findById(majorId).orElse(null);
+            if (major == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy ngành với ID: " + majorId);
+                return "redirect:/admin/students/add";
+            }
+        }
+
+        if (major == null) {
+            ra.addFlashAttribute("error", "Vui lòng chọn ngành hoặc lớp để hệ thống tự gán ngành.");
+            return "redirect:/admin/students/add" + (classId != null ? "?classId=" + classId : "");
+        }
+
+        // Create password
+        String effectivePassword = (password != null && !password.trim().isEmpty())
+                ? password.trim()
+                : trimmedUsername;
+
+        // Parse name parts
+        String[] nameParts = resolvedFullName.split("\\s+");
+        String derivedFirstName = nameParts[nameParts.length - 1];
+        String derivedLastName = nameParts.length > 1
+                ? String.join(" ", java.util.Arrays.copyOf(nameParts, nameParts.length - 1)).trim()
+                : "";
+
+        String firstName = !trimmedFname.isEmpty() ? trimmedFname : derivedFirstName;
+        String lastName = !trimmedLname.isEmpty() ? trimmedLname : derivedLastName;
+
+        // Create User
+        User svUser = new User();
+        svUser.setUsername(trimmedUsername);
+        svUser.setPassword(passwordEncoder.encode(effectivePassword));
+        svUser.setFname(firstName);
+        svUser.setLname(lastName.isEmpty() ? null : lastName);
+        svUser.setEmail(trimmedEmail);
+        svUser.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
+        svUser.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
+        svUser.setNationalId(null);
+
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            try {
+                svUser.setBirthDate(java.time.LocalDate.parse(birthDate.trim()));
+            } catch (Exception ex) {
+                ra.addFlashAttribute("error",
+                        "Định dạng ngày sinh không hợp lệ. Vui lòng sử dụng định dạng YYYY-MM-DD.");
+                return "redirect:/admin/students/add" + (classId != null ? "?classId=" + classId : "");
+            }
+        }
+
+        svUser.setRole(User.Role.STUDENT);
+        svUser = userRepository.save(svUser);
+
+        // Create Student
+        Student student = new Student();
+        student.setUser(svUser);
+        student.setMajor(major);
+        if (classroom != null) {
+            student.setClassroom(classroom);
+            student.setClassName(classroom.getClassCode());
+        } else {
+            student.setClassroom(null);
+            student.setClassName(null);
+        }
+
+        studentRepository.save(student);
+
+        ra.addFlashAttribute("success", "Đã tạo sinh viên: " + trimmedUsername);
+        return "redirect:/admin/classrooms";
+    }
+
     private void addUserInfo(Authentication auth, Model model) {
         String firstName = "User";
         String roleDisplay = "Người dùng";
@@ -192,6 +311,46 @@ public class AdminController {
         }
         model.addAttribute("firstName", firstName);
         model.addAttribute("roleDisplay", roleDisplay);
+    }
+
+    // Validate course year format (YYYY-YYYY)
+    private String validateCourseYear(String courseYear) {
+        if (courseYear == null || courseYear.trim().isEmpty()) {
+            return "Khóa không được để trống";
+        }
+
+        String trimmed = courseYear.trim();
+
+        if (!trimmed.matches("\\d{4}-\\d{4}")) {
+            return "Khóa phải có định dạng YYYY-YYYY (ví dụ: 2020-2024)";
+        }
+
+        try {
+            String[] years = trimmed.split("-");
+            int startYear = Integer.parseInt(years[0]);
+            int endYear = Integer.parseInt(years[1]);
+
+            if (startYear < 1900 || startYear > 2100) {
+                return "Năm bắt đầu phải nằm trong khoảng từ 1900 đến 2100";
+            }
+
+            if (endYear < 1900 || endYear > 2100) {
+                return "Năm kết thúc phải nằm trong khoảng từ 1900 đến 2100";
+            }
+
+            if (endYear <= startYear) {
+                return "Năm kết thúc phải lớn hơn năm bắt đầu";
+            }
+
+            if (endYear - startYear > 10) {
+                return "Khoảng cách giữa năm bắt đầu và kết thúc không được quá 10 năm";
+            }
+
+        } catch (NumberFormatException e) {
+            return "Năm phải là số hợp lệ";
+        }
+
+        return null; // No error
     }
 
     @GetMapping
@@ -238,6 +397,46 @@ public class AdminController {
         model.addAttribute("majorStats", overviewService.getMajorStatistics());
 
         return "admin/overview";
+    }
+
+    // Danh sách sinh viên
+    @GetMapping("/students")
+    public String students(Authentication auth, Model model,
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(required = false) Long majorId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "username") String sort,
+            @RequestParam(defaultValue = "asc") String dir) {
+
+        addUserInfo(auth, model);
+        model.addAttribute("activeTab", "students");
+
+        Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
+
+        // Get all students with search
+        Page<Student> studentsPage;
+        if (search.trim().isEmpty()) {
+            studentsPage = studentRepository.findAllWithUser(pageable);
+        } else {
+            studentsPage = studentRepository.search(search.trim(), pageable);
+        }
+
+        model.addAttribute("students", studentsPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", studentsPage.getTotalPages());
+        model.addAttribute("totalElements", studentsPage.getTotalElements());
+        model.addAttribute("size", size);
+        model.addAttribute("search", search);
+        model.addAttribute("majorId", majorId);
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+
+        // For filters
+        model.addAttribute("majors", majorRepository.findAll());
+
+        return "admin/students";
     }
 
     // Danh sách lớp học: giao diện 2 panel - trái: quản lý lớp, phải: sinh viên

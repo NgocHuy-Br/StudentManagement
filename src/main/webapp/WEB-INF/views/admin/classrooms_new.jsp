@@ -537,6 +537,12 @@
                                                                     required>
                                                             </div>
                                                             <div class="mb-3">
+                                                                <label class="form-label">Mật khẩu</label>
+                                                                <input type="password" class="form-control"
+                                                                    name="password"
+                                                                    placeholder="Để trống để dùng MSSV làm mật khẩu">
+                                                            </div>
+                                                            <div class="mb-3">
                                                                 <label class="form-label">Họ <span
                                                                         class="text-danger">*</span></label>
                                                                 <input type="text" class="form-control" name="fname"
@@ -564,12 +570,17 @@
                                                                     name="birthDate">
                                                             </div>
                                                             <div class="mb-3">
+                                                                <label class="form-label">Địa chỉ</label>
+                                                                <input type="text" class="form-control" name="address">
+                                                            </div>
+                                                            <div class="mb-3">
                                                                 <label class="form-label">Lớp học</label>
-                                                                <select class="form-select" name="classroomId"
+                                                                <select class="form-select" name="classId"
                                                                     id="studentClassroomSelect">
                                                                     <option value="">-- Chưa phân lớp --</option>
                                                                     <c:forEach var="classroom" items="${classrooms}">
-                                                                        <option value="${classroom.id}">
+                                                                        <option value="${classroom.id}"
+                                                                            data-major-id="${classroom.major.id}">
                                                                             ${classroom.classCode}
                                                                             (${classroom.courseYear})</option>
                                                                     </c:forEach>
@@ -577,7 +588,8 @@
                                                             </div>
                                                             <div class="mb-3">
                                                                 <label class="form-label">Ngành học</label>
-                                                                <select class="form-select" name="majorId" required>
+                                                                <select class="form-select" name="majorId"
+                                                                    id="studentMajorSelect" required>
                                                                     <option value="">-- Chọn ngành --</option>
                                                                     <c:forEach var="major" items="${majors}">
                                                                         <option value="${major.id}">${major.majorCode} -
@@ -644,13 +656,8 @@
 
                                     // Initialize page
                                     document.addEventListener('DOMContentLoaded', function () {
-                                        loadAllStudents();
+                                        loadAllStudents(); // This will handle the initial display
                                         setupEventListeners();
-
-                                        // Auto-select classroom if provided
-                                        if (selectedClassroomId) {
-                                            updateStudentsDisplay(selectedClassroomId);
-                                        }
                                     });
 
                                     function setupEventListeners() {
@@ -733,7 +740,6 @@
 
                                     function updateStudentsDisplay(classroomId) {
                                         const title = document.getElementById('studentsTitle');
-                                        const tbody = document.getElementById('studentsTableBody');
 
                                         if (!classroomId) {
                                             title.textContent = 'Tất cả sinh viên';
@@ -764,11 +770,12 @@
 
                                         tbody.innerHTML = students.map((student, index) => {
                                             const classroomName = student.classroomName || 'Chưa phân lớp';
+                                            const fullName = (student.fname || '') + (student.lname ? ' ' + student.lname : '');
 
                                             return '<tr class="student-row">' +
                                                 '<td class="text-center fw-bold">' + (index + 1) + '</td>' +
                                                 '<td class="fw-semibold text-primary">' + student.username + '</td>' +
-                                                '<td class="fw-medium">' + student.fname + ' ' + student.lname + '</td>' +
+                                                '<td class="fw-medium">' + fullName + '</td>' +
                                                 '<td>' +
                                                 (student.classroomId ?
                                                     '<span class="badge bg-info">' + classroomName + '</span>' :
@@ -805,20 +812,34 @@
                                     }
 
                                     function getClassroomById(id) {
-                                        // Sample classroom data - this should come from server
-                                        const classroomData = [
-                                            <c:forEach var="classroom" items="${classrooms}" varStatus="status">
-                                                {
-                                                    id: ${classroom.id},
-                                                classCode: '${classroom.classCode}',
-                                                courseYear: '${classroom.courseYear}'
-                                                }<c:if test="${!status.last}">,</c:if>
-                                            </c:forEach>
-                                        ];
-                                        return classroomData.find(c => c.id == id);
-                                    }
+                                        if (!id) return null;
 
-                                    function updateURL(classroomId) {
+                                        // Get classroom data from selector options
+                                        const selector = document.getElementById('classroomSelector');
+
+                                        // Find the option with matching value
+                                        let foundOption = null;
+                                        for (let i = 0; i < selector.options.length; i++) {
+                                            const option = selector.options[i];
+                                            if (option.value === id.toString()) {
+                                                foundOption = option;
+                                                break;
+                                            }
+                                        }
+
+                                        if (foundOption) {
+                                            const text = foundOption.textContent.trim();
+                                            const matches = text.match(/^(.+?)\s*\((.+?)\)$/);
+                                            if (matches) {
+                                                return {
+                                                    id: parseInt(id),
+                                                    classCode: matches[1].trim(),
+                                                    courseYear: matches[2].trim()
+                                                };
+                                            }
+                                        }
+                                        return null;
+                                    } function updateURL(classroomId) {
                                         const url = new URL(window.location);
                                         if (classroomId) {
                                             url.searchParams.set('selectedClassroomId', classroomId);
@@ -834,15 +855,39 @@
                                             .then(response => response.json())
                                             .then(data => {
                                                 allStudents = data;
+                                                // Always update display after loading data
                                                 if (selectedClassroomId) {
                                                     updateStudentsDisplay(selectedClassroomId);
+                                                } else {
+                                                    // Show all students by default
+                                                    updateStudentsDisplay(null);
                                                 }
                                             })
                                             .catch(error => {
                                                 console.error('Error loading students:', error);
-                                                // Use sample data for now
+                                                // Use empty array as fallback
                                                 allStudents = [];
+                                                updateStudentsDisplay(null);
                                             });
+                                    }
+
+                                    function updateDebug(message) {
+                                        const debugElement = document.getElementById('debugText');
+                                        if (debugElement) {
+                                            debugElement.textContent = message;
+                                        }
+                                    }
+
+                                    function debugDropdownOptions() {
+                                        const selector = document.getElementById('classroomSelector');
+                                        console.log('Dropdown options:');
+                                        console.log('Total options:', selector.options.length);
+                                        for (let i = 0; i < selector.options.length; i++) {
+                                            const option = selector.options[i];
+                                            console.log(`Option ${i}: value="${option.value}", text="${option.textContent.trim()}"`);
+                                        }
+                                        console.log('Selected value:', selector.value);
+                                        console.log('Selected index:', selector.selectedIndex);
                                     }
 
                                     function toggleClearButton(searchValue) {
@@ -1102,6 +1147,47 @@
                                             input.classList.remove('is-invalid', 'is-valid');
                                         }
                                     }
+
+                                    // Auto-select classroom when adding student
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        const addStudentModal = document.getElementById('addStudentModal');
+                                        const classSelect = document.getElementById('studentClassroomSelect');
+                                        const majorSelect = document.getElementById('studentMajorSelect');
+
+                                        if (addStudentModal && classSelect && majorSelect) {
+                                            // Function to auto-select major based on classroom
+                                            function updateMajorBasedOnClassroom() {
+                                                const selectedOption = classSelect.options[classSelect.selectedIndex];
+                                                if (selectedOption && selectedOption.value) {
+                                                    const majorId = selectedOption.getAttribute('data-major-id');
+                                                    if (majorId) {
+                                                        majorSelect.value = majorId;
+                                                        majorSelect.disabled = true;
+                                                    } else {
+                                                        majorSelect.disabled = false;
+                                                    }
+                                                } else {
+                                                    majorSelect.disabled = false;
+                                                }
+                                            }
+
+                                            // Auto-select classroom when modal opens
+                                            addStudentModal.addEventListener('show.bs.modal', function () {
+                                                if (selectedClassroomId && !classSelect.value) {
+                                                    classSelect.value = selectedClassroomId;
+                                                }
+                                                updateMajorBasedOnClassroom();
+                                            });
+
+                                            // Update major when classroom changes
+                                            classSelect.addEventListener('change', updateMajorBasedOnClassroom);
+
+                                            // Re-enable major select on form submit
+                                            addStudentModal.querySelector('form').addEventListener('submit', function () {
+                                                majorSelect.disabled = false;
+                                            });
+                                        }
+                                    });
                                 </script>
                 </body>
 
