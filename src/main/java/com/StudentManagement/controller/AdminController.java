@@ -38,6 +38,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -3318,13 +3319,17 @@ public class AdminController {
             }
 
             // Update user information - split fullName into fname and lname
-            String[] nameParts = fullName.trim().split("\\s+", 2);
+            // Vietnamese format: "Họ [Đệm] Tên" -> lname = "Họ [Đệm]", fname = "Tên"
+            String[] nameParts = fullName.trim().split("\\s+");
             if (nameParts.length == 1) {
+                // Only one name part - treat as first name
                 user.setFname(nameParts[0]);
                 user.setLname("");
             } else {
-                user.setFname(nameParts[0]);
-                user.setLname(nameParts[1]);
+                // Multiple parts: last part is first name (tên), rest is last name (họ đệm)
+                user.setFname(nameParts[nameParts.length - 1]); // Last part is first name (tên)
+                String lastName = String.join(" ", Arrays.copyOfRange(nameParts, 0, nameParts.length - 1));
+                user.setLname(lastName); // All parts except last are last name (họ đệm)
             }
 
             user.setEmail(email);

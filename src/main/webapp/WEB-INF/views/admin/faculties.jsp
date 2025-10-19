@@ -82,36 +82,24 @@
                                         <!-- Toolbar: tìm kiếm + Thêm mới -->
                                         <form class="faculty-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
                                             method="get" action="">
-                                            <div class="d-flex">
-                                                <div class="input-group search">
+                                            <div class="d-flex flex-grow-1">
+                                                <div class="input-group search me-3" style="min-width: 400px;">
                                                     <button type="submit" class="btn btn-outline-primary">
                                                         <i class="bi bi-search"></i>
                                                     </button>
                                                     <input name="q" id="searchInput" class="form-control"
-                                                        placeholder="Tìm tên khoa, mô tả..." value="${q}" />
+                                                        placeholder="Tìm theo mã khoa, tên khoa..." value="${q}" />
+                                                    <c:if test="${not empty q}">
+                                                        <button type="button"
+                                                            class="btn btn-outline-secondary search-clear-btn"
+                                                            onclick="clearSearch()" title="Xóa tìm kiếm">
+                                                            <i class="bi bi-x"></i>
+                                                        </button>
+                                                    </c:if>
                                                 </div>
-                                                <c:if test="${not empty q}">
-                                                    <button type="button" class="btn search-clear-btn"
-                                                        onclick="clearSearch()" title="Xóa tìm kiếm">
-                                                        <i class="bi bi-x"></i>
-                                                    </button>
-                                                </c:if>
                                             </div>
 
-                                            <div class="ms-auto"></div>
-
-                                            <label class="me-1 text-muted small">Hiển thị</label>
-                                            <select class="form-select" name="size" style="width:100px"
-                                                onchange="this.form.submit()">
-                                                <option value="10" ${param.size=='10' ?'selected':''}>10</option>
-                                                <option value="20" ${param.size=='20' ?'selected':''}>20</option>
-                                                <option value="50" ${param.size=='50' ?'selected':''}>50</option>
-                                                <option value="100" ${param.size=='100' ?'selected':''}>100</option>
-                                            </select>
-                                            <input type="hidden" name="sort" value="${sort}">
-                                            <input type="hidden" name="dir" value="${dir}">
-
-                                            <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal"
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                                 data-bs-target="#modalCreate">
                                                 <i class="bi bi-plus-lg me-1"></i> Thêm mới
                                             </button>
@@ -125,32 +113,32 @@
                                                         <th width="60px">STT</th>
                                                         <th width="120px">Mã khoa
                                                             <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=facultyCode&dir=${dir=='asc' && sort=='facultyCode' ? 'desc' : 'asc'}">
+                                                                href="?q=${fn:escapeXml(q)}&sort=facultyCode&dir=${dir=='asc' && sort=='facultyCode' ? 'desc' : 'asc'}">
                                                                 <i class="bi bi-arrow-down-up"></i>
                                                             </a>
                                                         </th>
                                                         <th width="220px">Tên khoa
                                                             <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=name&dir=${dir=='asc' && sort=='name' ? 'desc' : 'asc'}">
+                                                                href="?q=${fn:escapeXml(q)}&sort=name&dir=${dir=='asc' && sort=='name' ? 'desc' : 'asc'}">
                                                                 <i class="bi bi-arrow-down-up"></i>
                                                             </a>
                                                         </th>
                                                         <th width="180px">Mô tả</th>
                                                         <th width="100px" class="text-center">Số ngành
                                                             <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=majorCount&dir=${dir=='asc' && sort=='majorCount' ? 'desc' : 'asc'}">
+                                                                href="?q=${fn:escapeXml(q)}&sort=majorCount&dir=${dir=='asc' && sort=='majorCount' ? 'desc' : 'asc'}">
                                                                 <i class="bi bi-arrow-down-up"></i>
                                                             </a>
                                                         </th>
                                                         <th width="100px" class="text-center">Số giáo viên
                                                             <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=teacherCount&dir=${dir=='asc' && sort=='teacherCount' ? 'desc' : 'asc'}">
+                                                                href="?q=${fn:escapeXml(q)}&sort=teacherCount&dir=${dir=='asc' && sort=='teacherCount' ? 'desc' : 'asc'}">
                                                                 <i class="bi bi-arrow-down-up"></i>
                                                             </a>
                                                         </th>
                                                         <th width="100px" class="text-center">Số sinh viên
                                                             <a class="sort-link"
-                                                                href="?q=${fn:escapeXml(q)}&size=${page.size}&sort=studentCount&dir=${dir=='asc' && sort=='studentCount' ? 'desc' : 'asc'}">
+                                                                href="?q=${fn:escapeXml(q)}&sort=studentCount&dir=${dir=='asc' && sort=='studentCount' ? 'desc' : 'asc'}">
                                                                 <i class="bi bi-arrow-down-up"></i>
                                                             </a>
                                                         </th>

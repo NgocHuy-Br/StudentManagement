@@ -344,7 +344,7 @@
                                     <div class="mb-3">
                                         <label for="editAddress" class="form-label">Địa chỉ</label>
                                         <textarea class="form-control" id="editAddress" name="address"
-                                            rows="2">${currentUser.address}</textarea>
+                                            rows="1">${currentUser.address}</textarea>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
