@@ -306,6 +306,7 @@ public class AdminController {
             @RequestParam(required = false) String birthDate,
             @RequestParam(required = false) Long classId,
             @RequestParam(required = false) Long majorId,
+            @RequestParam(required = false) String resetPassword,
             RedirectAttributes ra) {
 
         // Find student
@@ -412,7 +413,13 @@ public class AdminController {
         System.out.println("DEBUG editStudent: Final student major="
                 + (student.getMajor() != null ? student.getMajor().getId() : "null"));
 
-        ra.addFlashAttribute("success", "Đã cập nhật thông tin sinh viên: " + user.getUsername());
+        // Handle password reset if requested
+        if ("true".equals(resetPassword)) {
+            ra.addFlashAttribute("success", "Đã cập nhật sinh viên và đặt lại mật khẩu: " + user.getUsername());
+        } else {
+            ra.addFlashAttribute("success", "Đã cập nhật thông tin sinh viên: " + user.getUsername());
+        }
+
         return "redirect:/admin/classrooms";
     }
 
@@ -1725,6 +1732,62 @@ public class AdminController {
 
         } catch (Exception e) {
             logger.error("Error resetting teacher password: {}", e.getMessage());
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra khi đặt lại mật khẩu");
+        }
+
+        return response;
+    }
+
+    // Reset password for student
+    @PostMapping("/students/reset-password")
+    @ResponseBody
+    public Map<String, Object> resetStudentPassword(
+            @RequestParam("adminPassword") String adminPassword,
+            @RequestParam("studentId") Long studentId,
+            Authentication authentication) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Get current admin user
+            String currentUsername = authentication.getName();
+            User adminUser = userRepository.findByUsername(currentUsername).orElse(null);
+
+            if (adminUser == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy tài khoản admin");
+                return response;
+            }
+
+            // Verify admin password
+            if (!passwordEncoder.matches(adminPassword, adminUser.getPassword())) {
+                response.put("success", false);
+                response.put("message", "Mật khẩu admin không đúng");
+                return response;
+            }
+
+            // Find student
+            Student student = studentRepository.findById(studentId).orElse(null);
+            if (student == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy sinh viên");
+                return response;
+            }
+
+            // Reset password to student's username
+            User studentUser = student.getUser();
+            String newPassword = studentUser.getUsername(); // Password = student code
+            studentUser.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(studentUser);
+
+            logger.info("Admin {} reset password for student {}", currentUsername, studentUser.getUsername());
+
+            response.put("success", true);
+            response.put("message", "Đặt lại mật khẩu thành công");
+
+        } catch (Exception e) {
+            logger.error("Error resetting student password: {}", e.getMessage());
             response.put("success", false);
             response.put("message", "Có lỗi xảy ra khi đặt lại mật khẩu");
         }
