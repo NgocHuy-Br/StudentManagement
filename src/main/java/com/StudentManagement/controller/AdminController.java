@@ -110,6 +110,43 @@ public class AdminController {
         if (!COURSE_YEAR_PATTERN.matcher(trimmed).matches()) {
             return "Định dạng khóa học phải là YYYY-YYYY (ví dụ: 2025-2029)";
         }
+    @GetMapping("/students/add")
+    public String showAddStudentForm(@RequestParam(value = "classId", required = false) Long classId, Model model) {
+        Major major = null;
+        if (classId != null) {
+            Classroom classroom = classroomRepository.findById(classId).orElse(null);
+            if (classroom != null) {
+                major = classroom.getMajor();
+                model.addAttribute("selectedClassroom", classroom);
+            }
+        }
+        model.addAttribute("majors", majorRepository.findAll());
+        model.addAttribute("classrooms", classroomRepository.findAll());
+        model.addAttribute("selectedMajor", major);
+        model.addAttribute("disableMajorSelect", major != null);
+        return "admin/add-student";
+    }
+
+    @PostMapping("/students/add")
+    public String addStudent(@RequestParam String name,
+                             @RequestParam(required = false) Long classId,
+                             @RequestParam(required = false) Long majorId,
+                             Model model) {
+        Major major = null;
+        if (classId != null) {
+            Classroom classroom = classroomRepository.findById(classId).orElse(null);
+            if (classroom != null) {
+                major = classroom.getMajor();
+            }
+        }
+        if (major == null && majorId != null) {
+            major = majorRepository.findById(majorId).orElse(null);
+        }
+        // TODO: Tạo mới Student entity, gán major, gán classroom nếu có
+        // studentRepository.save(newStudent);
+        // model.addAttribute("message", "Thêm sinh viên thành công!");
+        return "redirect:/admin/students";
+    }
 
         try {
             String[] years = trimmed.split("-");
