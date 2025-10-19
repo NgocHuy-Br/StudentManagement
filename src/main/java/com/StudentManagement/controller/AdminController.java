@@ -507,46 +507,6 @@ public class AdminController {
         model.addAttribute("roleDisplay", roleDisplay);
     }
 
-    // Validate course year format (YYYY-YYYY)
-    private String validateCourseYear(String courseYear) {
-        if (courseYear == null || courseYear.trim().isEmpty()) {
-            return "Khóa không được để trống";
-        }
-
-        String trimmed = courseYear.trim();
-
-        if (!trimmed.matches("\\d{4}-\\d{4}")) {
-            return "Khóa phải có định dạng YYYY-YYYY (ví dụ: 2020-2024)";
-        }
-
-        try {
-            String[] years = trimmed.split("-");
-            int startYear = Integer.parseInt(years[0]);
-            int endYear = Integer.parseInt(years[1]);
-
-            if (startYear < 1900 || startYear > 2100) {
-                return "Năm bắt đầu phải nằm trong khoảng từ 1900 đến 2100";
-            }
-
-            if (endYear < 1900 || endYear > 2100) {
-                return "Năm kết thúc phải nằm trong khoảng từ 1900 đến 2100";
-            }
-
-            if (endYear <= startYear) {
-                return "Năm kết thúc phải lớn hơn năm bắt đầu";
-            }
-
-            if (endYear - startYear > 10) {
-                return "Khoảng cách giữa năm bắt đầu và kết thúc không được quá 10 năm";
-            }
-
-        } catch (NumberFormatException e) {
-            return "Năm phải là số hợp lệ";
-        }
-
-        return null; // No error
-    }
-
     @GetMapping
     public String index(Authentication auth, Model model) {
         // Redirect to overview page
@@ -1494,10 +1454,18 @@ public class AdminController {
             }
         }
 
-        // Tách họ tên thành fname và lname
-        String[] nameParts = fn.split("\\s+", 2);
-        String firstName = nameParts[0];
-        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+        // Tách họ tên thành fname và lname (Vietnamese format: "Họ [Đệm] Tên")
+        String[] nameParts = fn.split("\\s+");
+        String firstName, lastName;
+        if (nameParts.length == 1) {
+            // Only one name part - treat as first name
+            firstName = nameParts[0];
+            lastName = "";
+        } else {
+            // Multiple parts: last part is first name (tên), rest is last name (họ đệm)
+            firstName = nameParts[nameParts.length - 1]; // Last part is first name (tên)
+            lastName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 0, nameParts.length - 1));
+        }
 
         // 1) User với mật khẩu mặc định là mã giáo viên
         User teacherUser = new User();
@@ -1554,6 +1522,7 @@ public class AdminController {
             @RequestParam(required = false) String nationalId,
             @RequestParam(required = false) String birthDate,
             @RequestParam(required = false) Long facultyId,
+            @RequestParam(required = false, defaultValue = "false") String resetPassword,
             RedirectAttributes ra) {
 
         Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
@@ -1599,10 +1568,18 @@ public class AdminController {
             }
         }
 
-        // Tách họ tên thành fname và lname
-        String[] nameParts = fn.split("\\s+", 2);
-        String firstName = nameParts[0];
-        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+        // Tách họ tên thành fname và lname (Vietnamese format: "Họ [Đệm] Tên")
+        String[] nameParts = fn.split("\\s+");
+        String firstName, lastName;
+        if (nameParts.length == 1) {
+            // Only one name part - treat as first name
+            firstName = nameParts[0];
+            lastName = "";
+        } else {
+            // Multiple parts: last part is first name (tên), rest is last name (họ đệm)
+            firstName = nameParts[nameParts.length - 1]; // Last part is first name (tên)
+            lastName = String.join(" ", java.util.Arrays.copyOfRange(nameParts, 0, nameParts.length - 1));
+        }
 
         // Cập nhật thông tin
         user.setUsername(u); // Cập nhật username
@@ -1638,7 +1615,13 @@ public class AdminController {
 
         teacherRepository.save(teacher);
 
-        ra.addFlashAttribute("success", "Đã cập nhật giáo viên: " + user.getUsername());
+        // Handle password reset if requested
+        if ("true".equals(resetPassword)) {
+            ra.addFlashAttribute("success", "Đã cập nhật giáo viên và đặt lại mật khẩu: " + user.getUsername());
+        } else {
+            ra.addFlashAttribute("success", "Đã cập nhật giáo viên: " + user.getUsername());
+        }
+
         return "redirect:/admin/teachers";
     }
 
@@ -1691,6 +1674,62 @@ public class AdminController {
 
         ra.addFlashAttribute("success", "Đã xóa giáo viên: " + username);
         return "redirect:/admin/teachers";
+    }
+
+    // Reset password for teacher
+    @PostMapping("/teachers/reset-password")
+    @ResponseBody
+    public Map<String, Object> resetTeacherPassword(
+            @RequestParam("adminPassword") String adminPassword,
+            @RequestParam("teacherId") Long teacherId,
+            Authentication authentication) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Get current admin user
+            String currentUsername = authentication.getName();
+            User adminUser = userRepository.findByUsername(currentUsername).orElse(null);
+
+            if (adminUser == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy tài khoản admin");
+                return response;
+            }
+
+            // Verify admin password
+            if (!passwordEncoder.matches(adminPassword, adminUser.getPassword())) {
+                response.put("success", false);
+                response.put("message", "Mật khẩu admin không đúng");
+                return response;
+            }
+
+            // Find teacher
+            Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
+            if (teacher == null) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy giáo viên");
+                return response;
+            }
+
+            // Reset password to teacher's username
+            User teacherUser = teacher.getUser();
+            String newPassword = teacherUser.getUsername(); // Password = teacher code
+            teacherUser.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(teacherUser);
+
+            logger.info("Admin {} reset password for teacher {}", currentUsername, teacherUser.getUsername());
+
+            response.put("success", true);
+            response.put("message", "Đặt lại mật khẩu thành công");
+
+        } catch (Exception e) {
+            logger.error("Error resetting teacher password: {}", e.getMessage());
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra khi đặt lại mật khẩu");
+        }
+
+        return response;
     }
 
     @GetMapping("/subjects")

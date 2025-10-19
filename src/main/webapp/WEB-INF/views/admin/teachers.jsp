@@ -494,9 +494,55 @@
                                     <c:if test="${not empty _csrf}">
                                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                     </c:if>
+                                    <button type="button" class="btn btn-danger me-auto" id="resetPasswordBtn">
+                                        <i class="bi bi-key me-2"></i>Đặt lại mật khẩu
+                                    </button>
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                                     <button type="submit" class="btn btn-warning">
                                         <i class="bi bi-save me-2"></i>Cập nhật
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+                </div>
+                </div>
+
+                <!-- Password Reset Confirmation Modal -->
+                <div class="modal fade" id="passwordResetModal" tabindex="-1" aria-labelledby="passwordResetModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning">
+                                <h5 class="modal-title" id="passwordResetModalLabel">
+                                    <i class="bi bi-key me-2"></i>Xác nhận đặt lại mật khẩu
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <form id="passwordResetForm">
+                                <div class="modal-body">
+                                    <p class="mb-3">Mật khẩu của giáo viên <strong id="resetTeacherName"></strong> sẽ
+                                        được đặt lại thành mã giáo viên: <strong id="resetTeacherCode"></strong></p>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Để xác nhận, vui lòng nhập mật khẩu tài khoản admin của bạn:
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="adminPassword" class="form-label">Mật khẩu admin <span
+                                                class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="adminPassword"
+                                            name="adminPassword" placeholder="Nhập mật khẩu admin" required>
+                                    </div>
+                                    <input type="hidden" id="resetTeacherId" name="teacherId">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-key me-2"></i>Đặt lại mật khẩu
                                     </button>
                                 </div>
                             </form>
@@ -855,6 +901,15 @@
                             const form = document.getElementById('editTeacherForm');
                             form.action = '${pageContext.request.contextPath}/admin/teachers/' + id + '/edit';
 
+                            // Reset password reset button to original state
+                            const resetBtn = document.getElementById('resetPasswordBtn');
+                            if (resetBtn) {
+                                resetBtn.innerHTML = '<i class="bi bi-key me-2"></i>Đặt lại mật khẩu';
+                                resetBtn.classList.remove('btn-success');
+                                resetBtn.classList.add('btn-danger');
+                                resetBtn.disabled = false;
+                            }
+
                             // Show modal - simplified approach
                             const modalElement = document.getElementById('editTeacherModal');
                             if (modalElement) {
@@ -1001,6 +1056,153 @@
                             }
                         });
                     }
+
+                    // Password reset functionality
+                    let passwordResetRequested = false;
+                    let currentTeacherId = null;
+                    let currentTeacherUsername = null;
+                    let currentTeacherName = null;
+
+                    // Clean up any stuck backdrop on page load
+                    document.addEventListener('DOMContentLoaded', function () {
+                        setTimeout(() => {
+                            const backdrops = document.querySelectorAll('.modal-backdrop');
+                            backdrops.forEach(backdrop => backdrop.remove());
+                            document.body.classList.remove('modal-open');
+                            document.body.style.overflow = '';
+                            document.body.style.paddingRight = '';
+                        }, 100);
+                    });
+
+                    // Emergency backdrop cleanup on Escape key
+                    document.addEventListener('keydown', function (e) {
+                        if (e.key === 'Escape') {
+                            setTimeout(() => {
+                                const backdrops = document.querySelectorAll('.modal-backdrop');
+                                backdrops.forEach(backdrop => backdrop.remove());
+                                document.body.classList.remove('modal-open');
+                                document.body.style.overflow = '';
+                                document.body.style.paddingRight = '';
+                            }, 500);
+                        }
+                    });
+
+                    // Handle reset password button click
+                    document.getElementById('resetPasswordBtn').addEventListener('click', function () {
+                        passwordResetRequested = true;
+
+                        // Get current teacher info from edit form
+                        currentTeacherId = document.querySelector('#editTeacherModal form').action.split('/').slice(-2, -1)[0];
+                        currentTeacherUsername = document.getElementById('editUsername').value;
+                        currentTeacherName = document.getElementById('editFullName').value;
+
+                        // Update button state to show password will be reset
+                        document.getElementById('resetPasswordBtn').innerHTML = '<i class="bi bi-check me-2"></i>Sẽ đặt lại mật khẩu';
+                        document.getElementById('resetPasswordBtn').classList.remove('btn-danger');
+                        document.getElementById('resetPasswordBtn').classList.add('btn-success');
+                        document.getElementById('resetPasswordBtn').disabled = true;
+                    });
+
+                    // Handle edit teacher form submission
+                    document.querySelector('#editTeacherModal form').addEventListener('submit', function (e) {
+                        if (passwordResetRequested) {
+                            e.preventDefault();
+
+                            // Show password confirmation modal
+                            document.getElementById('resetTeacherName').textContent = currentTeacherName;
+                            document.getElementById('resetTeacherCode').textContent = currentTeacherUsername;
+                            document.getElementById('resetTeacherId').value = currentTeacherId;
+                            document.getElementById('adminPassword').value = '';
+
+                            // Hide edit modal and show password reset modal
+                            const editModal = bootstrap.Modal.getInstance(document.getElementById('editTeacherModal'));
+                            editModal.hide();
+
+                            const resetModal = new bootstrap.Modal(document.getElementById('passwordResetModal'));
+                            resetModal.show();
+                        }
+                    });
+
+                    // Handle password reset form submission
+                    document.getElementById('passwordResetForm').addEventListener('submit', function (e) {
+                        e.preventDefault();
+
+                        const adminPassword = document.getElementById('adminPassword').value;
+                        const teacherId = document.getElementById('resetTeacherId').value;
+
+                        if (!adminPassword.trim()) {
+                            alert('Vui lòng nhập mật khẩu admin');
+                            return;
+                        }
+
+                        // Submit password reset request
+                        const formData = new FormData();
+                        formData.append('adminPassword', adminPassword);
+                        formData.append('teacherId', teacherId);
+
+                        const csrfToken = document.querySelector('input[name="${_csrf.parameterName}"]');
+                        if (csrfToken) {
+                            formData.append(csrfToken.name, csrfToken.value);
+                        }
+
+                        fetch('${pageContext.request.contextPath}/admin/teachers/reset-password', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                const resetModal = bootstrap.Modal.getInstance(document.getElementById('passwordResetModal'));
+                                resetModal.hide();
+
+                                // Force remove any remaining backdrop
+                                setTimeout(() => {
+                                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                                    backdrops.forEach(backdrop => backdrop.remove());
+                                    document.body.classList.remove('modal-open');
+                                    document.body.style.overflow = '';
+                                    document.body.style.paddingRight = '';
+                                }, 300);
+
+                                if (data.success) {
+                                    // Now submit the original edit form
+                                    const editForm = document.querySelector('#editTeacherModal form');
+                                    const hiddenInput = document.createElement('input');
+                                    hiddenInput.type = 'hidden';
+                                    hiddenInput.name = 'resetPassword';
+                                    hiddenInput.value = 'true';
+                                    editForm.appendChild(hiddenInput);
+
+                                    editForm.submit();
+                                } else {
+                                    alert(data.message || 'Mật khẩu admin không đúng');
+
+                                    // Reset password reset state
+                                    passwordResetRequested = false;
+                                    const resetBtn = document.getElementById('resetPasswordBtn');
+                                    resetBtn.innerHTML = '<i class="bi bi-key me-2"></i>Đặt lại mật khẩu';
+                                    resetBtn.classList.remove('btn-success');
+                                    resetBtn.classList.add('btn-danger');
+                                    resetBtn.disabled = false;
+
+                                    // Show edit modal again
+                                    const editModal = new bootstrap.Modal(document.getElementById('editTeacherModal'));
+                                    editModal.show();
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Có lỗi xảy ra khi đặt lại mật khẩu');
+
+                                // Force remove any remaining backdrop
+                                setTimeout(() => {
+                                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                                    backdrops.forEach(backdrop => backdrop.remove());
+                                    document.body.classList.remove('modal-open');
+                                    document.body.style.overflow = '';
+                                    document.body.style.paddingRight = '';
+                                }, 300);
+                            });
+                    });
 
                 </script>
             </body>

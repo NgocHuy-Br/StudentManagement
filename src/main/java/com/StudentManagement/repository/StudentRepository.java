@@ -86,8 +86,4 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
   // Đếm số sinh viên theo faculty (thông qua major)
   @Query("SELECT COUNT(s) FROM Student s WHERE s.major.faculty = :faculty")
   Long countByMajorFaculty(@Param("faculty") com.StudentManagement.entity.Faculty faculty);
-
-  // Lấy danh sách sinh viên chưa phân lớp
-  @EntityGraph(attributePaths = { "user", "major" })
-  List<Student> findByClassroomIsNull();
 }
