@@ -134,17 +134,17 @@ public class User {
         this.role = role;
     }
 
-    // Helper method for full name
+    // Helper method for full name (Vietnamese format: lastName + firstName)
     public String getFullName() {
         StringBuilder fullName = new StringBuilder();
-        if (fname != null && !fname.trim().isEmpty()) {
-            fullName.append(fname.trim());
-        }
         if (lname != null && !lname.trim().isEmpty()) {
+            fullName.append(lname.trim());
+        }
+        if (fname != null && !fname.trim().isEmpty()) {
             if (fullName.length() > 0) {
                 fullName.append(" ");
             }
-            fullName.append(lname.trim());
+            fullName.append(fname.trim());
         }
         return fullName.length() > 0 ? fullName.toString() : username;
     }

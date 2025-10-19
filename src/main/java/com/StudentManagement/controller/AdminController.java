@@ -295,6 +295,134 @@ public class AdminController {
         return "redirect:/admin/classrooms";
     }
 
+    @PostMapping("/students/edit")
+    @Transactional
+    public String editStudent(@RequestParam Long studentId,
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String birthDate,
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) Long majorId,
+            RedirectAttributes ra) {
+
+        // Find student
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy sinh viên.");
+            return "redirect:/admin/classrooms";
+        }
+
+        User user = student.getUser();
+        if (user == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy thông tin người dùng.");
+            return "redirect:/admin/classrooms";
+        }
+
+        // Validate and update full name
+        String trimmedFullName = fullName != null ? fullName.trim() : "";
+        if (trimmedFullName.isEmpty()) {
+            ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ họ tên.");
+            return "redirect:/admin/classrooms";
+        }
+
+        // Update email if provided and not already taken by another user
+        String trimmedEmail = (email != null && !email.trim().isEmpty()) ? email.trim() : null;
+        if (trimmedEmail != null) {
+            User existingEmailUser = userRepository.findByEmail(trimmedEmail).orElse(null);
+            if (existingEmailUser != null && !existingEmailUser.getId().equals(user.getId())) {
+                ra.addFlashAttribute("error", "Email đã tồn tại: " + trimmedEmail);
+                return "redirect:/admin/classrooms";
+            }
+        }
+
+        // Parse name parts
+        String[] nameParts = trimmedFullName.split("\\s+");
+        String firstName = nameParts[nameParts.length - 1];
+        String lastName = nameParts.length > 1
+                ? String.join(" ", java.util.Arrays.copyOf(nameParts, nameParts.length - 1)).trim()
+                : "";
+
+        // Update user info
+        user.setFname(firstName);
+        user.setLname(lastName.isEmpty() ? null : lastName);
+        user.setEmail(trimmedEmail);
+        user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
+        user.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
+
+        // Update birth date
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            try {
+                user.setBirthDate(java.time.LocalDate.parse(birthDate.trim()));
+            } catch (Exception ex) {
+                ra.addFlashAttribute("error",
+                        "Định dạng ngày sinh không hợp lệ. Vui lòng sử dụng định dạng YYYY-MM-DD.");
+                return "redirect:/admin/classrooms";
+            }
+        } else {
+            user.setBirthDate(null);
+        }
+
+        userRepository.save(user);
+
+        // Update classroom and major
+        if (classId != null) {
+            Classroom classroom = classroomRepository.findById(classId).orElse(null);
+            if (classroom != null) {
+                student.setClassroom(classroom);
+                student.setClassName(classroom.getClassCode());
+                student.setMajor(classroom.getMajor());
+            }
+        } else if (majorId != null) {
+            Major major = majorRepository.findById(majorId).orElse(null);
+            if (major != null) {
+                student.setMajor(major);
+                student.setClassroom(null);
+                student.setClassName(null);
+            }
+        }
+
+        studentRepository.save(student);
+
+        ra.addFlashAttribute("success", "Đã cập nhật thông tin sinh viên: " + user.getUsername());
+        return "redirect:/admin/classrooms";
+    }
+
+    @GetMapping("/students/delete/{studentId}")
+    @Transactional
+    public String deleteStudent(@PathVariable Long studentId, RedirectAttributes ra) {
+        // Find student
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy sinh viên.");
+            return "redirect:/admin/classrooms";
+        }
+
+        // Check if student is assigned to a classroom
+        if (student.getClassroom() != null) {
+            ra.addFlashAttribute("error",
+                    "Không thể xóa sinh viên đang thuộc lớp học. Vui lòng xóa sinh viên khỏi lớp trước.");
+            return "redirect:/admin/classrooms";
+        }
+
+        User user = student.getUser();
+        String username = user.getUsername();
+
+        try {
+            // Delete student first (foreign key constraint)
+            studentRepository.delete(student);
+            // Then delete user
+            userRepository.delete(user);
+
+            ra.addFlashAttribute("success", "Đã xóa sinh viên: " + username);
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Không thể xóa sinh viên do ràng buộc dữ liệu. Vui lòng kiểm tra lại.");
+        }
+
+        return "redirect:/admin/classrooms";
+    }
+
     private void addUserInfo(Authentication auth, Model model) {
         String firstName = "User";
         String roleDisplay = "Người dùng";
@@ -412,8 +540,26 @@ public class AdminController {
         addUserInfo(auth, model);
         model.addAttribute("activeTab", "students");
 
+        // Map sort field to correct entity path
+        String mappedSort = sort;
+        if ("username".equals(sort)) {
+            mappedSort = "user.username";
+        } else if ("email".equals(sort)) {
+            mappedSort = "user.email";
+        } else if ("fname".equals(sort)) {
+            mappedSort = "user.fname";
+        } else if ("lname".equals(sort)) {
+            mappedSort = "user.lname";
+        } else if ("phone".equals(sort)) {
+            mappedSort = "user.phone";
+        } else if ("majorName".equals(sort)) {
+            mappedSort = "major.majorName";
+        } else if ("className".equals(sort)) {
+            mappedSort = "className";
+        }
+
         Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, sort));
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(direction, mappedSort));
 
         // Get all students with search
         Page<Student> studentsPage;

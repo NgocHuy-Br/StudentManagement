@@ -612,6 +612,116 @@
                                     </div>
                                 </div>
 
+                                <!-- Edit Student Modal -->
+                                <div class="modal fade" id="editStudentModal" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-pencil me-2"></i>Chỉnh sửa sinh viên
+                                                </h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form action="${pageContext.request.contextPath}/admin/students/edit"
+                                                method="post">
+                                                <input type="hidden" id="editStudentId" name="studentId" value="">
+                                                <div class="modal-body">
+                                                    <div class="row g-3">
+                                                        <!-- Username (readonly) -->
+                                                        <div class="col-md-6">
+                                                            <label for="editUsername" class="form-label">
+                                                                <span class="text-danger">*</span> MSSV
+                                                            </label>
+                                                            <input type="text" class="form-control" id="editUsername"
+                                                                name="username" readonly>
+                                                        </div>
+
+                                                        <!-- Full Name -->
+                                                        <div class="col-md-6">
+                                                            <label for="editFullName" class="form-label">
+                                                                <span class="text-danger">*</span> Họ và tên
+                                                            </label>
+                                                            <input type="text" class="form-control" id="editFullName"
+                                                                name="fullName" required>
+                                                        </div>
+
+                                                        <!-- Email -->
+                                                        <div class="col-md-6">
+                                                            <label for="editEmail" class="form-label">Email</label>
+                                                            <input type="email" class="form-control" id="editEmail"
+                                                                name="email">
+                                                        </div>
+
+                                                        <!-- Phone -->
+                                                        <div class="col-md-6">
+                                                            <label for="editPhone" class="form-label">Số điện
+                                                                thoại</label>
+                                                            <input type="tel" class="form-control" id="editPhone"
+                                                                name="phone">
+                                                        </div>
+
+                                                        <!-- Address -->
+                                                        <div class="col-12">
+                                                            <label for="editAddress" class="form-label">Địa chỉ</label>
+                                                            <input type="text" class="form-control" id="editAddress"
+                                                                name="address">
+                                                        </div>
+
+                                                        <!-- Birth Date -->
+                                                        <div class="col-md-6">
+                                                            <label for="editBirthDate" class="form-label">Ngày
+                                                                sinh</label>
+                                                            <input type="date" class="form-control" id="editBirthDate"
+                                                                name="birthDate">
+                                                        </div>
+
+                                                        <!-- Classroom -->
+                                                        <div class="col-md-6">
+                                                            <label for="editClassroomSelect" class="form-label">Lớp
+                                                                học</label>
+                                                            <select class="form-select" id="editClassroomSelect"
+                                                                name="classId">
+                                                                <option value="">Chưa phân lớp</option>
+                                                                <c:forEach var="classroom" items="${classrooms}">
+                                                                    <option value="${classroom.id}"
+                                                                        data-major-id="${classroom.major.id}">
+                                                                        ${classroom.classCode} (${classroom.courseYear})
+                                                                    </option>
+                                                                </c:forEach>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Major -->
+                                                        <div class="col-md-6">
+                                                            <label for="editMajorSelect" class="form-label">
+                                                                <span class="text-danger">*</span> Ngành học
+                                                            </label>
+                                                            <select class="form-select" id="editMajorSelect"
+                                                                name="majorId" required>
+                                                                <c:forEach var="major" items="${majors}">
+                                                                    <option value="${major.id}">
+                                                                        ${major.majorName} (${major.majorCode})
+                                                                    </option>
+                                                                </c:forEach>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">
+                                                        <i class="bi bi-x-circle me-1"></i>Hủy
+                                                    </button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="bi bi-check-circle me-1"></i>Cập nhật
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <script
                                     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                                 <script>
@@ -770,7 +880,29 @@
 
                                         tbody.innerHTML = students.map((student, index) => {
                                             const classroomName = student.classroomName || 'Chưa phân lớp';
-                                            const fullName = (student.fname || '') + (student.lname ? ' ' + student.lname : '');
+                                            const fullName = (student.lname ? student.lname + ' ' : '') + (student.fname || '');
+
+                                            // Determine which delete action to show
+                                            const currentClassroomId = document.getElementById('classroomSelector').value;
+                                            let deleteButton = '';
+
+                                            if (currentClassroomId && currentClassroomId !== '') {
+                                                // In specific classroom: show remove from class button
+                                                deleteButton = '<button type="button" class="btn btn-outline-warning btn-sm" onclick="removeFromClass(' + student.id + ', ' + currentClassroomId + ')" title="Xóa khỏi lớp">' +
+                                                    '<i class="bi bi-person-dash"></i>' +
+                                                    '</button>';
+                                            } else {
+                                                // In "All classes": show delete student button only for unassigned students
+                                                if (!student.classroomId) {
+                                                    deleteButton = '<button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteStudent(' + student.id + ')" title="Xóa sinh viên">' +
+                                                        '<i class="bi bi-trash"></i>' +
+                                                        '</button>';
+                                                } else {
+                                                    deleteButton = '<button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Không thể xóa - sinh viên đã có lớp">' +
+                                                        '<i class="bi bi-shield-lock"></i>' +
+                                                        '</button>';
+                                                }
+                                            }
 
                                             return '<tr class="student-row">' +
                                                 '<td class="text-center fw-bold">' + (index + 1) + '</td>' +
@@ -786,9 +918,7 @@
                                                 '<button type="button" class="btn btn-outline-primary btn-sm" onclick="editStudent(' + student.id + ')" title="Sửa">' +
                                                 '<i class="bi bi-pencil"></i>' +
                                                 '</button>' +
-                                                '<button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteStudent(' + student.id + ')" title="Xóa">' +
-                                                '<i class="bi bi-trash"></i>' +
-                                                '</button>' +
+                                                deleteButton +
                                                 '</div>' +
                                                 '</td>' +
                                                 '</tr>';
@@ -804,7 +934,7 @@
                                         if (searchTerm) {
                                             students = students.filter(s =>
                                                 s.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                                (s.fname + ' ' + s.lname).toLowerCase().includes(searchTerm.toLowerCase())
+                                                ((s.lname || '') + ' ' + (s.fname || '')).toLowerCase().includes(searchTerm.toLowerCase())
                                             );
                                         }
 
@@ -985,13 +1115,71 @@
                                     }
 
                                     function editStudent(id) {
-                                        // Implement edit student modal
-                                        alert('Edit student: ' + id);
+                                        // Find student data from allStudents array
+                                        const student = allStudents.find(s => s.id == id);
+                                        if (!student) {
+                                            alert('Không tìm thấy thông tin sinh viên');
+                                            return;
+                                        }
+
+                                        // Populate modal with student data
+                                        document.getElementById('editStudentId').value = student.id;
+                                        document.getElementById('editUsername').value = student.username;
+                                        document.getElementById('editFullName').value = (student.lname ? student.lname + ' ' : '') + (student.fname || '');
+                                        document.getElementById('editEmail').value = student.email || '';
+                                        document.getElementById('editPhone').value = student.phone || '';
+                                        document.getElementById('editAddress').value = student.address || '';
+                                        document.getElementById('editBirthDate').value = student.birthDate || '';
+
+                                        // Set classroom and major
+                                        document.getElementById('editClassroomSelect').value = student.classroomId || '';
+                                        document.getElementById('editMajorSelect').value = student.majorId || '';
+
+                                        // Show modal
+                                        const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+                                        modal.show();
                                     }
 
                                     function deleteStudent(id) {
-                                        if (confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
+                                        if (confirm('Bạn có chắc chắn muốn xóa sinh viên này hoàn toàn? Hành động này không thể hoàn tác.')) {
                                             window.location.href = '${pageContext.request.contextPath}/admin/students/delete/' + id;
+                                        }
+                                    }
+
+                                    function removeFromClass(studentId, classroomId) {
+                                        if (confirm('Bạn có chắc chắn muốn xóa sinh viên này khỏi lớp? Sinh viên sẽ chuyển về trạng thái "Chưa phân lớp".')) {
+                                            // Find student data
+                                            const student = allStudents.find(s => s.id === studentId);
+                                            if (!student) {
+                                                alert('Không tìm thấy thông tin sinh viên!');
+                                                return;
+                                            }
+
+                                            // Create form data for edit request (set classId to null to remove from class)
+                                            const formData = new FormData();
+                                            formData.append('studentId', studentId);
+                                            formData.append('fullName', (student.lname ? student.lname + ' ' : '') + (student.fname || ''));
+                                            formData.append('email', student.email || '');
+                                            formData.append('phone', student.phone || '');
+                                            formData.append('address', student.address || '');
+                                            formData.append('birthDate', student.birthDate || '');
+                                            // Don't set classId and majorId to remove from class
+
+                                            // Submit the edit form
+                                            fetch('${pageContext.request.contextPath}/admin/students/edit', {
+                                                method: 'POST',
+                                                body: formData
+                                            }).then(response => {
+                                                if (response.ok) {
+                                                    // Reload the page to show updated data
+                                                    window.location.reload();
+                                                } else {
+                                                    alert('Có lỗi xảy ra khi xóa sinh viên khỏi lớp!');
+                                                }
+                                            }).catch(error => {
+                                                console.error('Error:', error);
+                                                alert('Có lỗi xảy ra khi xóa sinh viên khỏi lớp!');
+                                            });
                                         }
                                     }
 
