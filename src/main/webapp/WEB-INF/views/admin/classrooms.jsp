@@ -246,25 +246,21 @@
                                                                                         <i class="bi bi-eye"></i>
                                                                                     </button>
                                                                                     <button type="button"
-                                                                                        class="btn btn-sm btn-outline-primary"
+                                                                                        class="btn btn-sm btn-outline-primary edit-classroom-btn"
                                                                                         data-classroom-id="${classroom.id}"
-                                                                                        data-class-code="${classroom.classCode}"
-                                                                                        data-course-year="${classroom.courseYear}"
-                                                                                        data-major-id="${classroom.major.id}"
-                                                                                        data-teacher-id="${empty classroom.homeRoomTeacher ? '' : classroom.homeRoomTeacher.id}"
-                                                                                        onclick="event.preventDefault(); event.stopPropagation(); editClassroomWithData(this);"
                                                                                         data-bs-toggle="tooltip"
                                                                                         data-bs-placement="top"
-                                                                                        title="Chỉnh sửa thông tin lớp">
+                                                                                        title="Chỉnh sửa lớp học">
                                                                                         <i
                                                                                             class="bi bi-pencil-square"></i>
                                                                                     </button>
                                                                                     <button type="button"
-                                                                                        class="btn btn-sm btn-outline-danger"
-                                                                                        onclick="event.preventDefault(); event.stopPropagation(); deleteClassroom('${classroom.id}', '${classroom.classCode}');"
+                                                                                        class="btn btn-sm btn-outline-danger delete-classroom-btn"
+                                                                                        data-classroom-id="${classroom.id}"
+                                                                                        data-classroom-name="${classroom.classCode}"
                                                                                         data-bs-toggle="tooltip"
                                                                                         data-bs-placement="top"
-                                                                                        title="Xóa lớp">
+                                                                                        title="Xóa lớp học">
                                                                                         <i class="bi bi-trash"></i>
                                                                                     </button>
                                                                                 </div>
@@ -651,102 +647,6 @@
                                     </div>
                                 </c:if>
 
-                                <!-- Edit Classroom Modal -->
-                                <div class="modal fade" id="editClassroomModal" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Chỉnh sửa thông tin lớp học</h5>
-                                                <button type="button" class="btn-close"
-                                                    data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <form id="editClassroomForm"
-                                                    action="${pageContext.request.contextPath}/admin/classrooms/update"
-                                                    method="post">
-                                                    <input type="hidden" name="${_csrf.parameterName}"
-                                                        value="${_csrf.token}" />
-                                                    <input type="hidden" id="editClassroomId" name="id">
-
-                                                    <!-- Warning message for classes with students -->
-                                                    <div id="editWarningMessage" class="alert alert-warning d-none">
-                                                        <i class="fas fa-exclamation-triangle"></i>
-                                                        Lớp học đã có sinh viên. Chỉ có thể thay đổi giáo viên chủ
-                                                        nhiệm.
-                                                    </div>
-
-                                                    <div class="mb-3" id="editClassCodeGroup">
-                                                        <label for="editClassCode" class="form-label">Mã lớp <span
-                                                                class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control" id="editClassCode"
-                                                            name="classCode" required>
-                                                    </div>
-
-                                                    <div class="mb-3" id="editCourseYearGroup">
-                                                        <label for="editCourseYear" class="form-label">Khóa học <span
-                                                                class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control" id="editCourseYear"
-                                                            name="courseYear" pattern="[0-9]{4}-[0-9]{4}"
-                                                            placeholder="VD: 2025-2029"
-                                                            title="Định dạng: YYYY-YYYY (năm sau phải lớn hơn năm trước)"
-                                                            required>
-                                                        <div class="invalid-feedback" id="editCourseYearError">
-                                                            Vui lòng nhập đúng định dạng YYYY-YYYY và năm sau phải lớn
-                                                            hơn năm
-                                                            trước
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mb-3" id="editMajorGroup">
-                                                        <label for="editMajorId" class="form-label">Ngành <span
-                                                                class="text-danger">*</span></label>
-                                                        <select class="form-select" id="editMajorId" name="majorId"
-                                                            required>
-                                                            <option value="">Chọn ngành...</option>
-                                                            <c:forEach var="major" items="${majors}">
-                                                                <option value="${major.id}">${major.majorCode} -
-                                                                    ${major.majorName}
-                                                                </option>
-                                                            </c:forEach>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label for="editTeacherId" class="form-label">Giáo viên chủ
-                                                            nhiệm (tùy
-                                                            chọn)</label>
-                                                        <select class="form-select" id="editTeacherId" name="teacherId">
-                                                            <option value="">Chọn giáo viên...</option>
-                                                            <c:forEach var="teacher" items="${teachers}">
-                                                                <option value="${teacher.id}">${teacher.user.username} -
-                                                                    ${teacher.user.lname} ${teacher.user.fname}</option>
-                                                            </c:forEach>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label for="editTeacherChangeNotes" class="form-label">Ghi chú
-                                                            thay đổi
-                                                            chủ nhiệm (tùy chọn)</label>
-                                                        <textarea class="form-control" id="editTeacherChangeNotes"
-                                                            name="teacherChangeNotes" rows="3"
-                                                            placeholder="Nhập lý do thay đổi giáo viên chủ nhiệm..."></textarea>
-                                                        <small class="form-text text-muted">Ghi chú này sẽ được lưu vào
-                                                            lịch sử
-                                                            thay đổi chủ nhiệm</small>
-                                                    </div>
-
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary"
-                                                            data-bs-dismiss="modal">Hủy</button>
-                                                        <button type="submit" class="btn btn-primary">Cập nhật</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <script
                                     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                                 <script>
@@ -758,184 +658,6 @@
 
                                     function viewClassroomDetails(classroomId) {
                                         window.location.href = '${pageContext.request.contextPath}/admin/classrooms/' + classroomId + '/details';
-                                    }
-
-                                    function deleteClassroom(classroomId, classroomName) {
-                                        console.log('deleteClassroom called with id:', classroomId, 'name:', classroomName);
-                                        if (confirm('Bạn có chắc chắn muốn xóa lớp "' + classroomName + '"?\nLưu ý: Chỉ có thể xóa lớp không có sinh viên nào.')) {
-                                            console.log('User confirmed deletion');
-                                            console.log('Timestamp:', new Date().toISOString());
-
-                                            // Using fetch instead of form submit for better debugging
-                                            const formData = new FormData();
-                                            formData.append('id', classroomId);
-
-                                            console.log('About to send DELETE request...');
-                                            fetch('${pageContext.request.contextPath}/admin/classrooms/delete', {
-                                                method: 'POST',
-                                                body: formData
-                                            })
-                                                .then(response => {
-                                                    console.log('Response received:', response.status, response.statusText);
-                                                    if (response.ok || response.redirected) {
-                                                        console.log('Delete request successful, refreshing page...');
-                                                        window.location.reload();
-                                                    } else {
-                                                        console.error('Delete request failed:', response.status);
-                                                        alert('Lỗi khi xóa lớp học. Vui lòng thử lại.');
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    console.error('Network error:', error);
-                                                    alert('Lỗi kết nối khi xóa lớp học.');
-                                                });
-                                        }
-                                    }
-
-                                    function editClassroomWithData(element) {
-                                        const classroomId = element.getAttribute('data-classroom-id');
-                                        const classCode = element.getAttribute('data-class-code');
-                                        const courseYear = element.getAttribute('data-course-year');
-                                        const majorId = element.getAttribute('data-major-id');
-                                        const teacherId = element.getAttribute('data-teacher-id');
-
-                                        editClassroom(classroomId, classCode, courseYear, majorId, teacherId);
-                                    }
-
-                                    function editClassroom(classroomId, currentClassCode, currentCourseYear, currentMajorId, currentTeacherId) {
-                                        console.log('editClassroom called with:', {
-                                            id: classroomId,
-                                            classCode: currentClassCode,
-                                            courseYear: currentCourseYear,
-                                            majorId: currentMajorId,
-                                            teacherId: currentTeacherId
-                                        });
-
-                                        // Check if modal element exists
-                                        const modalElement = document.getElementById('editClassroomModal');
-                                        if (!modalElement) {
-                                            console.error('Modal element not found!');
-                                            alert('Lỗi: Không tìm thấy modal chỉnh sửa');
-                                            return;
-                                        }
-
-                                        console.log('Modal element found:', modalElement);
-
-                                        // Find classroom data from the list-group-item using data attribute
-                                        let classroomItem = document.querySelector(`div.list-group-item[data-classroom-id="${classroomId}"]`);
-                                        if (!classroomItem) {
-                                            console.error('Classroom item not found for id:', classroomId);
-                                            // Try alternative method - find by class code in h6
-                                            const alternativeItem = Array.from(document.querySelectorAll('div.list-group-item')).find(item => {
-                                                const h6 = item.querySelector('h6');
-                                                return h6 && h6.textContent.trim() === currentClassCode;
-                                            });
-
-                                            if (alternativeItem) {
-                                                console.log('Found classroom by class code:', alternativeItem);
-                                                classroomItem = alternativeItem;
-                                            } else {
-                                                alert('Không tìm thấy thông tin lớp học');
-                                                return;
-                                            }
-                                        }
-
-                                        console.log('Classroom item found:', classroomItem);
-
-                                        // Extract student count for conditional logic
-                                        const studentCountElement = classroomItem.querySelector('small');
-                                        const studentCountText = studentCountElement ? studentCountElement.textContent : '0/50';
-                                        const studentCount = parseInt(studentCountText.split('/')[0].replace('Sĩ số: ', '')) || 0;
-
-                                        console.log('Student count:', studentCount);
-
-                                        // Check if form elements exist
-                                        const editClassroomId = document.getElementById('editClassroomId');
-                                        const editClassCode = document.getElementById('editClassCode');
-                                        const editCourseYear = document.getElementById('editCourseYear');
-                                        const editMajorId = document.getElementById('editMajorId');
-                                        const editTeacherId = document.getElementById('editTeacherId');
-
-                                        if (!editClassroomId || !editClassCode || !editCourseYear || !editMajorId || !editTeacherId) {
-                                            console.error('Form elements not found!');
-                                            alert('Lỗi: Không tìm thấy form elements');
-                                            return;
-                                        }
-
-                                        // Fill modal fields with current values
-                                        editClassroomId.value = classroomId;
-                                        editClassCode.value = currentClassCode || '';
-                                        editCourseYear.value = currentCourseYear || '';
-
-                                        // Select current major
-                                        editMajorId.selectedIndex = 0; // Reset first
-                                        if (currentMajorId && currentMajorId !== '') {
-                                            for (let option of editMajorId.options) {
-                                                if (option.value === currentMajorId.toString()) {
-                                                    option.selected = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-
-                                        // Select current teacher
-                                        editTeacherId.selectedIndex = 0; // Reset first
-                                        if (currentTeacherId && currentTeacherId !== '') {
-                                            for (let option of editTeacherId.options) {
-                                                if (option.value === currentTeacherId.toString()) {
-                                                    option.selected = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-
-                                        console.log('Form filled with values:', {
-                                            classCode: editClassCode.value,
-                                            courseYear: editCourseYear.value,
-                                            majorId: editMajorId.value,
-                                            teacherId: editTeacherId.value
-                                        });
-
-                                        // Show/hide fields based on student count
-                                        const hasStudents = studentCount > 0;
-                                        const warningMsg = document.getElementById('editWarningMessage');
-                                        const classCodeGroup = document.getElementById('editClassCodeGroup');
-                                        const courseYearGroup = document.getElementById('editCourseYearGroup');
-                                        const majorGroup = document.getElementById('editMajorGroup');
-
-                                        if (hasStudents) {
-                                            if (warningMsg) warningMsg.classList.remove('d-none');
-                                            if (classCodeGroup) classCodeGroup.style.display = 'none';
-                                            if (courseYearGroup) courseYearGroup.style.display = 'none';
-                                            if (majorGroup) majorGroup.style.display = 'none';
-
-                                            // Remove required attributes
-                                            if (editClassCode) editClassCode.removeAttribute('required');
-                                            if (editCourseYear) editCourseYear.removeAttribute('required');
-                                            if (editMajorId) editMajorId.removeAttribute('required');
-                                        } else {
-                                            if (warningMsg) warningMsg.classList.add('d-none');
-                                            if (classCodeGroup) classCodeGroup.style.display = 'block';
-                                            if (courseYearGroup) courseYearGroup.style.display = 'block';
-                                            if (majorGroup) majorGroup.style.display = 'block';
-
-                                            // Add required attributes back
-                                            if (editClassCode) editClassCode.setAttribute('required', 'required');
-                                            if (editCourseYear) editCourseYear.setAttribute('required', 'required');
-                                            if (editMajorId) editMajorId.setAttribute('required', 'required');
-                                        }
-
-                                        console.log('About to show modal...');
-
-                                        // Show modal using Bootstrap 5 method
-                                        try {
-                                            const modal = new bootstrap.Modal(modalElement);
-                                            modal.show();
-                                            console.log('Modal show() called successfully');
-                                        } catch (error) {
-                                            console.error('Error showing modal:', error);
-                                            alert('Lỗi khi hiển thị modal: ' + error.message);
-                                        }
                                     }
 
                                     function removeStudentFromClass(studentId, studentName, classroomId) {
@@ -960,6 +682,62 @@
                                             form.submit();
                                         }
                                     }
+
+                                    // New simple Edit and Delete functions
+                                    function editClassroom(classroomId) {
+                                        // Simple redirect to edit page or show modal
+                                        window.location.href = '${pageContext.request.contextPath}/admin/classrooms/' + classroomId + '/edit';
+                                    }
+
+                                    function deleteClassroom(classroomId, classroomName) {
+                                        if (confirm('Bạn có chắc chắn muốn xóa lớp "' + classroomName + '"?\n\nChú ý: Chỉ có thể xóa lớp không có sinh viên.')) {
+                                            // Create and submit form
+                                            const form = document.createElement('form');
+                                            form.method = 'POST';
+                                            form.action = '${pageContext.request.contextPath}/admin/classrooms/delete';
+
+                                            // Add CSRF token
+                                            const csrfToken = document.createElement('input');
+                                            csrfToken.type = 'hidden';
+                                            csrfToken.name = '${_csrf.parameterName}';
+                                            csrfToken.value = '${_csrf.token}';
+                                            form.appendChild(csrfToken);
+
+                                            // Add classroom ID
+                                            const idInput = document.createElement('input');
+                                            idInput.type = 'hidden';
+                                            idInput.name = 'id';
+                                            idInput.value = classroomId;
+                                            form.appendChild(idInput);
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        }
+                                    }
+
+                                    // Event listeners for edit and delete buttons
+                                    document.addEventListener('click', function (e) {
+                                        // Handle edit button clicks
+                                        if (e.target.closest('.edit-classroom-btn')) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const btn = e.target.closest('.edit-classroom-btn');
+                                            const classroomId = btn.getAttribute('data-classroom-id');
+                                            console.log('Edit button clicked for classroom:', classroomId);
+                                            editClassroom(classroomId);
+                                        }
+
+                                        // Handle delete button clicks
+                                        if (e.target.closest('.delete-classroom-btn')) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const btn = e.target.closest('.delete-classroom-btn');
+                                            const classroomId = btn.getAttribute('data-classroom-id');
+                                            const classroomName = btn.getAttribute('data-classroom-name');
+                                            console.log('Delete button clicked for classroom:', classroomId, classroomName);
+                                            deleteClassroom(classroomId, classroomName);
+                                        }
+                                    });
 
                                     // Auto-submit search form when major dropdown changes
                                     function autoSubmitSearch() {
@@ -1035,29 +813,12 @@
                                         });
 
                                         const addCourseYearInput = document.getElementById('addCourseYear');
-                                        const editCourseYearInput = document.getElementById('editCourseYear');
 
                                         // Validation for Add Form
                                         if (addCourseYearInput) {
                                             addCourseYearInput.addEventListener('blur', function () {
                                                 const validation = validateCourseYear(this.value);
                                                 const errorDiv = document.getElementById('addCourseYearError');
-
-                                                if (!validation.isValid) {
-                                                    this.classList.add('is-invalid');
-                                                    errorDiv.textContent = validation.message;
-                                                } else {
-                                                    this.classList.remove('is-invalid');
-                                                    this.classList.add('is-valid');
-                                                }
-                                            });
-                                        }
-
-                                        // Validation for Edit Form
-                                        if (editCourseYearInput) {
-                                            editCourseYearInput.addEventListener('blur', function () {
-                                                const validation = validateCourseYear(this.value);
-                                                const errorDiv = document.getElementById('editCourseYearError');
 
                                                 if (!validation.isValid) {
                                                     this.classList.add('is-invalid');
@@ -1083,22 +844,6 @@
                                                     e.preventDefault();
                                                     alert('Lỗi Khóa học: ' + validation.message);
                                                     addCourseYearInput.focus();
-                                                    return false;
-                                                }
-                                            });
-                                        }
-
-                                        // Form submit validation for Edit Form
-                                        const editForm = document.querySelector('#editClassroomModal form');
-                                        if (editForm) {
-                                            editForm.addEventListener('submit', function (e) {
-                                                const courseYear = editCourseYearInput.value;
-                                                const validation = validateCourseYear(courseYear);
-
-                                                if (!validation.isValid) {
-                                                    e.preventDefault();
-                                                    alert('Lỗi Khóa học: ' + validation.message);
-                                                    editCourseYearInput.focus();
                                                     return false;
                                                 }
                                             });

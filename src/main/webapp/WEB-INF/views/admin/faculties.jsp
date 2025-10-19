@@ -84,7 +84,9 @@
                                             method="get" action="">
                                             <div class="d-flex">
                                                 <div class="input-group search">
-                                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                    <button type="submit" class="btn btn-outline-primary">
+                                                        <i class="bi bi-search"></i>
+                                                    </button>
                                                     <input name="q" id="searchInput" class="form-control"
                                                         placeholder="Tìm tên khoa, mô tả..." value="${q}" />
                                                 </div>

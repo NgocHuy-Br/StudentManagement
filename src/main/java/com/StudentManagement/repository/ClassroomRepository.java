@@ -42,6 +42,18 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Long> {
       """)
   Page<Classroom> search(@Param("q") String q, Pageable pageable);
 
+  // Tìm kiếm chỉ theo mã lớp
+  @EntityGraph(attributePaths = { "major", "homeRoomTeacher", "homeRoomTeacher.user", "students" })
+  @Query("""
+      select c from Classroom c
+      left join c.major m
+      left join c.homeRoomTeacher t
+      left join t.user tu
+      where
+        lower(c.classCode) like lower(concat('%', :classCode, '%'))
+      """)
+  Page<Classroom> searchByClassCode(@Param("classCode") String classCode, Pageable pageable);
+
   // Lấy lớp theo ngành
   @EntityGraph(attributePaths = { "major", "homeRoomTeacher", "homeRoomTeacher.user", "students" })
   Page<Classroom> findByMajor(Major major, Pageable pageable);
@@ -75,6 +87,20 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Long> {
         )
       """)
   Page<Classroom> searchByClassCodeAndMajor(@Param("search") String search, @Param("majorId") Long majorId,
+      Pageable pageable);
+
+  // Tìm kiếm theo mã lớp và lọc theo ngành
+  @EntityGraph(attributePaths = { "major", "homeRoomTeacher", "homeRoomTeacher.user", "students" })
+  @Query("""
+      select c from Classroom c
+      left join c.major m
+      left join c.homeRoomTeacher t
+      left join t.user tu
+      where
+        m.id = :majorId AND
+        lower(c.classCode) like lower(concat('%', :classCode, '%'))
+      """)
+  Page<Classroom> searchByClassCodeAndMajorId(@Param("classCode") String classCode, @Param("majorId") Long majorId,
       Pageable pageable);
 
   // Find classrooms by homeroom teacher

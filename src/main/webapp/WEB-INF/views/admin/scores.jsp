@@ -172,6 +172,9 @@
                                                         <i class="bi bi-funnel"></i> Lọc sinh viên
                                                     </label>
                                                     <div class="input-group">
+                                                        <button type="submit" class="btn btn-outline-primary">
+                                                            <i class="bi bi-search"></i>
+                                                        </button>
                                                         <input type="text" class="form-control" id="searchInput"
                                                             name="search" placeholder="Nhập MSSV hoặc họ tên..."
                                                             value="${param.search}"

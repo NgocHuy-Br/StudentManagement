@@ -90,7 +90,9 @@
                                             <!-- Ô tìm kiếm với nút clear -->
                                             <div class="position-relative" style="flex: 1; max-width: 400px;">
                                                 <div class="input-group search">
-                                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                    <button type="submit" class="btn btn-outline-primary">
+                                                        <i class="bi bi-search"></i>
+                                                    </button>
                                                     <input name="q" id="teacherSearchInput" class="form-control"
                                                         placeholder="Tìm mã GV, họ tên, email, SĐT..." value="${q}" />
                                                 </div>

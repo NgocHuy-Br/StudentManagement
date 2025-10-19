@@ -232,11 +232,11 @@ public class AdminController {
             // Chỉ lọc theo ngành
             classrooms = classroomRepository.findByMajorId(majorId, pageable);
         } else if (majorId == null && search != null && !search.isBlank()) {
-            // Chỉ tìm kiếm theo tên
-            classrooms = classroomRepository.search(search.trim(), pageable);
+            // Chỉ tìm kiếm theo mã lớp
+            classrooms = classroomRepository.searchByClassCode(search.trim(), pageable);
         } else {
             // Cả tìm kiếm và lọc theo ngành
-            classrooms = classroomRepository.searchByClassCodeAndMajor(search.trim(), majorId, pageable);
+            classrooms = classroomRepository.searchByClassCodeAndMajorId(search.trim(), majorId, pageable);
         }
 
         // Lấy danh sách ngành và giáo viên cho form tạo lớp
@@ -407,6 +407,61 @@ public class AdminController {
 
         System.out.println("DEBUG: Redirecting to /admin/classrooms");
         return "redirect:/admin/classrooms";
+    }
+
+    // GET form chỉnh sửa lớp học
+    @GetMapping("/classrooms/{id}/edit")
+    public String editClassroomForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
+        System.out.println("DEBUG: editClassroomForm called with id: " + id);
+
+        Classroom classroom = classroomRepository.findById(id).orElse(null);
+        if (classroom == null) {
+            System.out.println("DEBUG: Classroom not found with id: " + id);
+            ra.addFlashAttribute("error", "Không tìm thấy lớp học.");
+            return "redirect:/admin/classrooms";
+        }
+
+        // Lấy danh sách ngành và giáo viên
+        List<Major> majors = majorRepository.findAll();
+        List<Teacher> teachers = teacherRepository.findAll();
+
+        // Kiểm tra xem lớp có sinh viên không
+        boolean hasStudents = classroom.getStudents() != null && !classroom.getStudents().isEmpty();
+
+        model.addAttribute("classroom", classroom);
+        model.addAttribute("majors", majors);
+        model.addAttribute("teachers", teachers);
+        model.addAttribute("hasStudents", hasStudents);
+
+        return "admin/classroom-edit";
+    }
+
+    // API to get classroom data as JSON for modal
+    @GetMapping("/classrooms/{id}/api")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getClassroomData(@PathVariable Long id) {
+        System.out.println("DEBUG: getClassroomData called with id: " + id);
+
+        Optional<Classroom> classroomOpt = classroomRepository.findById(id);
+        if (classroomOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Classroom classroom = classroomOpt.get();
+        boolean hasStudents = classroom.getStudents() != null && !classroom.getStudents().isEmpty();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", classroom.getId());
+        response.put("classCode", classroom.getClassCode());
+        response.put("courseYear", classroom.getCourseYear());
+        response.put("majorId", classroom.getMajor() != null ? classroom.getMajor().getId() : null);
+        response.put("teacherId",
+                classroom.getClassroomTeachers() != null && !classroom.getClassroomTeachers().isEmpty()
+                        ? classroom.getClassroomTeachers().get(0).getTeacher().getId()
+                        : null);
+        response.put("hasStudents", hasStudents);
+
+        return ResponseEntity.ok(response);
     }
 
     // Cập nhật thông tin lớp học

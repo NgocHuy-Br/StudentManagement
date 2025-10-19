@@ -121,9 +121,10 @@
                                                                 <!-- Search -->
                                                                 <div class="col-md-6">
                                                                     <div class="input-group input-group-sm">
-                                                                        <span class="input-group-text">
+                                                                        <button type="submit"
+                                                                            class="btn btn-outline-primary btn-sm">
                                                                             <i class="bi bi-search"></i>
-                                                                        </span>
+                                                                        </button>
                                                                         <input type="text" name="q" value="${q}"
                                                                             class="form-control form-control-sm"
                                                                             placeholder="Tìm ngành...">
@@ -336,9 +337,10 @@
                                                                 <div class="flex-shrink-0">
                                                                     <form method="get" class="d-flex">
                                                                         <div class="input-group input-group-sm">
-                                                                            <span class="input-group-text">
+                                                                            <button type="submit"
+                                                                                class="btn btn-outline-primary btn-sm">
                                                                                 <i class="bi bi-search"></i>
-                                                                            </span>
+                                                                            </button>
                                                                             <input type="text" name="subjectSearch"
                                                                                 value="${param.subjectSearch}"
                                                                                 class="form-control form-control-sm"

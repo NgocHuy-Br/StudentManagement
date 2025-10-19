@@ -56,7 +56,9 @@
                                         <form class="student-toolbar d-flex flex-wrap align-items-center gap-2 mb-3"
                                             method="get" action="">
                                             <div class="input-group search">
-                                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                <button type="submit" class="btn btn-outline-primary">
+                                                    <i class="bi bi-search"></i>
+                                                </button>
                                                 <input name="q" class="form-control"
                                                     placeholder="Tìm MSSV, họ tên, email, SĐT, lớp, khoa..."
                                                     value="${q}" />

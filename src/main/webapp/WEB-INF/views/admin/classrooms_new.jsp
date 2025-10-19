@@ -55,6 +55,29 @@
                         .sortable:hover .sort-icon {
                             color: #495057;
                         }
+
+                        /* Course year validation styles */
+                        .form-control.is-invalid {
+                            border-color: #dc3545;
+                            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+                        }
+
+                        .form-control.is-valid {
+                            border-color: #198754;
+                            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+                        }
+
+                        .form-text.text-muted {
+                            font-size: 0.85em;
+                            color: #6c757d !important;
+                        }
+
+                        .invalid-feedback {
+                            display: block;
+                            color: #dc3545;
+                            font-size: 0.85em;
+                            margin-top: 0.25rem;
+                        }
                     </style>
                 </head>
 
@@ -115,13 +138,15 @@
                                                                     <!-- Search -->
                                                                     <div class="col-md-6">
                                                                         <div class="input-group input-group-sm">
-                                                                            <span class="input-group-text">
+                                                                            <button type="submit"
+                                                                                class="btn btn-outline-primary btn-sm">
                                                                                 <i class="bi bi-search"></i>
-                                                                            </span>
-                                                                            <input type="text" name="q" value="${q}"
+                                                                            </button>
+                                                                            <input type="text" name="search"
+                                                                                value="${search}"
                                                                                 class="form-control form-control-sm"
-                                                                                placeholder="Tìm lớp...">
-                                                                            <c:if test="${not empty q}">
+                                                                                placeholder="Tìm theo mã lớp...">
+                                                                            <c:if test="${not empty search}">
                                                                                 <a href="${pageContext.request.contextPath}/admin/classrooms"
                                                                                     class="btn btn-outline-secondary btn-sm">
                                                                                     <i class="bi bi-x-circle"></i>
@@ -281,9 +306,10 @@
                                                                 <!-- Search Students -->
                                                                 <div class="col-md-6">
                                                                     <div class="input-group input-group-sm">
-                                                                        <span class="input-group-text">
+                                                                        <button class="btn btn-outline-primary btn-sm"
+                                                                            type="button" id="studentSearchBtn">
                                                                             <i class="bi bi-search"></i>
-                                                                        </span>
+                                                                        </button>
                                                                         <input type="text"
                                                                             class="form-control form-control-sm"
                                                                             id="studentSearch"
@@ -362,7 +388,10 @@
                                                         <label class="form-label">Khóa học <span
                                                                 class="text-danger">*</span></label>
                                                         <input type="text" class="form-control" name="courseYear"
-                                                            placeholder="Ví dụ: 2024" required>
+                                                            pattern="[0-9]{4}-[0-9]{4}" placeholder="VD: 2025-2029"
+                                                            title="Vui lòng nhập đúng định dạng YYYY-YYYY" required>
+                                                        <small class="form-text text-muted">Định dạng: YYYY-YYYY (VD:
+                                                            2025-2029)</small>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label">Ngành học</label>
@@ -380,6 +409,104 @@
                                                         data-bs-dismiss="modal">Hủy</button>
                                                     <button type="submit" class="btn btn-success">
                                                         <i class="bi bi-check-lg me-1"></i>Thêm lớp
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Edit Classroom Modal -->
+                                <div class="modal fade" id="editClassroomModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa lớp học
+                                                </h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form id="editClassroomForm"
+                                                action="${pageContext.request.contextPath}/admin/classrooms/update"
+                                                method="post">
+                                                <input type="hidden" name="${_csrf.parameterName}"
+                                                    value="${_csrf.token}" />
+                                                <input type="hidden" id="editClassroomId" name="id">
+
+                                                <div class="modal-body">
+                                                    <!-- Warning message for classes with students -->
+                                                    <div id="editWarningMessage" class="alert alert-warning d-none">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        <strong>Lưu ý:</strong> Lớp học đã có sinh viên. Chỉ có thể thay
+                                                        đổi giáo viên chủ nhiệm.
+                                                    </div>
+
+                                                    <div class="mb-3" id="editClassCodeGroup">
+                                                        <label for="editClassCode" class="form-label">
+                                                            Mã lớp <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text" class="form-control" id="editClassCode"
+                                                            name="classCode" required>
+                                                    </div>
+
+                                                    <div class="mb-3" id="editCourseYearGroup">
+                                                        <label for="editCourseYear" class="form-label">
+                                                            Khóa học <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text" class="form-control" id="editCourseYear"
+                                                            name="courseYear" pattern="[0-9]{4}-[0-9]{4}"
+                                                            placeholder="VD: 2025-2029"
+                                                            title="Vui lòng nhập đúng định dạng YYYY-YYYY" required>
+                                                        <small class="form-text text-muted">Định dạng: YYYY-YYYY (VD:
+                                                            2025-2029)</small>
+                                                    </div>
+
+                                                    <div class="mb-3" id="editMajorGroup">
+                                                        <label for="editMajorId" class="form-label">
+                                                            Ngành <span class="text-danger">*</span>
+                                                        </label>
+                                                        <select class="form-select" id="editMajorId" name="majorId"
+                                                            required>
+                                                            <option value="">Chọn ngành...</option>
+                                                            <c:forEach var="major" items="${majors}">
+                                                                <option value="${major.id}">${major.majorCode} -
+                                                                    ${major.majorName}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="editTeacherId" class="form-label">
+                                                            Giáo viên chủ nhiệm
+                                                        </label>
+                                                        <select class="form-select" id="editTeacherId" name="teacherId">
+                                                            <option value="">Chọn giáo viên...</option>
+                                                            <c:forEach var="teacher" items="${teachers}">
+                                                                <option value="${teacher.id}">${teacher.user.username} -
+                                                                    ${teacher.user.lname} ${teacher.user.fname}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-3" id="editTeacherNotesGroup" style="display: none;">
+                                                        <label for="editTeacherChangeNotes" class="form-label">
+                                                            Ghi chú thay đổi chủ nhiệm
+                                                        </label>
+                                                        <textarea class="form-control" id="editTeacherChangeNotes"
+                                                            name="teacherChangeNotes" rows="3"
+                                                            placeholder="Nhập lý do thay đổi giáo viên chủ nhiệm..."></textarea>
+                                                        <small class="form-text text-muted">
+                                                            Ghi chú này sẽ được lưu vào lịch sử thay đổi chủ nhiệm
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="bi bi-check-lg me-1"></i>Cập nhật
                                                     </button>
                                                 </div>
                                             </form>
@@ -480,6 +607,41 @@
                                     let selectedClassroomId = <c:choose><c:when test="${selectedClassroomId != null}">${selectedClassroomId}</c:when><c:otherwise>null</c:otherwise></c:choose>;
                                     let allStudents = [];
 
+                                    // Notification function
+                                    function showNotification(type, message, title) {
+                                        // Create notification container if it doesn't exist
+                                        let container = document.getElementById('notification-container');
+                                        if (!container) {
+                                            container = document.createElement('div');
+                                            container.id = 'notification-container';
+                                            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 350px;';
+                                            document.body.appendChild(container);
+                                        }
+
+                                        // Create notification element
+                                        const notification = document.createElement('div');
+                                        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                                        const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+
+                                        notification.className = `alert ${alertClass} alert-dismissible fade show mb-2`;
+                                        notification.innerHTML = `
+                                            <div class="d-flex">
+                                                <i class="bi ${icon} me-2 flex-shrink-0"></i>
+                                                <div>
+                                                    <strong>${title}:</strong> ${message}
+                                                </div>
+                                                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                                            </div>
+                                        `;
+
+                                        container.appendChild(notification);
+
+                                        // Auto remove after 5 seconds
+                                        setTimeout(() => {
+                                            notification.remove();
+                                        }, 5000);
+                                    }
+
                                     // Initialize page
                                     document.addEventListener('DOMContentLoaded', function () {
                                         loadAllStudents();
@@ -515,6 +677,40 @@
                                         // Filter form change
                                         document.getElementById('majorFilter').addEventListener('change', function () {
                                             document.getElementById('filterSearchForm').submit();
+                                        });
+
+                                        // Classroom search - only submit on Enter key
+                                        const classroomSearchInput = document.querySelector('input[name="search"]');
+                                        if (classroomSearchInput) {
+                                            // Submit on Enter key
+                                            classroomSearchInput.addEventListener('keypress', function (e) {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    document.getElementById('filterSearchForm').submit();
+                                                }
+                                            });
+                                        }
+
+                                        // Add click handlers for sortable table headers
+                                        document.querySelectorAll('.sortable').forEach(header => {
+                                            header.style.cursor = 'pointer';
+                                            header.addEventListener('click', function () {
+                                                const sortField = this.getAttribute('data-sort');
+                                                if (sortField) {
+                                                    const currentUrl = new URL(window.location.href);
+                                                    const currentSort = currentUrl.searchParams.get('sort');
+                                                    const currentDir = currentUrl.searchParams.get('dir') || 'asc';
+
+                                                    // Toggle direction if same field, otherwise use asc
+                                                    const newDir = (currentSort === sortField && currentDir === 'asc') ? 'desc' : 'asc';
+
+                                                    currentUrl.searchParams.set('sort', sortField);
+                                                    currentUrl.searchParams.set('dir', newDir);
+                                                    currentUrl.searchParams.set('page', '0'); // Reset to first page
+
+                                                    window.location.href = currentUrl.toString();
+                                                }
+                                            });
                                         });
                                     }
 
@@ -613,10 +809,10 @@
                                         const classroomData = [
                                             <c:forEach var="classroom" items="${classrooms}" varStatus="status">
                                                 {
-                                                    id: <c:out value="${classroom.id}" />,
-                                                classCode: '<c:out value="${classroom.classCode}" />',
-                                                courseYear: '<c:out value="${classroom.courseYear}" />'
-                                }<c:if test="${!status.last}">,</c:if>
+                                                    id: ${classroom.id},
+                                                classCode: '${classroom.classCode}',
+                                                courseYear: '${classroom.courseYear}'
+                                                }<c:if test="${!status.last}">,</c:if>
                                             </c:forEach>
                                         ];
                                         return classroomData.find(c => c.id == id);
@@ -660,13 +856,86 @@
 
                                     // CRUD operation functions
                                     function editClassroom(id) {
-                                        // Implement edit classroom modal
-                                        alert('Edit classroom: ' + id);
+                                        console.log('Edit classroom clicked:', id);
+
+                                        // Get classroom data from API
+                                        fetch('${pageContext.request.contextPath}/admin/classrooms/' + id + '/api')
+                                            .then(response => {
+                                                if (!response.ok) {
+                                                    throw new Error('Classroom not found');
+                                                }
+                                                return response.json();
+                                            })
+                                            .then(classroom => {
+                                                // Populate the edit modal
+                                                document.getElementById('editClassroomId').value = classroom.id;
+                                                document.getElementById('editClassCode').value = classroom.classCode || '';
+                                                document.getElementById('editCourseYear').value = classroom.courseYear || '';
+                                                document.getElementById('editMajorId').value = classroom.majorId || '';
+                                                document.getElementById('editTeacherId').value = classroom.teacherId || '';
+
+                                                // Clear teacher change notes
+                                                document.getElementById('editTeacherChangeNotes').value = '';
+
+                                                // Handle restrictions for classes with students
+                                                if (classroom.hasStudents) {
+                                                    document.getElementById('editWarningMessage').classList.remove('d-none');
+                                                    document.getElementById('editClassCodeGroup').style.display = 'none';
+                                                    document.getElementById('editCourseYearGroup').style.display = 'none';
+                                                    document.getElementById('editMajorGroup').style.display = 'none';
+                                                    document.getElementById('editTeacherNotesGroup').style.display = 'block';
+
+                                                    // Remove required attributes
+                                                    document.getElementById('editClassCode').removeAttribute('required');
+                                                    document.getElementById('editCourseYear').removeAttribute('required');
+                                                    document.getElementById('editMajorId').removeAttribute('required');
+                                                } else {
+                                                    document.getElementById('editWarningMessage').classList.add('d-none');
+                                                    document.getElementById('editClassCodeGroup').style.display = 'block';
+                                                    document.getElementById('editCourseYearGroup').style.display = 'block';
+                                                    document.getElementById('editMajorGroup').style.display = 'block';
+                                                    document.getElementById('editTeacherNotesGroup').style.display = 'none';
+
+                                                    // Add required attributes back
+                                                    document.getElementById('editClassCode').setAttribute('required', 'required');
+                                                    document.getElementById('editCourseYear').setAttribute('required', 'required');
+                                                    document.getElementById('editMajorId').setAttribute('required', 'required');
+                                                }
+
+                                                // Show the modal
+                                                const modal = new bootstrap.Modal(document.getElementById('editClassroomModal'));
+                                                modal.show();
+                                            })
+                                            .catch(error => {
+                                                console.error('Error loading classroom data:', error);
+                                                alert('Có lỗi xảy ra khi tải dữ liệu lớp học!');
+                                            });
                                     }
 
                                     function deleteClassroom(id) {
-                                        if (confirm('Bạn có chắc chắn muốn xóa lớp này?')) {
-                                            window.location.href = '${pageContext.request.contextPath}/admin/classrooms/delete/' + id;
+                                        console.log('Delete classroom clicked:', id);
+                                        if (confirm('Bạn có chắc chắn muốn xóa lớp này?\n\nChú ý: Chỉ có thể xóa lớp không có sinh viên.')) {
+                                            // Create and submit form with CSRF token
+                                            const form = document.createElement('form');
+                                            form.method = 'POST';
+                                            form.action = '${pageContext.request.contextPath}/admin/classrooms/delete';
+
+                                            // Add CSRF token
+                                            const csrfToken = document.createElement('input');
+                                            csrfToken.type = 'hidden';
+                                            csrfToken.name = '${_csrf.parameterName}';
+                                            csrfToken.value = '${_csrf.token}';
+                                            form.appendChild(csrfToken);
+
+                                            // Add classroom ID
+                                            const idInput = document.createElement('input');
+                                            idInput.type = 'hidden';
+                                            idInput.name = 'id';
+                                            idInput.value = id;
+                                            form.appendChild(idInput);
+
+                                            document.body.appendChild(form);
+                                            form.submit();
                                         }
                                     }
 
@@ -689,20 +958,150 @@
                                                 if (selectedClassroomId) {
                                                     document.getElementById('studentClassroomSelect').value = selectedClassroomId;
                                                 }
-                                            }
-                                        });
+                                            });
+                                        }
 
-                                    // Check for flash messages on page load
-                                    const successMessage = '${success}';
-                                    if (successMessage && successMessage.trim() !== '') {
-                                        showNotification('success', successMessage, 'Thành công');
-                                    }
+                                        // Reset edit modal when closed
+                                        const editClassroomModal = document.getElementById('editClassroomModal');
+                                        if (editClassroomModal) {
+                                            editClassroomModal.addEventListener('hidden.bs.modal', function () {
+                                                // Reset form
+                                                document.getElementById('editClassroomForm').reset();
 
-                                    const errorMessage = '${error}';
-                                    if (errorMessage && errorMessage.trim() !== '') {
-                                        showNotification('error', errorMessage, 'Lỗi');
-                                    }
+                                                // Reset visibility of fields
+                                                document.getElementById('editWarningMessage').classList.add('d-none');
+                                                document.getElementById('editClassCodeGroup').style.display = 'block';
+                                                document.getElementById('editCourseYearGroup').style.display = 'block';
+                                                document.getElementById('editMajorGroup').style.display = 'block';
+                                                document.getElementById('editTeacherNotesGroup').style.display = 'none';
+
+                                                // Restore required attributes
+                                                document.getElementById('editClassCode').setAttribute('required', 'required');
+                                                document.getElementById('editCourseYear').setAttribute('required', 'required');
+                                                document.getElementById('editMajorId').setAttribute('required', 'required');
+                                            });
+                                        }
+
+                                        // Handle edit form submission with AJAX
+                                        const editClassroomForm = document.getElementById('editClassroomForm');
+                                        if (editClassroomForm) {
+                                            editClassroomForm.addEventListener('submit', function (e) {
+                                                e.preventDefault(); // Prevent normal form submission
+
+                                                // Get form data
+                                                const formData = new FormData(this);
+
+                                                // Show loading state
+                                                const submitBtn = this.querySelector('button[type="submit"]');
+                                                const originalText = submitBtn.innerHTML;
+                                                submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Đang cập nhật...';
+                                                submitBtn.disabled = true;
+
+                                                // Submit via AJAX
+                                                fetch(this.action, {
+                                                    method: 'POST',
+                                                    body: formData
+                                                })
+                                                    .then(response => {
+                                                        if (response.ok) {
+                                                            // Close modal
+                                                            const modal = bootstrap.Modal.getInstance(editClassroomModal);
+                                                            modal.hide();
+
+                                                            // Show success message
+                                                            showNotification('success', 'Cập nhật lớp học thành công!', 'Thành công');
+
+                                                            // Reload page to reflect changes
+                                                            setTimeout(() => {
+                                                                window.location.reload();
+                                                            }, 1000);
+                                                        } else {
+                                                            throw new Error('Update failed');
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error updating classroom:', error);
+                                                        showNotification('error', 'Có lỗi xảy ra khi cập nhật lớp học!', 'Lỗi');
+                                                    })
+                                                    .finally(() => {
+                                                        // Restore button state
+                                                        submitBtn.innerHTML = originalText;
+                                                        submitBtn.disabled = false;
+                                                    });
+                                            });
+                                        }
+
+                                        // Setup course year validation
+                                        setupCourseYearValidation();
+
+                                        // Check for flash messages on page load
+                                        const successMessage = '${success}';
+                                        if (successMessage && successMessage.trim() !== '') {
+                                            showNotification('success', successMessage, 'Thành công');
+                                        }
+
+                                        const errorMessage = '${error}';
+                                        if (errorMessage && errorMessage.trim() !== '') {
+                                            showNotification('error', errorMessage, 'Lỗi');
+                                        }
                                     });
+
+                                    // Function to setup course year validation
+                                    function setupCourseYearValidation() {
+                                        // Add modal course year validation
+                                        const addCourseYearInput = document.querySelector('#addClassroomModal input[name="courseYear"]');
+                                        if (addCourseYearInput) {
+                                            addCourseYearInput.addEventListener('input', function () {
+                                                validateCourseYear(this);
+                                            });
+                                            addCourseYearInput.addEventListener('invalid', function () {
+                                                this.setCustomValidity('Vui lòng nhập đúng định dạng YYYY-YYYY (VD: 2025-2029)');
+                                            });
+                                        }
+
+                                        // Edit modal course year validation
+                                        const editCourseYearInput = document.getElementById('editCourseYear');
+                                        if (editCourseYearInput) {
+                                            editCourseYearInput.addEventListener('input', function () {
+                                                validateCourseYear(this);
+                                            });
+                                            editCourseYearInput.addEventListener('invalid', function () {
+                                                this.setCustomValidity('Vui lòng nhập đúng định dạng YYYY-YYYY (VD: 2025-2029)');
+                                            });
+                                        }
+                                    }
+
+                                    // Function to validate course year format
+                                    function validateCourseYear(input) {
+                                        const pattern = /^[0-9]{4}-[0-9]{4}$/;
+                                        const value = input.value.trim();
+
+                                        // Remove any existing custom validity
+                                        input.setCustomValidity('');
+
+                                        if (value && !pattern.test(value)) {
+                                            input.setCustomValidity('Vui lòng nhập đúng định dạng YYYY-YYYY (VD: 2025-2029)');
+                                            input.classList.add('is-invalid');
+                                        } else if (value && pattern.test(value)) {
+                                            // Additional validation: check if years are logical
+                                            const years = value.split('-');
+                                            const startYear = parseInt(years[0]);
+                                            const endYear = parseInt(years[1]);
+
+                                            if (endYear <= startYear) {
+                                                input.setCustomValidity('Năm kết thúc phải lớn hơn năm bắt đầu');
+                                                input.classList.add('is-invalid');
+                                            } else if (endYear - startYear > 10) {
+                                                input.setCustomValidity('Khóa học không nên dài quá 10 năm');
+                                                input.classList.add('is-invalid');
+                                            } else {
+                                                input.classList.remove('is-invalid');
+                                                input.classList.add('is-valid');
+                                            }
+                                        } else {
+                                            input.classList.remove('is-invalid', 'is-valid');
+                                        }
+                                    }
                                 </script>
                 </body>
 
