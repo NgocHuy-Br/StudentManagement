@@ -782,6 +782,12 @@ public class AdminController {
             return "redirect:/admin/classrooms";
         }
 
+        // Validate major is selected
+        if (majorId == null || majorId == 0) {
+            ra.addFlashAttribute("error", "Vui lòng chọn ngành học.");
+            return "redirect:/admin/classrooms";
+        }
+
         // Validate course year format and logic
         String courseYearError = validateCourseYear(year);
         if (courseYearError != null) {
@@ -812,6 +818,52 @@ public class AdminController {
 
         ra.addFlashAttribute("success", "Đã tạo lớp học: " + code);
         return "redirect:/admin/classrooms";
+    }
+
+    // Kiểm tra lớp trước khi xóa
+    @GetMapping("/classrooms/check-before-delete/{id}")
+    @ResponseBody
+    public Map<String, Object> checkClassroomBeforeDelete(@PathVariable Long id) {
+        System.out.println("=== CHECK CLASSROOM BEFORE DELETE ===");
+        System.out.println("Checking classroom ID: " + id);
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Kiểm tra lớp có tồn tại không
+            Optional<Classroom> classroomOpt = classroomRepository.findById(id);
+            if (!classroomOpt.isPresent()) {
+                response.put("canDelete", false);
+                response.put("message", "Không tìm thấy lớp học.");
+                return response;
+            }
+
+            Classroom classroom = classroomOpt.get();
+
+            // Kiểm tra số sinh viên trong lớp
+            long studentCount = classroomRepository.countStudentsByClassroomId(id);
+            System.out.println("Student count in classroom: " + studentCount);
+
+            if (studentCount > 0) {
+                response.put("canDelete", false);
+                response.put("message", "Không thể xóa lớp học vì còn " + studentCount + " sinh viên trong lớp.");
+                response.put("studentCount", studentCount);
+                response.put("classCode", classroom.getClassCode());
+            } else {
+                response.put("canDelete", true);
+                response.put("message", "Có thể xóa lớp học này.");
+                response.put("classCode", classroom.getClassCode());
+            }
+
+            return response;
+
+        } catch (Exception e) {
+            System.err.println("Error checking classroom before delete: " + e.getMessage());
+            e.printStackTrace();
+            response.put("canDelete", false);
+            response.put("message", "Có lỗi xảy ra khi kiểm tra lớp học.");
+            return response;
+        }
     }
 
     // Xóa lớp học
@@ -917,7 +969,7 @@ public class AdminController {
     public String updateClassroom(@RequestParam Long id,
             @RequestParam(required = false) String classCode,
             @RequestParam(required = false) String courseYear,
-            @RequestParam(required = false) Long majorId,
+            @RequestParam Long majorId,
             @RequestParam(required = false) Long teacherId,
             @RequestParam(required = false) String teacherChangeNotes,
             RedirectAttributes ra) {
@@ -983,10 +1035,17 @@ public class AdminController {
 
                 // Cập nhật ngành nếu có
                 if (majorId != null) {
-                    Major newMajor = majorRepository.findById(majorId).orElse(null);
-                    if (newMajor != null) {
-                        classroom.setMajor(newMajor);
+                    if (majorId == 0) {
+                        ra.addFlashAttribute("error", "Vui lòng chọn ngành học.");
+                        return "redirect:/admin/classrooms";
                     }
+
+                    Major newMajor = majorRepository.findById(majorId).orElse(null);
+                    if (newMajor == null) {
+                        ra.addFlashAttribute("error", "Không tìm thấy ngành học được chọn.");
+                        return "redirect:/admin/classrooms";
+                    }
+                    classroom.setMajor(newMajor);
                 }
 
                 // Cập nhật giáo viên chủ nhiệm

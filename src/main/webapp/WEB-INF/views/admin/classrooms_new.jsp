@@ -57,12 +57,14 @@
                         }
 
                         /* Course year validation styles */
-                        .form-control.is-invalid {
+                        .form-control.is-invalid,
+                        .form-select.is-invalid {
                             border-color: #dc3545;
                             box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
                         }
 
-                        .form-control.is-valid {
+                        .form-control.is-valid,
+                        .form-select.is-valid {
                             border-color: #198754;
                             box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
                         }
@@ -386,7 +388,8 @@
                                                 <button type="button" class="btn-close"
                                                     data-bs-dismiss="modal"></button>
                                             </div>
-                                            <form action="${pageContext.request.contextPath}/admin/classrooms/add"
+                                            <form id="addClassroomForm"
+                                                action="${pageContext.request.contextPath}/admin/classrooms/add"
                                                 method="post">
                                                 <div class="modal-body">
                                                     <div class="mb-3">
@@ -405,8 +408,9 @@
                                                             2025-2029)</small>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label">Ngành học</label>
-                                                        <select class="form-select" name="majorId">
+                                                        <label class="form-label">Ngành học <span
+                                                                class="text-danger">*</span></label>
+                                                        <select class="form-select" name="majorId" required>
                                                             <option value="">-- Chọn ngành --</option>
                                                             <c:forEach var="major" items="${majors}">
                                                                 <option value="${major.id}">${major.majorCode} -
@@ -804,6 +808,23 @@
                                         bootstrapModal.show();
                                     }
 
+                                    // Custom Warning Modal Function
+                                    function showWarningModal(title, message, note) {
+                                        const modal = document.getElementById('warningModal');
+                                        const titleEl = document.getElementById('warningModalTitle');
+                                        const messageEl = document.getElementById('warningModalMessage');
+                                        const noteEl = document.getElementById('warningModalNote');
+
+                                        titleEl.textContent = title;
+                                        messageEl.textContent = message;
+                                        noteEl.textContent = note || '';
+                                        noteEl.style.display = note ? 'block' : 'none';
+
+                                        // Show modal
+                                        const bootstrapModal = new bootstrap.Modal(modal);
+                                        bootstrapModal.show();
+                                    }
+
                                     // Initialize page
                                     document.addEventListener('DOMContentLoaded', function () {
                                         loadAllStudents(); // This will handle the initial display
@@ -879,6 +900,74 @@
 
                                                     window.location.href = currentUrl.toString();
                                                 }
+                                            });
+                                        });
+
+                                        // Form validation for classroom forms
+                                        setupClassroomFormValidation();
+                                    }
+
+                                    function setupClassroomFormValidation() {
+                                        // Add classroom form validation
+                                        const addForm = document.getElementById('addClassroomForm');
+                                        if (addForm) {
+                                            addForm.addEventListener('submit', function (e) {
+                                                const majorSelect = addForm.querySelector('select[name="majorId"]');
+                                                if (!majorSelect.value || majorSelect.value === '') {
+                                                    e.preventDefault();
+                                                    showWarningModal(
+                                                        'Thiếu thông tin bắt buộc',
+                                                        'Vui lòng chọn ngành học cho lớp.',
+                                                        'Ngành học là thông tin bắt buộc khi tạo lớp mới.'
+                                                    );
+                                                    // Focus on the major select
+                                                    majorSelect.focus();
+                                                    majorSelect.classList.add('is-invalid');
+                                                    return false;
+                                                }
+                                                majorSelect.classList.remove('is-invalid');
+                                            });
+                                        }
+
+                                        // Edit classroom form validation
+                                        const editForm = document.getElementById('editClassroomForm');
+                                        if (editForm) {
+                                            editForm.addEventListener('submit', function (e) {
+                                                const majorSelect = editForm.querySelector('select[name="majorId"]');
+                                                if (!majorSelect.value || majorSelect.value === '') {
+                                                    e.preventDefault();
+                                                    showWarningModal(
+                                                        'Thiếu thông tin bắt buộc',
+                                                        'Vui lòng chọn ngành học cho lớp.',
+                                                        'Ngành học là thông tin bắt buộc.'
+                                                    );
+                                                    // Focus on the major select
+                                                    majorSelect.focus();
+                                                    majorSelect.classList.add('is-invalid');
+                                                    return false;
+                                                }
+                                                majorSelect.classList.remove('is-invalid');
+                                            });
+                                        }
+
+                                        // Remove invalid class when user selects a major
+                                        document.querySelectorAll('select[name="majorId"]').forEach(select => {
+                                            select.addEventListener('change', function () {
+                                                if (this.value && this.value !== '') {
+                                                    this.classList.remove('is-invalid');
+                                                }
+                                            });
+
+                                            // Custom validation message for HTML5 validation
+                                            select.addEventListener('invalid', function () {
+                                                if (this.validity.valueMissing) {
+                                                    this.setCustomValidity('Vui lòng chọn một ngành');
+                                                }
+                                            });
+
+                                            // Clear custom message when user interacts
+                                            select.addEventListener('input', function () {
+                                                this.setCustomValidity('');
                                             });
                                         });
                                     }
@@ -1147,34 +1236,62 @@
 
                                     function deleteClassroom(id) {
                                         console.log('Delete classroom clicked:', id);
-                                        showConfirmModal(
-                                            'Xóa lớp học',
-                                            'Bạn có chắc chắn muốn xóa lớp này?',
-                                            'Chú ý: Chỉ có thể xóa lớp không có sinh viên.',
-                                            function () {
-                                                // Create and submit form with CSRF token
-                                                const form = document.createElement('form');
-                                                form.method = 'POST';
-                                                form.action = '${pageContext.request.contextPath}/admin/classrooms/delete';
 
-                                                // Add CSRF token
-                                                const csrfToken = document.createElement('input');
-                                                csrfToken.type = 'hidden';
-                                                csrfToken.name = '${_csrf.parameterName}';
-                                                csrfToken.value = '${_csrf.token}';
-                                                form.appendChild(csrfToken);
+                                        // Kiểm tra trước khi xóa
+                                        fetch('${pageContext.request.contextPath}/admin/classrooms/check-before-delete/' + id)
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                console.log('Check result:', data);
 
-                                                // Add classroom ID
-                                                const idInput = document.createElement('input');
-                                                idInput.type = 'hidden';
-                                                idInput.name = 'id';
-                                                idInput.value = id;
-                                                form.appendChild(idInput);
+                                                if (data.canDelete) {
+                                                    // Có thể xóa - hiển thị confirm dialog
+                                                    showConfirmModal(
+                                                        'Xóa lớp học',
+                                                        'Bạn có chắc chắn muốn xóa lớp "' + data.classCode + '"?',
+                                                        'Hành động này không thể hoàn tác.',
+                                                        function () {
+                                                            // Thực hiện xóa
+                                                            const form = document.createElement('form');
+                                                            form.method = 'POST';
+                                                            form.action = '${pageContext.request.contextPath}/admin/classrooms/delete';
 
-                                                document.body.appendChild(form);
-                                                form.submit();
-                                            }
-                                        );
+                                                            // Add CSRF token
+                                                            const csrfToken = document.createElement('input');
+                                                            csrfToken.type = 'hidden';
+                                                            csrfToken.name = '${_csrf.parameterName}';
+                                                            csrfToken.value = '${_csrf.token}';
+                                                            form.appendChild(csrfToken);
+
+                                                            // Add classroom ID
+                                                            const idInput = document.createElement('input');
+                                                            idInput.type = 'hidden';
+                                                            idInput.name = 'id';
+                                                            idInput.value = id;
+                                                            form.appendChild(idInput);
+
+                                                            document.body.appendChild(form);
+                                                            form.submit();
+                                                        }
+                                                    );
+                                                } else {
+                                                    // Không thể xóa - hiển thị cảnh báo
+                                                    showWarningModal(
+                                                        'Không thể xóa lớp học',
+                                                        data.message,
+                                                        data.studentCount ?
+                                                            'Vui lòng chuyển tất cả sinh viên ra khỏi lớp trước khi xóa.' :
+                                                            'Hãy kiểm tra lại thông tin lớp học.'
+                                                    );
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error checking classroom:', error);
+                                                showWarningModal(
+                                                    'Lỗi',
+                                                    'Có lỗi xảy ra khi kiểm tra thông tin lớp học.',
+                                                    'Vui lòng thử lại sau.'
+                                                );
+                                            });
                                     }
 
                                     function editStudent(id) {
@@ -1699,6 +1816,36 @@
                                                     data-bs-dismiss="modal">Hủy</button>
                                                 <button type="button" class="btn btn-danger" id="confirmModalOkBtn">Xác
                                                     nhận</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Warning Modal -->
+                                <div class="modal fade" id="warningModal" tabindex="-1"
+                                    aria-labelledby="warningModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header border-0 pb-1">
+                                                <h5 class="modal-title" id="warningModalTitle">Cảnh báo</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body py-3">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="me-3">
+                                                        <i class="bi bi-exclamation-circle-fill text-danger fs-2"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mb-2 fw-semibold" id="warningModalMessage">Thông báo
+                                                        </p>
+                                                        <p class="mb-0 text-muted small" id="warningModalNote"></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0 pt-1">
+                                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đã
+                                                    hiểu</button>
                                             </div>
                                         </div>
                                     </div>

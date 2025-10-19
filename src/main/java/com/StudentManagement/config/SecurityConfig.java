@@ -40,7 +40,8 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 // Temporarily allow unassigned students endpoint for testing
                                                 .requestMatchers("/admin/students/unassigned",
-                                                                "/admin/students/assign-to-class")
+                                                                "/admin/students/assign-to-class",
+                                                                "/admin/classrooms/check-before-delete/**")
                                                 .permitAll()
                                                 // Role-based authorization
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
