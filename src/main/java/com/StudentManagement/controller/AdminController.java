@@ -367,12 +367,19 @@ public class AdminController {
         userRepository.save(user);
 
         // Update classroom and major
+        System.out.println("DEBUG editStudent: classId=" + classId + ", majorId=" + majorId);
+        System.out.println("DEBUG editStudent: Current student classroom="
+                + (student.getClassroom() != null ? student.getClassroom().getId() : "null"));
+        System.out.println("DEBUG editStudent: Current student major="
+                + (student.getMajor() != null ? student.getMajor().getId() : "null"));
+
         if (classId != null) {
             Classroom classroom = classroomRepository.findById(classId).orElse(null);
             if (classroom != null) {
                 student.setClassroom(classroom);
                 student.setClassName(classroom.getClassCode());
                 student.setMajor(classroom.getMajor());
+                System.out.println("DEBUG editStudent: Updated to classroom " + classroom.getId());
             }
         } else if (majorId != null) {
             Major major = majorRepository.findById(majorId).orElse(null);
@@ -380,12 +387,70 @@ public class AdminController {
                 student.setMajor(major);
                 student.setClassroom(null);
                 student.setClassName(null);
+                System.out.println("DEBUG editStudent: Updated to major " + major.getId() + ", removed from classroom");
+            }
+        } else {
+            // Both classId and majorId are null - remove from class but keep major
+            // This is the case for "remove from class" operation
+            if (student.getClassroom() != null) {
+                Major currentMajor = student.getMajor();
+                student.setClassroom(null);
+                student.setClassName(null);
+                // Keep the current major if it exists
+                if (currentMajor != null) {
+                    student.setMajor(currentMajor);
+                }
+                System.out.println("DEBUG editStudent: Removed from classroom, kept major "
+                        + (currentMajor != null ? currentMajor.getId() : "null"));
             }
         }
 
         studentRepository.save(student);
+        System.out.println("DEBUG editStudent: Final student classroom="
+                + (student.getClassroom() != null ? student.getClassroom().getId() : "null"));
+        System.out.println("DEBUG editStudent: Final student major="
+                + (student.getMajor() != null ? student.getMajor().getId() : "null"));
 
         ra.addFlashAttribute("success", "Đã cập nhật thông tin sinh viên: " + user.getUsername());
+        return "redirect:/admin/classrooms";
+    }
+
+    @PostMapping("/students/remove-from-class")
+    @Transactional
+    public String removeStudentFromClass(@RequestParam Long studentId, RedirectAttributes ra) {
+        System.out.println("DEBUG removeStudentFromClass: studentId=" + studentId);
+
+        // Find student
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy sinh viên.");
+            return "redirect:/admin/classrooms";
+        }
+
+        System.out.println("DEBUG removeStudentFromClass: Found student " + student.getUser().getUsername());
+        System.out.println("DEBUG removeStudentFromClass: Current classroom="
+                + (student.getClassroom() != null ? student.getClassroom().getId() : "null"));
+        System.out.println("DEBUG removeStudentFromClass: Current major="
+                + (student.getMajor() != null ? student.getMajor().getId() : "null"));
+
+        // Check if student is in a classroom
+        if (student.getClassroom() == null) {
+            ra.addFlashAttribute("error", "Sinh viên không thuộc lớp nào.");
+            return "redirect:/admin/classrooms";
+        }
+
+        // Keep the current major but remove from classroom
+        Major currentMajor = student.getMajor();
+        student.setClassroom(null);
+        student.setClassName(null);
+
+        // Save student
+        studentRepository.save(student);
+
+        System.out.println("DEBUG removeStudentFromClass: Removed from classroom, final major="
+                + (student.getMajor() != null ? student.getMajor().getId() : "null"));
+
+        ra.addFlashAttribute("success", "Đã xóa sinh viên " + student.getUser().getUsername() + " khỏi lớp.");
         return "redirect:/admin/classrooms";
     }
 
@@ -3318,5 +3383,103 @@ public class AdminController {
         }
 
         return "redirect:/admin/overview";
+    }
+
+    @GetMapping("/students/unassigned")
+    @ResponseBody
+    public List<Map<String, Object>> getUnassignedStudents() {
+        System.out.println("=== Getting unassigned students ===");
+
+        try {
+            List<Student> unassignedStudents = studentRepository.findByClassroomIsNull();
+            System.out.println("Found " + unassignedStudents.size() + " unassigned students");
+
+            List<Map<String, Object>> result = new ArrayList<>();
+
+            for (Student student : unassignedStudents) {
+                Map<String, Object> studentData = new HashMap<>();
+                studentData.put("id", student.getId());
+                studentData.put("username", student.getUser().getUsername());
+                studentData.put("fname", student.getUser().getFname());
+                studentData.put("lname", student.getUser().getLname());
+                studentData.put("majorName", student.getMajor() != null ? student.getMajor().getMajorName() : null);
+                result.add(studentData);
+            }
+
+            System.out.println("Returning " + result.size() + " unassigned students");
+            return result;
+
+        } catch (Exception e) {
+            System.err.println("Error getting unassigned students: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    @PostMapping("/students/assign-to-class")
+    @ResponseBody
+    @Transactional
+    public Map<String, Object> assignStudentsToClass(
+            @RequestParam("classroomId") Long classroomId,
+            @RequestParam("studentIds") List<Long> studentIds) {
+
+        System.out.println("=== Assigning students to class ===");
+        System.out.println("Classroom ID: " + classroomId);
+        System.out.println("Student IDs: " + studentIds);
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Validate classroom exists
+            Optional<Classroom> classroomOpt = classroomRepository.findById(classroomId);
+            if (!classroomOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Lớp học không tồn tại");
+                return response;
+            }
+
+            Classroom classroom = classroomOpt.get();
+            System.out.println("Found classroom: " + classroom.getClassCode());
+
+            int assignedCount = 0;
+
+            for (Long studentId : studentIds) {
+                Optional<Student> studentOpt = studentRepository.findById(studentId);
+                if (studentOpt.isPresent()) {
+                    Student student = studentOpt.get();
+
+                    // Check if student is already assigned to a class
+                    if (student.getClassroom() != null) {
+                        System.out.println(
+                                "Student " + student.getUser().getUsername() + " is already assigned to class " +
+                                        student.getClassroom().getClassCode());
+                        continue;
+                    }
+
+                    // Assign student to classroom
+                    student.setClassroom(classroom);
+                    studentRepository.save(student);
+                    assignedCount++;
+
+                    System.out.println(
+                            "Assigned student " + student.getUser().getUsername() + " to class "
+                                    + classroom.getClassCode());
+                } else {
+                    System.out.println("Student with ID " + studentId + " not found");
+                }
+            }
+
+            response.put("success", true);
+            response.put("message", "Đã gán " + assignedCount + " sinh viên vào lớp " + classroom.getClassCode());
+            System.out.println("Successfully assigned " + assignedCount + " students");
+
+        } catch (Exception e) {
+            System.err.println("Error assigning students to class: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+        }
+
+        return response;
     }
 }

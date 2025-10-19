@@ -72,6 +72,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
   @Query("select s from Student s where s.classroom is null and s.major.id = :majorId")
   Page<Student> findUnassignedStudentsByMajorId(@Param("majorId") Long majorId, Pageable pageable);
 
+  // Lấy tất cả sinh viên chưa có lớp
+  @EntityGraph(attributePaths = { "user", "major" })
+  List<Student> findByClassroomIsNull();
+
   // Đếm số sinh viên theo khoa
   @Query("SELECT COUNT(s) FROM Student s WHERE s.major.faculty.id = :facultyId")
   Long countByFacultyId(@Param("facultyId") Long facultyId);
@@ -82,4 +86,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
   // Đếm số sinh viên theo faculty (thông qua major)
   @Query("SELECT COUNT(s) FROM Student s WHERE s.major.faculty = :faculty")
   Long countByMajorFaculty(@Param("faculty") com.StudentManagement.entity.Faculty faculty);
+
+  // Lấy danh sách sinh viên chưa phân lớp
+  @EntityGraph(attributePaths = { "user", "major" })
+  List<Student> findByClassroomIsNull();
 }

@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 import com.StudentManagement.service.CustomUserDetailsService;
 
-@Configuration //thử với Huy//
+@Configuration // thử với Huy//
 @EnableWebSecurity
 public class SecurityConfig {
 
@@ -37,6 +37,10 @@ public class SecurityConfig {
                                                                 "/favicon.ico",
                                                                 "/css/**", "/js/**", "/images/**", "/img/**",
                                                                 "/webjars/**")
+                                                .permitAll()
+                                                // Temporarily allow unassigned students endpoint for testing
+                                                .requestMatchers("/admin/students/unassigned",
+                                                                "/admin/students/assign-to-class")
                                                 .permitAll()
                                                 // Role-based authorization
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")

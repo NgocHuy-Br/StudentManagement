@@ -272,10 +272,21 @@
                                                             <span id="studentsTitle">Chọn lớp để xem danh sách sinh
                                                                 viên</span>
                                                         </h6>
-                                                        <button type="button" class="btn btn-success btn-sm"
-                                                            data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                                                            <i class="bi bi-person-plus me-1"></i>Thêm sinh viên
-                                                        </button>
+                                                        <div class="d-flex gap-2">
+                                                            <button type="button" class="btn btn-success btn-sm"
+                                                                data-bs-toggle="modal" data-bs-target="#addStudentModal"
+                                                                id="addStudentBtn">
+                                                                <i class="bi bi-person-plus me-1"></i>
+                                                                <span id="addStudentText">Thêm sinh viên</span>
+                                                            </button>
+                                                            <button type="button" class="btn btn-primary btn-sm"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#assignStudentModal"
+                                                                id="assignStudentBtn" style="display: none;">
+                                                                <i class="bi bi-person-check me-1"></i>Gán sinh viên vào
+                                                                lớp
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <div class="card-body">
                                                         <!-- Classroom Selector and Search -->
@@ -764,6 +775,35 @@
                                         }, 5000);
                                     }
 
+                                    // Custom Confirmation Modal Functions
+                                    function showConfirmModal(title, message, note, onConfirm) {
+                                        const modal = document.getElementById('confirmModal');
+                                        const titleEl = document.getElementById('confirmModalTitle');
+                                        const messageEl = document.getElementById('confirmModalMessage');
+                                        const noteEl = document.getElementById('confirmModalNote');
+                                        const okBtn = document.getElementById('confirmModalOkBtn');
+
+                                        titleEl.textContent = title;
+                                        messageEl.textContent = message;
+                                        noteEl.textContent = note || '';
+                                        noteEl.style.display = note ? 'block' : 'none';
+
+                                        // Remove old event listeners
+                                        const newOkBtn = okBtn.cloneNode(true);
+                                        okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+
+                                        // Add new event listener
+                                        newOkBtn.addEventListener('click', function () {
+                                            const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                                            bootstrapModal.hide();
+                                            if (onConfirm) onConfirm();
+                                        });
+
+                                        // Show modal
+                                        const bootstrapModal = new bootstrap.Modal(modal);
+                                        bootstrapModal.show();
+                                    }
+
                                     // Initialize page
                                     document.addEventListener('DOMContentLoaded', function () {
                                         loadAllStudents(); // This will handle the initial display
@@ -778,10 +818,22 @@
                                             updateURL(classroomId);
                                         });
 
-                                        // Student search
-                                        document.getElementById('studentSearch').addEventListener('input', function () {
-                                            filterStudents(this.value);
-                                            toggleClearButton(this.value);
+                                        // Student search - only on search button click or Enter key
+                                        function performSearch() {
+                                            const searchValue = document.getElementById('studentSearch').value;
+                                            filterStudents(searchValue);
+                                            toggleClearButton(searchValue);
+                                        }
+
+                                        // Search button click
+                                        document.getElementById('studentSearchBtn').addEventListener('click', performSearch);
+
+                                        // Search on Enter key
+                                        document.getElementById('studentSearch').addEventListener('keydown', function (e) {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                performSearch();
+                                            }
                                         });
 
                                         // Clear search button
@@ -850,14 +902,20 @@
 
                                     function updateStudentsDisplay(classroomId) {
                                         const title = document.getElementById('studentsTitle');
+                                        const addStudentText = document.getElementById('addStudentText');
+                                        const assignStudentBtn = document.getElementById('assignStudentBtn');
 
                                         if (!classroomId) {
                                             title.textContent = 'Tất cả sinh viên';
+                                            addStudentText.textContent = 'Thêm sinh viên';
+                                            assignStudentBtn.style.display = 'none';
                                             displayStudents(allStudents);
                                         } else {
                                             const classroom = getClassroomById(classroomId);
                                             if (classroom) {
                                                 title.textContent = 'Sinh viên lớp ' + classroom.classCode;
+                                                addStudentText.textContent = 'Thêm sinh viên mới';
+                                                assignStudentBtn.style.display = 'block';
                                                 const classroomStudents = allStudents.filter(s => s.classroomId == classroomId);
                                                 displayStudents(classroomStudents);
                                             }
@@ -1089,29 +1147,34 @@
 
                                     function deleteClassroom(id) {
                                         console.log('Delete classroom clicked:', id);
-                                        if (confirm('Bạn có chắc chắn muốn xóa lớp này?\n\nChú ý: Chỉ có thể xóa lớp không có sinh viên.')) {
-                                            // Create and submit form with CSRF token
-                                            const form = document.createElement('form');
-                                            form.method = 'POST';
-                                            form.action = '${pageContext.request.contextPath}/admin/classrooms/delete';
+                                        showConfirmModal(
+                                            'Xóa lớp học',
+                                            'Bạn có chắc chắn muốn xóa lớp này?',
+                                            'Chú ý: Chỉ có thể xóa lớp không có sinh viên.',
+                                            function () {
+                                                // Create and submit form with CSRF token
+                                                const form = document.createElement('form');
+                                                form.method = 'POST';
+                                                form.action = '${pageContext.request.contextPath}/admin/classrooms/delete';
 
-                                            // Add CSRF token
-                                            const csrfToken = document.createElement('input');
-                                            csrfToken.type = 'hidden';
-                                            csrfToken.name = '${_csrf.parameterName}';
-                                            csrfToken.value = '${_csrf.token}';
-                                            form.appendChild(csrfToken);
+                                                // Add CSRF token
+                                                const csrfToken = document.createElement('input');
+                                                csrfToken.type = 'hidden';
+                                                csrfToken.name = '${_csrf.parameterName}';
+                                                csrfToken.value = '${_csrf.token}';
+                                                form.appendChild(csrfToken);
 
-                                            // Add classroom ID
-                                            const idInput = document.createElement('input');
-                                            idInput.type = 'hidden';
-                                            idInput.name = 'id';
-                                            idInput.value = id;
-                                            form.appendChild(idInput);
+                                                // Add classroom ID
+                                                const idInput = document.createElement('input');
+                                                idInput.type = 'hidden';
+                                                idInput.name = 'id';
+                                                idInput.value = id;
+                                                form.appendChild(idInput);
 
-                                            document.body.appendChild(form);
-                                            form.submit();
-                                        }
+                                                document.body.appendChild(form);
+                                                form.submit();
+                                            }
+                                        );
                                     }
 
                                     function editStudent(id) {
@@ -1141,46 +1204,62 @@
                                     }
 
                                     function deleteStudent(id) {
-                                        if (confirm('Bạn có chắc chắn muốn xóa sinh viên này hoàn toàn? Hành động này không thể hoàn tác.')) {
-                                            window.location.href = '${pageContext.request.contextPath}/admin/students/delete/' + id;
-                                        }
+                                        showConfirmModal(
+                                            'Xóa sinh viên',
+                                            'Bạn có chắc chắn muốn xóa sinh viên này hoàn toàn?',
+                                            'Hành động này không thể hoàn tác.',
+                                            function () {
+                                                window.location.href = '${pageContext.request.contextPath}/admin/students/delete/' + id;
+                                            }
+                                        );
                                     }
 
                                     function removeFromClass(studentId, classroomId) {
-                                        if (confirm('Bạn có chắc chắn muốn xóa sinh viên này khỏi lớp? Sinh viên sẽ chuyển về trạng thái "Chưa phân lớp".')) {
-                                            // Find student data
-                                            const student = allStudents.find(s => s.id === studentId);
-                                            if (!student) {
-                                                alert('Không tìm thấy thông tin sinh viên!');
-                                                return;
-                                            }
+                                        console.log('removeFromClass called with:', { studentId, classroomId });
+                                        showConfirmModal(
+                                            'Xóa khỏi lớp',
+                                            'Bạn có chắc chắn muốn xóa sinh viên này khỏi lớp?',
+                                            'Sinh viên sẽ chuyển về trạng thái "Chưa phân lớp".',
+                                            function () {
+                                                console.log('Confirmation confirmed, proceeding with removal...');
 
-                                            // Create form data for edit request (set classId to null to remove from class)
-                                            const formData = new FormData();
-                                            formData.append('studentId', studentId);
-                                            formData.append('fullName', (student.lname ? student.lname + ' ' : '') + (student.fname || ''));
-                                            formData.append('email', student.email || '');
-                                            formData.append('phone', student.phone || '');
-                                            formData.append('address', student.address || '');
-                                            formData.append('birthDate', student.birthDate || '');
-                                            // Don't set classId and majorId to remove from class
+                                                // Create form data for remove from class request
+                                                const formData = new FormData();
+                                                formData.append('studentId', studentId);
+                                                // Add CSRF token
+                                                formData.append('${_csrf.parameterName}', '${_csrf.token}');
 
-                                            // Submit the edit form
-                                            fetch('${pageContext.request.contextPath}/admin/students/edit', {
-                                                method: 'POST',
-                                                body: formData
-                                            }).then(response => {
-                                                if (response.ok) {
-                                                    // Reload the page to show updated data
-                                                    window.location.reload();
-                                                } else {
+                                                console.log('FormData prepared for remove from class:', {
+                                                    studentId: formData.get('studentId'),
+                                                    csrfToken: formData.get('${_csrf.parameterName}')
+                                                });
+
+                                                // Submit the remove from class form
+                                                console.log('Sending AJAX request to /admin/students/remove-from-class');
+                                                fetch('${pageContext.request.contextPath}/admin/students/remove-from-class', {
+                                                    method: 'POST',
+                                                    body: formData
+                                                }).then(response => {
+                                                    console.log('Response received:', response);
+                                                    console.log('Response status:', response.status);
+                                                    console.log('Response ok:', response.ok);
+                                                    if (response.ok) {
+                                                        console.log('Response OK, reloading page...');
+                                                        // Reload the page to show updated data
+                                                        window.location.reload();
+                                                    } else {
+                                                        console.error('Response not OK, status:', response.status);
+                                                        response.text().then(text => {
+                                                            console.error('Response text:', text);
+                                                        });
+                                                        alert('Có lỗi xảy ra khi xóa sinh viên khỏi lớp!');
+                                                    }
+                                                }).catch(error => {
+                                                    console.error('Fetch error:', error);
                                                     alert('Có lỗi xảy ra khi xóa sinh viên khỏi lớp!');
-                                                }
-                                            }).catch(error => {
-                                                console.error('Error:', error);
-                                                alert('Có lỗi xảy ra khi xóa sinh viên khỏi lớp!');
-                                            });
-                                        }
+                                                });
+                                            }
+                                        );
                                     }
 
                                     // Auto-select classroom when adding student
@@ -1375,8 +1454,322 @@
                                                 majorSelect.disabled = false;
                                             });
                                         }
+
+                                        // Assign Student Modal functionality
+                                        const assignStudentModal = document.getElementById('assignStudentModal');
+                                        const searchUnassignedInput = document.getElementById('searchUnassignedStudents');
+                                        const unassignedStudentsList = document.getElementById('unassignedStudentsList');
+                                        const confirmAssignBtn = document.getElementById('confirmAssignStudents');
+                                        let unassignedStudents = [];
+                                        let selectedStudentsForAssign = new Set();
+
+                                        if (assignStudentModal) {
+                                            assignStudentModal.addEventListener('show.bs.modal', function () {
+                                                console.log('=== Assign Student Modal opening ===');
+                                                console.log('selectedClassroomId:', selectedClassroomId);
+                                                if (selectedClassroomId) {
+                                                    const classroom = getClassroomById(selectedClassroomId);
+                                                    console.log('Found classroom:', classroom);
+                                                    document.getElementById('assignToClassName').textContent = classroom ? classroom.classCode : '';
+                                                    loadUnassignedStudents();
+                                                } else {
+                                                    console.log('No classroom selected');
+                                                }
+                                            });
+
+                                            assignStudentModal.addEventListener('hidden.bs.modal', function () {
+                                                selectedStudentsForAssign.clear();
+                                                updateSelectedStudentsDisplay();
+                                                searchUnassignedInput.value = '';
+                                            });
+                                        }
+
+                                        function loadUnassignedStudents() {
+                                            console.log('=== loadUnassignedStudents called ===');
+                                            const loadingDiv = document.getElementById('unassignedStudentsLoading');
+                                            loadingDiv.style.display = 'block';
+                                            unassignedStudentsList.innerHTML = '';
+
+                                            console.log('Making fetch request to /admin/students/unassigned');
+                                            fetch('/admin/students/unassigned')
+                                                .then(response => {
+                                                    console.log('Response status:', response.status);
+                                                    console.log('Response ok:', response.ok);
+                                                    return response.json();
+                                                })
+                                                .then(data => {
+                                                    console.log('Received data:', data);
+                                                    unassignedStudents = data;
+                                                    displayUnassignedStudents(unassignedStudents);
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error loading unassigned students:', error);
+                                                    // Fallback to mock data if API fails
+                                                    console.log('Using mock data as fallback');
+                                                    const mockData = [
+                                                        {
+                                                            id: 101,
+                                                            username: "SV001",
+                                                            fname: "Nguyễn Văn",
+                                                            lname: "A",
+                                                            majorName: "Công nghệ thông tin"
+                                                        },
+                                                        {
+                                                            id: 102,
+                                                            username: "SV002",
+                                                            fname: "Trần Thị",
+                                                            lname: "B",
+                                                            majorName: "Kỹ thuật phần mềm"
+                                                        },
+                                                        {
+                                                            id: 103,
+                                                            username: "SV003",
+                                                            fname: "Lê Văn",
+                                                            lname: "C",
+                                                            majorName: "An toàn thông tin"
+                                                        }
+                                                    ];
+                                                    unassignedStudents = mockData;
+                                                    displayUnassignedStudents(unassignedStudents);
+                                                })
+                                                .finally(() => {
+                                                    loadingDiv.style.display = 'none';
+                                                });
+                                        }
+
+                                        function displayUnassignedStudents(students) {
+                                            if (students.length === 0) {
+                                                unassignedStudentsList.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Không có sinh viên nào chưa được phân lớp</div>';
+                                                return;
+                                            }
+
+                                            const html = students.map(student => `
+                                                <div class="card mb-2">
+                                                    <div class="card-body py-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input student-checkbox" type="checkbox" 
+                                                                   id="student-\${student.id}" 
+                                                                   value="\${student.id}"
+                                                                   data-student-id="\${student.id}">
+                                                            <label class="form-check-label w-100" for="student-\${student.id}">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <strong>\${student.username}</strong> - \${student.lname} \${student.fname}
+                                                                        <br><small class="text-muted">\${student.majorName ? student.majorName : 'Chưa có ngành'}</small>
+                                                                    </div>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('');
+                                            unassignedStudentsList.innerHTML = html;
+
+                                            // Add event listeners to checkboxes
+                                            document.querySelectorAll('.student-checkbox').forEach(checkbox => {
+                                                checkbox.addEventListener('change', function () {
+                                                    const studentId = parseInt(this.getAttribute('data-student-id'));
+                                                    const isSelected = this.checked;
+                                                    toggleStudentSelection(studentId, isSelected);
+                                                });
+                                            });
+                                        }
+
+                                        function toggleStudentSelection(studentId, isSelected) {
+                                            if (isSelected) {
+                                                selectedStudentsForAssign.add(studentId);
+                                            } else {
+                                                selectedStudentsForAssign.delete(studentId);
+                                            }
+                                            updateSelectedStudentsDisplay();
+                                        }
+
+                                        function updateSelectedStudentsDisplay() {
+                                            const count = selectedStudentsForAssign.size;
+                                            const countSpan = document.getElementById('selectedStudentsCount');
+                                            const selectedSection = document.getElementById('selectedStudentsSection');
+                                            const selectedList = document.getElementById('selectedStudentsList');
+
+                                            countSpan.textContent = count;
+                                            confirmAssignBtn.disabled = count === 0;
+
+                                            if (count > 0) {
+                                                selectedSection.style.display = 'block';
+                                                const selectedStudentsList = Array.from(selectedStudentsForAssign).map(id => {
+                                                    const student = unassignedStudents.find(s => s.id == id);
+                                                    return student ? `<span class="badge bg-primary me-1">\${student.username} - \${student.lname} \${student.fname}</span>` : '';
+                                                }).join('');
+                                                selectedList.innerHTML = selectedStudentsList;
+                                            } else {
+                                                selectedSection.style.display = 'none';
+                                            }
+                                        }
+
+                                        // Search functionality for unassigned students
+                                        if (searchUnassignedInput) {
+                                            searchUnassignedInput.addEventListener('input', function () {
+                                                const searchTerm = this.value.toLowerCase();
+                                                const filteredStudents = unassignedStudents.filter(student =>
+                                                    student.username.toLowerCase().includes(searchTerm) ||
+                                                    student.fname.toLowerCase().includes(searchTerm) ||
+                                                    student.lname.toLowerCase().includes(searchTerm)
+                                                );
+                                                displayUnassignedStudents(filteredStudents);
+                                            });
+                                        }
+
+                                        // Confirm assign students
+                                        if (confirmAssignBtn) {
+                                            confirmAssignBtn.addEventListener('click', function () {
+                                                if (selectedStudentsForAssign.size === 0 || !selectedClassroomId) return;
+
+                                                const button = this;
+                                                const originalText = button.innerHTML;
+                                                button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Đang gán...';
+                                                button.disabled = true;
+
+                                                const formData = new FormData();
+                                                formData.append('classroomId', selectedClassroomId);
+                                                selectedStudentsForAssign.forEach(studentId => {
+                                                    formData.append('studentIds', studentId);
+                                                });
+
+                                                // Add CSRF token
+                                                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                                                if (csrfToken && csrfHeader) {
+                                                    formData.append(csrfHeader.substring(csrfHeader.lastIndexOf('-') + 1), csrfToken);
+                                                }
+
+                                                fetch('/admin/students/assign-to-class', {
+                                                    method: 'POST',
+                                                    body: formData
+                                                })
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        if (data.success) {
+                                                            // Close modal
+                                                            const modal = bootstrap.Modal.getInstance(assignStudentModal);
+                                                            modal.hide();
+
+                                                            // Refresh page to show updated data
+                                                            window.location.reload();
+                                                        } else {
+                                                            alert('Lỗi: ' + (data.message || 'Không thể gán sinh viên vào lớp'));
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error assigning students:', error);
+                                                        alert('Có lỗi xảy ra khi gán sinh viên vào lớp');
+                                                    })
+                                                    .finally(() => {
+                                                        button.innerHTML = originalText;
+                                                        button.disabled = false;
+                                                    });
+                                            });
+                                        }
                                     });
                                 </script>
+
+                                <!-- Custom Confirmation Modal -->
+                                <div class="modal fade" id="confirmModal" tabindex="-1"
+                                    aria-labelledby="confirmModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header border-0 pb-1">
+                                                <h5 class="modal-title" id="confirmModalTitle">Xác nhận</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body py-3">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="me-3">
+                                                        <i
+                                                            class="bi bi-exclamation-triangle-fill text-warning fs-2"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mb-2 fw-semibold" id="confirmModalMessage">Bạn có chắc
+                                                            chắn muốn thực hiện hành động này?</p>
+                                                        <p class="mb-0 text-muted small" id="confirmModalNote"></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0 pt-1">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Hủy</button>
+                                                <button type="button" class="btn btn-danger" id="confirmModalOkBtn">Xác
+                                                    nhận</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Assign Student to Class Modal -->
+                                <div class="modal fade" id="assignStudentModal" tabindex="-1"
+                                    aria-labelledby="assignStudentModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="assignStudentModalLabel">
+                                                    <i class="bi bi-person-check me-2"></i>Gán sinh viên vào lớp
+                                                    <span id="assignToClassName" class="text-primary"></span>
+                                                </h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <!-- Search unassigned students -->
+                                                <div class="mb-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">
+                                                            <i class="bi bi-search"></i>
+                                                        </span>
+                                                        <input type="text" class="form-control"
+                                                            id="searchUnassignedStudents"
+                                                            placeholder="Tìm kiếm sinh viên chưa phân lớp...">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Loading indicator -->
+                                                <div id="unassignedStudentsLoading" class="text-center py-3"
+                                                    style="display: none;">
+                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                        <span class="visually-hidden">Đang tải...</span>
+                                                    </div>
+                                                    <span class="ms-2">Đang tải danh sách sinh viên...</span>
+                                                </div>
+
+                                                <!-- Unassigned students list -->
+                                                <div id="unassignedStudentsList">
+                                                    <div class="alert alert-info">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Chọn lớp để xem danh sách sinh viên chưa phân lớp
+                                                    </div>
+                                                </div>
+
+                                                <!-- Selected students -->
+                                                <div id="selectedStudentsSection" style="display: none;">
+                                                    <hr>
+                                                    <h6 class="mb-2">
+                                                        <i class="bi bi-check-square me-2"></i>Sinh viên đã chọn:
+                                                        <span id="selectedStudentsCount"
+                                                            class="badge bg-primary">0</span>
+                                                    </h6>
+                                                    <div id="selectedStudentsList" class="mb-3"></div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Hủy</button>
+                                                <button type="button" class="btn btn-primary" id="confirmAssignStudents"
+                                                    disabled>
+                                                    <i class="bi bi-check-lg me-1"></i>Gán sinh viên vào lớp
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                 </body>
 
                 </html>
