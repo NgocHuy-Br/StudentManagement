@@ -85,35 +85,6 @@
                         .score-poor {
                             color: #dc3545;
                         }
-
-                        .quick-stats {
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            color: white;
-                            border-radius: 10px;
-                            padding: 0.8rem 1.2rem;
-                            margin-bottom: 1.5rem;
-                        }
-
-                        .stat-item {
-                            text-align: center;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 0.4rem;
-                        }
-
-                        .stat-label {
-                            font-size: 1.1rem;
-                            opacity: 0.95;
-                            display: inline;
-                            font-weight: 600;
-                        }
-
-                        .stat-number {
-                            font-size: 1.1rem;
-                            font-weight: 700;
-                            display: inline;
-                        }
                     </style>
                 </head>
 
@@ -134,17 +105,26 @@
                                             <form method="GET" action="/admin/scores" class="row g-3">
                                                 <div class="col-md-3">
                                                     <label for="classroomSelect" class="form-label fw-semibold">
-                                                        <i class="bi bi-building"></i> Chọn lớp học
+                                                        <i class="bi bi-building"></i> Chọn lớp học <span
+                                                            class="text-danger">*</span>
                                                     </label>
                                                     <select class="form-select" id="classroomSelect" name="classroomId"
-                                                        onchange="this.form.submit()">
-                                                        <option value="">-- Tất cả lớp --</option>
-                                                        <c:forEach items="${assignedClasses}" var="classroom">
-                                                            <option value="${classroom.id}"
-                                                                ${selectedClassroomId==classroom.id ? 'selected' : '' }>
-                                                                ${classroom.classCode}
-                                                            </option>
-                                                        </c:forEach>
+                                                        onchange="resetSubjectAndSubmit()" required>
+                                                        <c:choose>
+                                                            <c:when test="${empty assignedClasses}">
+                                                                <option value="">-- Chưa có lớp --</option>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <option value="">-- Chọn lớp học --</option>
+                                                                <c:forEach items="${assignedClasses}" var="classroom">
+                                                                    <option value="${classroom.id}"
+                                                                        ${selectedClassroomId==classroom.id ? 'selected'
+                                                                        : '' }>
+                                                                        ${classroom.classCode}
+                                                                    </option>
+                                                                </c:forEach>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </select>
                                                 </div>
 
@@ -153,14 +133,26 @@
                                                         <i class="bi bi-book"></i> Chọn môn học
                                                     </label>
                                                     <select class="form-select" id="subjectSelect" name="subjectId"
-                                                        onchange="this.form.submit()">
-                                                        <option value="">-- Tất cả môn học --</option>
-                                                        <c:forEach items="${subjects}" var="subject">
-                                                            <option value="${subject.id}"
-                                                                ${selectedSubjectId==subject.id ? 'selected' : '' }>
-                                                                ${subject.subjectCode} - ${subject.subjectName}
-                                                            </option>
-                                                        </c:forEach>
+                                                        onchange="this.form.submit()" ${empty selectedClassroomId
+                                                        ? 'disabled' : '' }>
+                                                        <c:choose>
+                                                            <c:when test="${empty selectedClassroomId}">
+                                                                <option value="">-- Vui lòng chọn lớp trước --</option>
+                                                            </c:when>
+                                                            <c:when test="${empty subjects}">
+                                                                <option value="">-- Lớp chưa có môn học --</option>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <option value="">-- Tất cả môn học --</option>
+                                                                <c:forEach items="${subjects}" var="subject">
+                                                                    <option value="${subject.id}"
+                                                                        ${selectedSubjectId==subject.id ? 'selected'
+                                                                        : '' }>
+                                                                        ${subject.subjectName}
+                                                                    </option>
+                                                                </c:forEach>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </select>
                                                 </div>
 
@@ -172,15 +164,19 @@
                                                         <i class="bi bi-funnel"></i> Lọc sinh viên
                                                     </label>
                                                     <div class="input-group">
-                                                        <button type="submit" class="btn btn-outline-primary">
+                                                        <button type="submit" class="btn btn-outline-primary" ${empty
+                                                            selectedClassroomId ? 'disabled' : '' }>
                                                             <i class="bi bi-search"></i>
                                                         </button>
                                                         <input type="text" class="form-control" id="searchInput"
-                                                            name="search" placeholder="Nhập MSSV hoặc họ tên..."
-                                                            value="${param.search}"
+                                                            name="search"
+                                                            placeholder="${empty selectedClassroomId ? 'Vui lòng chọn lớp trước' : 'Nhập MSSV hoặc họ tên...'}"
+                                                            value="${param.search}" ${empty selectedClassroomId
+                                                            ? 'disabled' : '' }
                                                             onkeypress="if(event.key==='Enter') this.form.submit()">
                                                         <button type="button" class="btn btn-outline-secondary"
-                                                            onclick="clearSearch()" title="Xóa bộ lọc">
+                                                            onclick="clearSearch()" title="Xóa bộ lọc" ${empty
+                                                            selectedClassroomId ? 'disabled' : '' }>
                                                             <i class="bi bi-x-lg"></i>
                                                         </button>
                                                     </div>
@@ -196,319 +192,494 @@
                                             </div>
                                         </div>
 
-                                        <c:if test="${not empty students or not empty scores}">
-                                            <!-- Quick Stats -->
-                                            <div class="quick-stats">
-                                                <div class="row">
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Tổng sinh viên:</span>
-                                                            <span class="stat-number">${fn:length(students)}</span>
+                                        <c:choose>
+                                            <c:when test="${empty selectedClassroomId}">
+                                                <!-- Thông báo khi chưa chọn lớp -->
+                                                <div class="card">
+                                                    <div class="card-body text-center py-5">
+                                                        <div class="mb-3">
+                                                            <i class="bi bi-building text-muted"
+                                                                style="font-size: 3rem;"></i>
                                                         </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Đã có điểm:</span>
-                                                            <span class="stat-number">${fn:length(scores)}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Chưa có điểm:</span>
-                                                            <span class="stat-number">${fn:length(students) -
-                                                                fn:length(scores)}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Tỷ lệ hoàn thành:</span>
-                                                            <span class="stat-number">
-                                                                <c:choose>
-                                                                    <c:when test="${fn:length(students) > 0}">
-                                                                        <fmt:formatNumber
-                                                                            value="${(fn:length(scores) / fn:length(students)) * 100}"
-                                                                            pattern="#0" />%
-                                                                    </c:when>
-                                                                    <c:otherwise>0%</c:otherwise>
-                                                                </c:choose>
-                                                            </span>
-                                                        </div>
+                                                        <h5 class="text-muted mb-3">Vui lòng chọn lớp học</h5>
+                                                        <p class="text-muted">Bạn cần chọn một lớp học cụ thể để xem
+                                                            điểm sinh viên</p>
+                                                        <c:if test="${empty assignedClasses}">
+                                                            <div class="alert alert-warning mt-3">
+                                                                <i class="bi bi-exclamation-triangle"></i>
+                                                                Hệ thống chưa có lớp học nào
+                                                            </div>
+                                                        </c:if>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </c:if>
-
-                                        <!-- Scores Table -->
-                                        <c:choose>
-                                            <c:when test="${not empty scores}">
+                                            </c:when>
+                                            <c:when
+                                                test="${not empty selectedClassroomId and (not empty students or not empty scores)}">
+                                                <!-- Scores Management Table -->
                                                 <div class="card">
-                                                    <div
-                                                        class="card-header d-flex justify-content-between align-items-center">
-                                                        <h5 class="mb-0">
-                                                            <i class="bi bi-journal-text me-2"></i>Bảng điểm sinh viên
-                                                        </h5>
-                                                        <small class="text-muted">
-                                                            Hiển thị ${fn:length(scores)} kết quả
-                                                        </small>
-                                                    </div>
                                                     <div class="card-body p-0">
                                                         <div class="table-responsive">
-                                                            <table class="table table-striped table-hover mb-0">
-                                                                <thead class="table-light">
+                                                            <table class="table table-hover mb-0">
+                                                                <thead class="bg-light">
                                                                     <tr>
-                                                                        <th style="width: 50px;">#</th>
-                                                                        <th style="width: 120px;">MSSV</th>
-                                                                        <th>Họ và tên</th>
-                                                                        <th style="width: 200px;">Lớp</th>
-                                                                        <th style="width: 200px;">Môn học</th>
-                                                                        <th style="width: 80px;">Chuyên cần</th>
-                                                                        <th style="width: 80px;">Giữa kỳ</th>
-                                                                        <th style="width: 80px;">Cuối kỳ</th>
-                                                                        <th style="width: 80px;">Trung bình</th>
-                                                                        <th style="width: 100px;">Thao tác</th>
+                                                                        <th style="width: 40px;">TT</th>
+                                                                        <th style="width: 130px;">MSSV</th>
+                                                                        <th style="width: 150px;">Sinh viên</th>
+                                                                        <th style="width: 180px;">Tên môn học</th>
+                                                                        <th style="width: 80px;">Điểm chuyên cần</th>
+                                                                        <th style="width: 80px;">Điểm giữa kỳ</th>
+                                                                        <th style="width: 80px;">Điểm cuối kỳ</th>
+                                                                        <th style="width: 70px;">Điểm TB</th>
+                                                                        <th style="width: 90px;">Kết quả</th>
+                                                                        <th style="width: 150px;">Ghi chú</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
-                                                                    <c:forEach items="${scores}" var="score"
-                                                                        varStatus="status">
-                                                                        <tr>
-                                                                            <td class="text-center">${status.index + 1}
-                                                                            </td>
-                                                                            <td class="fw-semibold">
-                                                                                ${score.student.user.username}</td>
-                                                                            <td>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <div class="student-avatar me-2">
-                                                                                        ${fn:toUpperCase(fn:substring(score.student.user.fname,
-                                                                                        0,
-                                                                                        1))}${fn:toUpperCase(fn:substring(score.student.user.lname,
-                                                                                        0, 1))}
-                                                                                    </div>
-                                                                                    <div>
+                                                                    <c:choose>
+                                                                        <c:when test="${selectedSubjectId != null}">
+                                                                            <!-- Hiển thị theo sinh viên khi chọn môn học cụ thể -->
+                                                                            <c:forEach items="${students}" var="student"
+                                                                                varStatus="status">
+                                                                                <c:set var="studentScore"
+                                                                                    value="${null}" />
+                                                                                <c:forEach items="${scores}"
+                                                                                    var="score">
+                                                                                    <c:if
+                                                                                        test="${score.student.id == student.id}">
+                                                                                        <c:set var="studentScore"
+                                                                                            value="${score}" />
+                                                                                    </c:if>
+                                                                                </c:forEach>
+
+                                                                                <tr>
+                                                                                    <td>${status.index + 1}</td>
+                                                                                    <td>
+                                                                                        <span
+                                                                                            class="fw-semibold text-primary">${student.user.username}</span>
+                                                                                    </td>
+                                                                                    <td>
                                                                                         <div class="fw-semibold">
-                                                                                            ${score.student.user.fname}
-                                                                                            ${score.student.user.lname}
+                                                                                            ${student.user.lname}
+                                                                                            ${student.user.fname}
                                                                                         </div>
-                                                                                        <small
-                                                                                            class="text-muted">${score.student.user.email}</small>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td>
-                                                                                <span
-                                                                                    class="badge bg-info">${score.student.classroom.classCode}</span>
-                                                                            </td>
-                                                                            <td>
-                                                                                <small
-                                                                                    class="text-muted">${score.subject.subjectCode}</small><br>
-                                                                                <strong>${score.subject.subjectName}</strong>
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                <c:choose>
-                                                                                    <c:when
-                                                                                        test="${score.attendanceScore != null}">
-                                                                                        <span
-                                                                                            class="badge bg-light text-dark">${score.attendanceScore}</span>
-                                                                                    </c:when>
-                                                                                    <c:otherwise>
-                                                                                        <span
-                                                                                            class="text-muted">-</span>
-                                                                                    </c:otherwise>
-                                                                                </c:choose>
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                <c:choose>
-                                                                                    <c:when
-                                                                                        test="${score.midtermScore != null}">
-                                                                                        <span
-                                                                                            class="badge bg-light text-dark">${score.midtermScore}</span>
-                                                                                    </c:when>
-                                                                                    <c:otherwise>
-                                                                                        <span
-                                                                                            class="text-muted">-</span>
-                                                                                    </c:otherwise>
-                                                                                </c:choose>
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                <c:choose>
-                                                                                    <c:when
-                                                                                        test="${score.finalScore != null}">
-                                                                                        <span
-                                                                                            class="badge bg-light text-dark">${score.finalScore}</span>
-                                                                                    </c:when>
-                                                                                    <c:otherwise>
-                                                                                        <span
-                                                                                            class="text-muted">-</span>
-                                                                                    </c:otherwise>
-                                                                                </c:choose>
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                <c:if test="${score.avgScore != null}">
-                                                                                    <span class="avg-score 
-                                                                                <c:choose>
-                                                                                    <c:when test=" ${score.avgScore>=
-                                                                                        8.5}">score-excellent
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <!-- Hiển thị môn học đã chọn -->
+                                                                                        <c:forEach items="${subjects}"
+                                                                                            var="subject">
+                                                                                            <c:if
+                                                                                                test="${subject.id == selectedSubjectId}">
+                                                                                                <div
+                                                                                                    class="fw-semibold text-info">
+                                                                                                    ${subject.subjectName}
+                                                                                                </div>
+                                                                                            </c:if>
+                                                                                        </c:forEach>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${studentScore != null and studentScore.attendanceScore != null}">
+                                                                                                <span
+                                                                                                    class="fw-semibold">${studentScore.attendanceScore}</span>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span
+                                                                                                    class="text-muted">--</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${studentScore != null and studentScore.midtermScore != null}">
+                                                                                                <span
+                                                                                                    class="fw-semibold">${studentScore.midtermScore}</span>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span
+                                                                                                    class="text-muted">--</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${studentScore != null and studentScore.finalScore != null}">
+                                                                                                <span
+                                                                                                    class="fw-semibold">${studentScore.finalScore}</span>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span
+                                                                                                    class="text-muted">--</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${studentScore != null and studentScore.avgScore != null}">
+                                                                                                <c:choose>
+                                                                                                    <c:when
+                                                                                                        test="${studentScore.avgScore >= 8.5}">
+                                                                                                        <span
+                                                                                                            class="avg-score score-excellent">
+                                                                                                            <fmt:formatNumber
+                                                                                                                value="${studentScore.avgScore}"
+                                                                                                                minFractionDigits="1"
+                                                                                                                maxFractionDigits="1" />
+                                                                                                        </span>
+                                                                                                    </c:when>
+                                                                                                    <c:when
+                                                                                                        test="${studentScore.avgScore >= 7.0}">
+                                                                                                        <span
+                                                                                                            class="avg-score score-good">
+                                                                                                            <fmt:formatNumber
+                                                                                                                value="${studentScore.avgScore}"
+                                                                                                                minFractionDigits="1"
+                                                                                                                maxFractionDigits="1" />
+                                                                                                        </span>
+                                                                                                    </c:when>
+                                                                                                    <c:when
+                                                                                                        test="${studentScore.avgScore >= 5.5}">
+                                                                                                        <span
+                                                                                                            class="avg-score score-average">
+                                                                                                            <fmt:formatNumber
+                                                                                                                value="${studentScore.avgScore}"
+                                                                                                                minFractionDigits="1"
+                                                                                                                maxFractionDigits="1" />
+                                                                                                        </span>
+                                                                                                    </c:when>
+                                                                                                    <c:otherwise>
+                                                                                                        <span
+                                                                                                            class="avg-score score-poor">
+                                                                                                            <fmt:formatNumber
+                                                                                                                value="${studentScore.avgScore}"
+                                                                                                                minFractionDigits="1"
+                                                                                                                maxFractionDigits="1" />
+                                                                                                        </span>
+                                                                                                    </c:otherwise>
+                                                                                                </c:choose>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span
+                                                                                                    class="text-muted">--</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${studentScore != null and studentScore.avgScore != null}">
+                                                                                                <c:choose>
+                                                                                                    <c:when
+                                                                                                        test="${studentScore.avgScore >= 5.0}">
+                                                                                                        <span
+                                                                                                            class="badge bg-success fs-6">
+                                                                                                            <i
+                                                                                                                class="bi bi-check-circle"></i>
+                                                                                                            Đạt
+                                                                                                        </span>
+                                                                                                    </c:when>
+                                                                                                    <c:otherwise>
+                                                                                                        <span
+                                                                                                            class="badge bg-danger fs-6">
+                                                                                                            <i
+                                                                                                                class="bi bi-x-circle"></i>
+                                                                                                            Không đạt
+                                                                                                        </span>
+                                                                                                    </c:otherwise>
+                                                                                                </c:choose>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span
+                                                                                                    class="badge bg-secondary">Chưa
+                                                                                                    đánh
+                                                                                                    giá</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${studentScore != null and not empty studentScore.notes}">
+                                                                                                <small>${studentScore.notes}</small>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <span
+                                                                                                    class="text-muted">--</span>
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </c:forEach>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <!-- Hiển thị tất cả combination sinh viên x môn học khi chọn "Tất cả môn học" -->
+                                                                            <c:set var="rowIndex" value="0" />
+                                                                            <c:forEach items="${students}"
+                                                                                var="student">
+                                                                                <c:forEach items="${subjects}"
+                                                                                    var="subject">
+                                                                                    <c:set var="rowIndex"
+                                                                                        value="${rowIndex + 1}" />
+                                                                                    <!-- Tìm điểm của sinh viên này cho môn học này -->
+                                                                                    <c:set var="currentScore"
+                                                                                        value="${null}" />
+                                                                                    <c:forEach items="${scores}"
+                                                                                        var="score">
+                                                                                        <c:if
+                                                                                            test="${score.student.id == student.id && score.subject.id == subject.id}">
+                                                                                            <c:set var="currentScore"
+                                                                                                value="${score}" />
+                                                                                        </c:if>
+                                                                                    </c:forEach>
+
+                                                                                    <tr>
+                                                                                        <td>${rowIndex}</td>
+                                                                                        <td>
+                                                                                            <span
+                                                                                                class="fw-semibold text-primary">${student.user.username}</span>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <div class="fw-semibold">
+                                                                                                ${student.user.lname}
+                                                                                                ${student.user.fname}
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <div
+                                                                                                class="fw-semibold text-info">
+                                                                                                ${subject.subjectName}
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${currentScore != null and currentScore.attendanceScore != null}">
+                                                                                                    <span
+                                                                                                        class="fw-semibold">${currentScore.attendanceScore}</span>
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <span
+                                                                                                        class="text-muted">--</span>
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${currentScore != null and currentScore.midtermScore != null}">
+                                                                                                    <span
+                                                                                                        class="fw-semibold">${currentScore.midtermScore}</span>
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <span
+                                                                                                        class="text-muted">--</span>
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${currentScore != null and currentScore.finalScore != null}">
+                                                                                                    <span
+                                                                                                        class="fw-semibold">${currentScore.finalScore}</span>
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <span
+                                                                                                        class="text-muted">--</span>
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${currentScore != null and currentScore.avgScore != null}">
+                                                                                                    <c:choose>
+                                                                                                        <c:when
+                                                                                                            test="${currentScore.avgScore >= 8.5}">
+                                                                                                            <span
+                                                                                                                class="avg-score score-excellent">
+                                                                                                                <fmt:formatNumber
+                                                                                                                    value="${currentScore.avgScore}"
+                                                                                                                    minFractionDigits="1"
+                                                                                                                    maxFractionDigits="1" />
+                                                                                                            </span>
+                                                                                                        </c:when>
+                                                                                                        <c:when
+                                                                                                            test="${currentScore.avgScore >= 7.0}">
+                                                                                                            <span
+                                                                                                                class="avg-score score-good">
+                                                                                                                <fmt:formatNumber
+                                                                                                                    value="${currentScore.avgScore}"
+                                                                                                                    minFractionDigits="1"
+                                                                                                                    maxFractionDigits="1" />
+                                                                                                            </span>
+                                                                                                        </c:when>
+                                                                                                        <c:when
+                                                                                                            test="${currentScore.avgScore >= 5.5}">
+                                                                                                            <span
+                                                                                                                class="avg-score score-average">
+                                                                                                                <fmt:formatNumber
+                                                                                                                    value="${currentScore.avgScore}"
+                                                                                                                    minFractionDigits="1"
+                                                                                                                    maxFractionDigits="1" />
+                                                                                                            </span>
+                                                                                                        </c:when>
+                                                                                                        <c:otherwise>
+                                                                                                            <span
+                                                                                                                class="avg-score score-poor">
+                                                                                                                <fmt:formatNumber
+                                                                                                                    value="${currentScore.avgScore}"
+                                                                                                                    minFractionDigits="1"
+                                                                                                                    maxFractionDigits="1" />
+                                                                                                            </span>
+                                                                                                        </c:otherwise>
+                                                                                                    </c:choose>
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <span
+                                                                                                        class="text-muted">--</span>
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${currentScore != null and currentScore.avgScore != null}">
+                                                                                                    <c:choose>
+                                                                                                        <c:when
+                                                                                                            test="${currentScore.avgScore >= 5.0}">
+                                                                                                            <span
+                                                                                                                class="badge bg-success fs-6">
+                                                                                                                <i
+                                                                                                                    class="bi bi-check-circle"></i>
+                                                                                                                Đạt
+                                                                                                            </span>
+                                                                                                        </c:when>
+                                                                                                        <c:otherwise>
+                                                                                                            <span
+                                                                                                                class="badge bg-danger fs-6">
+                                                                                                                <i
+                                                                                                                    class="bi bi-x-circle"></i>
+                                                                                                                Không
+                                                                                                                đạt
+                                                                                                            </span>
+                                                                                                        </c:otherwise>
+                                                                                                    </c:choose>
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <span
+                                                                                                        class="badge bg-secondary">Chưa
+                                                                                                        đánh giá</span>
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${currentScore != null and not empty currentScore.notes}">
+                                                                                                    <small>${currentScore.notes}</small>
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <span
+                                                                                                        class="text-muted">--</span>
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </c:forEach>
+                                                                            </c:forEach>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </c:when>
-                                            <c:when test="${score.avgScore >= 7.0}">score-good</c:when>
-                                            <c:when test="${score.avgScore >= 5.5}">score-average</c:when>
-                                            <c:otherwise>score-poor</c:otherwise>
+                                            <c:when
+                                                test="${not empty selectedClassroomId and empty students and empty scores}">
+                                                <!-- Thông báo khi lớp không có sinh viên hoặc chưa có điểm -->
+                                                <div class="card">
+                                                    <div class="card-body text-center py-5">
+                                                        <div class="mb-3">
+                                                            <i class="bi bi-journal-text text-muted"
+                                                                style="font-size: 3rem;"></i>
+                                                        </div>
+                                                        <h5 class="text-muted mb-3">Chưa có dữ liệu</h5>
+                                                        <p class="text-muted">Lớp học này chưa có sinh viên hoặc chưa có
+                                                            điểm nào được nhập</p>
+                                                    </div>
+                                                </div>
+                                            </c:when>
                                         </c:choose>
-                                        ">
-                                        <fmt:formatNumber value="${score.avgScore}" pattern="#0.0" />
-                                        </span>
-                                        </c:if>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-sm btn-outline-primary"
-                                                    onclick="editScore('${score.student.id}', '${score.subject.id}', '${score.attendanceScore}', '${score.midtermScore}', '${score.finalScore}', '${score.notes}')"
-                                                    title="Chỉnh sửa điểm">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                        </tr>
-                                        </c:forEach>
-                                        </tbody>
-                                        </table>
                                 </div>
-                    </div>
-                    </div>
-                    </c:when>
-                    <c:when test="${empty students and empty scores}">
-                        <div class="text-center py-5">
-                            <i class="bi bi-journal-x text-muted" style="font-size: 4rem;"></i>
-                            <h4 class="text-muted mt-3">Chưa có dữ liệu</h4>
-                            <p class="text-muted">Vui lòng chọn lớp học hoặc môn học để xem điểm số.</p>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="text-center py-5">
-                            <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
-                            <h4 class="text-muted mt-3">Không có điểm nào được tìm thấy</h4>
-                            <p class="text-muted">Thử thay đổi bộ lọc hoặc tìm kiếm khác.</p>
-                        </div>
-                    </c:otherwise>
-                    </c:choose>
-                    </div>
 
-                    <!-- Edit Score Modal -->
-                    <div class="modal fade" id="editScoreModal" tabindex="-1" aria-labelledby="editScoreModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="editScoreModalLabel">
-                                        <i class="bi bi-pencil-square me-2"></i>Cập nhật điểm
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <form method="POST" action="/admin/scores/update">
-                                    <div class="modal-body">
-                                        <input type="hidden" id="editStudentId" name="studentId">
-                                        <input type="hidden" id="editSubjectId" name="subjectId">
+                                <script
+                                    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                                <script>
+                                    // Reset subject selection and search when classroom changes
+                                    function resetSubjectAndSubmit() {
+                                        const subjectSelect = document.getElementById('subjectSelect');
+                                        const searchInput = document.getElementById('searchInput');
 
-                                        <div class="row g-3">
-                                            <div class="col-md-4">
-                                                <label for="editAttendanceScore" class="form-label">Điểm chuyên
-                                                    cần</label>
-                                                <input type="number" class="form-control" id="editAttendanceScore"
-                                                    name="attendanceScore" min="0" max="10" step="0.1">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="editMidtermScore" class="form-label">Điểm giữa
-                                                    kỳ</label>
-                                                <input type="number" class="form-control" id="editMidtermScore"
-                                                    name="midtermScore" min="0" max="10" step="0.1">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="editFinalScore" class="form-label">Điểm cuối kỳ</label>
-                                                <input type="number" class="form-control" id="editFinalScore"
-                                                    name="finalScore" min="0" max="10" step="0.1">
-                                            </div>
-                                        </div>
+                                        subjectSelect.value = ''; // Reset to "-- Tất cả môn học --"
+                                        searchInput.value = ''; // Clear search input
 
-                                        <div class="mt-3">
-                                            <label for="editNotes" class="form-label">Ghi chú</label>
-                                            <textarea class="form-control" id="editNotes" name="notes"
-                                                rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-check-lg me-1"></i>Cập nhật
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                                        const form = subjectSelect.closest('form');
+                                        form.submit();
+                                    }
 
+                                    function clearSearch() {
+                                        document.getElementById('searchInput').value = '';
+                                        // Giữ nguyên các filter khác và chỉ xóa search
+                                        const form = document.querySelector('form');
+                                        const searchInput = document.querySelector('input[name="search"]');
+                                        if (searchInput) {
+                                            searchInput.remove();
+                                        }
+                                        form.submit();
+                                    }
 
+                                    function exportToPdf() {
+                                        // Lấy các giá trị filter hiện tại
+                                        const classroomId = document.getElementById('classroomSelect').value;
+                                        const subjectId = document.getElementById('subjectSelect').value;
+                                        const search = document.getElementById('searchInput').value;
 
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-                    <script>
-                        function clearSearch() {
-                            document.getElementById('searchInput').value = '';
-                            document.querySelector('form').submit();
-                        }
+                                        // Tạo URL với các tham số
+                                        let url = '/admin/scores/export-pdf?';
+                                        const params = new URLSearchParams();
 
-                        function editScore(studentId, subjectId, attendanceScore, midtermScore, finalScore, notes) {
-                            document.getElementById('editStudentId').value = studentId;
-                            document.getElementById('editSubjectId').value = subjectId;
+                                        if (classroomId) {
+                                            params.append('classroomId', classroomId);
+                                        }
+                                        if (subjectId) {
+                                            params.append('subjectId', subjectId);
+                                        }
+                                        if (search && search.trim() !== '') {
+                                            params.append('search', search.trim());
+                                        }
 
-                            // Set values, handling null/undefined
-                            document.getElementById('editAttendanceScore').value = (attendanceScore && attendanceScore !== 'null') ? attendanceScore : '';
-                            document.getElementById('editMidtermScore').value = (midtermScore && midtermScore !== 'null') ? midtermScore : '';
-                            document.getElementById('editFinalScore').value = (finalScore && finalScore !== 'null') ? finalScore : '';
-                            document.getElementById('editNotes').value = (notes && notes !== 'null') ? notes : '';
+                                        url += params.toString();
 
-                            // Show modal
-                            new bootstrap.Modal(document.getElementById('editScoreModal')).show();
-                        }
+                                        // Tải file PDF
+                                        window.open(url, '_blank');
+                                    }
 
+                                    // Check for flash messages on page load
+                                    const successMessage = '${success}';
+                                    if (successMessage && successMessage.trim() !== '') {
+                                        showNotification('success', successMessage, 'Thành công');
+                                    }
 
-
-                        function exportToPdf() {
-                            // Lấy các giá trị filter hiện tại
-                            const classroomId = document.getElementById('classroomSelect').value;
-                            const subjectId = document.getElementById('subjectSelect').value;
-                            const search = document.getElementById('searchInput').value;
-
-                            // Tạo URL với các tham số
-                            let url = '/admin/scores/export-pdf?';
-                            const params = new URLSearchParams();
-
-                            if (classroomId) {
-                                params.append('classroomId', classroomId);
-                            }
-                            if (subjectId) {
-                                params.append('subjectId', subjectId);
-                            }
-                            if (search && search.trim() !== '') {
-                                params.append('search', search.trim());
-                            }
-
-                            url += params.toString();
-
-                            // Tải file PDF
-                            window.open(url, '_blank');
-                        }
-
-                        // Check for flash messages on page load
-                        const successMessage = '${success}';
-                        if (successMessage && successMessage.trim() !== '') {
-                            showNotification('success', successMessage, 'Thành công');
-                        }
-
-                        const errorMessage = '${error}';
-                        if (errorMessage && errorMessage.trim() !== '') {
-                            showNotification('error', errorMessage, 'Lỗi');
-                        }
-                    </script>
+                                    const errorMessage = '${error}';
+                                    if (errorMessage && errorMessage.trim() !== '') {
+                                        showNotification('error', errorMessage, 'Lỗi');
+                                    }
+                                </script>
                     </div>
                 </body>
 

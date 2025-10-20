@@ -2842,14 +2842,20 @@ public class AdminController {
         // Lấy tất cả lớp học
         List<Classroom> allClasses = classroomRepository.findAll();
 
-        // Lấy tất cả môn học
-        List<Subject> subjects = subjectRepository.findAll();
-
-        // Nếu có chọn lớp cụ thể
+        // Khởi tạo các list
+        List<Subject> subjects = new ArrayList<>();
         List<Student> students = new ArrayList<>();
         List<com.StudentManagement.entity.Score> scores = new ArrayList<>();
 
+        // Chỉ xử lý khi đã chọn lớp
         if (classroomId != null) {
+            // Lấy môn học của lớp đã chọn
+            Classroom selectedClassroom = classroomRepository.findById(classroomId).orElse(null);
+            if (selectedClassroom != null && selectedClassroom.getMajor() != null) {
+                subjects = selectedClassroom.getMajor().getSubjects();
+            }
+
+            // Lấy sinh viên của lớp
             students = studentRepository.findByClassroomId(classroomId);
 
             if (subjectId != null) {
@@ -2861,40 +2867,25 @@ public class AdminController {
                         Pageable.unpaged());
                 scores = scorePages.getContent();
             }
-        } else {
-            // Tất cả lớp - lấy tất cả sinh viên và điểm
-            for (Classroom classroom : allClasses) {
-                students.addAll(studentRepository.findByClassroomId(classroom.getId()));
 
-                if (subjectId != null) {
-                    // Lọc điểm theo môn học cụ thể cho tất cả lớp
-                    scores.addAll(scoreRepository.findByStudentClassroomIdAndSubjectId(classroom.getId(), subjectId));
-                } else {
-                    // Lấy tất cả điểm của tất cả lớp
-                    Page<com.StudentManagement.entity.Score> scorePages = scoreRepository
-                            .findByClassroomId(classroom.getId(), Pageable.unpaged());
-                    scores.addAll(scorePages.getContent());
-                }
+            // Lọc sinh viên theo tìm kiếm nếu có
+            if (search != null && !search.trim().isEmpty()) {
+                String searchTerm = search.trim().toLowerCase();
+                students = students.stream()
+                        .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
+                                (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
+                                        .contains(searchTerm))
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Lọc điểm tương ứng với sinh viên đã lọc
+                List<Long> filteredStudentIds = students.stream()
+                        .map(Student::getId)
+                        .collect(java.util.stream.Collectors.toList());
+
+                scores = scores.stream()
+                        .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
+                        .collect(java.util.stream.Collectors.toList());
             }
-        }
-
-        // Lọc sinh viên theo tìm kiếm nếu có
-        if (search != null && !search.trim().isEmpty()) {
-            String searchTerm = search.trim().toLowerCase();
-            students = students.stream()
-                    .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
-                            (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
-                                    .contains(searchTerm))
-                    .collect(java.util.stream.Collectors.toList());
-
-            // Lọc điểm tương ứng với sinh viên đã lọc
-            List<Long> filteredStudentIds = students.stream()
-                    .map(Student::getId)
-                    .collect(java.util.stream.Collectors.toList());
-
-            scores = scores.stream()
-                    .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
-                    .collect(java.util.stream.Collectors.toList());
         }
 
         model.addAttribute("assignedClasses", allClasses);
