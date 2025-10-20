@@ -90,4 +90,20 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
   @EntityGraph(attributePaths = { "student", "student.user", "subject" })
   @Query("select sc from Score sc join sc.student st where st.classroom.id in :classroomIds")
   List<Score> findByClassroomIds(@Param("classroomIds") List<Long> classroomIds);
+
+  // Tính tổng tín chỉ tích lũy (chỉ tính môn đạt - avgScore >= 5.0)
+  @Query("""
+      select sum(sub.credit)
+      from Score s join s.subject sub
+      where s.student = :student and s.avgScore >= 5.0
+      """)
+  Integer calculateTotalCreditsForStudent(@Param("student") Student student);
+
+  // Tính tổng tín chỉ chưa đạt (avgScore < 5.0 hoặc null)
+  @Query("""
+      select sum(sub.credit)
+      from Score s join s.subject sub
+      where s.student = :student and (s.avgScore < 5.0 or s.avgScore is null)
+      """)
+  Integer calculateFailedCreditsForStudent(@Param("student") Student student);
 }

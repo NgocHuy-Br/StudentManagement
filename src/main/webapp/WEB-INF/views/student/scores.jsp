@@ -101,7 +101,8 @@
                                         <p class="gpa-value">
                                             <c:choose>
                                                 <c:when test="${gpa != null}">
-                                                    <fmt:formatNumber value="${gpa}" maxFractionDigits="2" />
+                                                    <fmt:formatNumber value="${gpa}" minFractionDigits="1"
+                                                        maxFractionDigits="1" />
                                                 </c:when>
                                                 <c:otherwise>N/A</c:otherwise>
                                             </c:choose>
