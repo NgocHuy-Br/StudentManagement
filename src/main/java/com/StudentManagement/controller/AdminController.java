@@ -5,7 +5,6 @@ import com.StudentManagement.entity.ClassroomTeacher;
 import com.StudentManagement.entity.Faculty;
 import com.StudentManagement.entity.Major;
 import com.StudentManagement.entity.Score;
-import com.StudentManagement.entity.ScoreHistory;
 import com.StudentManagement.entity.Student;
 import com.StudentManagement.entity.Subject;
 import com.StudentManagement.entity.Teacher;
@@ -14,7 +13,6 @@ import com.StudentManagement.repository.ClassroomRepository;
 import com.StudentManagement.repository.FacultyRepository;
 import com.StudentManagement.repository.MajorRepository;
 import com.StudentManagement.repository.ScoreRepository;
-import com.StudentManagement.repository.ScoreHistoryRepository;
 import com.StudentManagement.repository.StudentRepository;
 import com.StudentManagement.repository.SubjectRepository;
 import com.StudentManagement.repository.TeacherRepository;
@@ -59,7 +57,6 @@ public class AdminController {
     private final MajorRepository majorRepository;
     private final SubjectRepository subjectRepository;
     private final ScoreRepository scoreRepository;
-    private final ScoreHistoryRepository scoreHistoryRepository;
     private final ClassroomRepository classroomRepository;
     private final ClassroomTeacherService classroomTeacherService;
     private final OverviewService overviewService;
@@ -76,7 +73,6 @@ public class AdminController {
             MajorRepository majorRepository,
             SubjectRepository subjectRepository,
             ScoreRepository scoreRepository,
-            ScoreHistoryRepository scoreHistoryRepository,
             ClassroomRepository classroomRepository,
             ClassroomTeacherService classroomTeacherService,
             OverviewService overviewService,
@@ -89,7 +85,6 @@ public class AdminController {
         this.majorRepository = majorRepository;
         this.subjectRepository = subjectRepository;
         this.scoreRepository = scoreRepository;
-        this.scoreHistoryRepository = scoreHistoryRepository;
         this.classroomRepository = classroomRepository;
         this.classroomTeacherService = classroomTeacherService;
         this.overviewService = overviewService;
@@ -3096,16 +3091,6 @@ public class AdminController {
             // Lưu điểm
             score = scoreRepository.save(score);
 
-            // Tạo lịch sử thay đổi
-            if (currentUser != null) {
-                ScoreHistory.ActionType actionType = isNewScore ? ScoreHistory.ActionType.CREATE
-                        : ScoreHistory.ActionType.UPDATE;
-                String changeDescription = isNewScore ? "Tạo điểm mới" : "Cập nhật điểm";
-
-                ScoreHistory history = new ScoreHistory(score, currentUser, actionType, changeDescription);
-                scoreHistoryRepository.save(history);
-            }
-
             ra.addFlashAttribute("success", "Cập nhật điểm thành công");
 
         } catch (Exception e) {
@@ -3113,65 +3098,6 @@ public class AdminController {
         }
 
         return "redirect:/admin/scores";
-    }
-
-    /**
-     * Lấy lịch sử thay đổi điểm (AJAX endpoint)
-     */
-    @GetMapping("/scores/history/{scoreId}")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> getScoreHistory(@PathVariable Long scoreId) {
-        try {
-            // Tìm điểm số
-            Optional<com.StudentManagement.entity.Score> scoreOpt = scoreRepository.findById(scoreId);
-            if (!scoreOpt.isPresent()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            com.StudentManagement.entity.Score score = scoreOpt.get();
-
-            // Lấy lịch sử thay đổi điểm
-            List<ScoreHistory> histories = scoreHistoryRepository.findByScoreIdOrderByChangedAtDesc(scoreId);
-
-            // Tạo response data
-            Map<String, Object> response = new HashMap<>();
-            response.put("score", Map.of(
-                    "id", score.getId(),
-                    "student", Map.of(
-                            "name",
-                            score.getStudent().getUser().getFname() + " " + score.getStudent().getUser().getLname(),
-                            "studentId", score.getStudent().getId()),
-                    "subject", Map.of(
-                            "name", score.getSubject().getSubjectName(),
-                            "subjectId", score.getSubject().getSubjectCode())));
-
-            // Convert histories to simplified format for JSON
-            List<Map<String, Object>> historyData = new ArrayList<>();
-            for (ScoreHistory history : histories) {
-                Map<String, Object> historyItem = new HashMap<>();
-                historyItem.put("id", history.getId());
-                historyItem.put("actionType", history.getActionType().toString());
-                historyItem.put("attendanceScore", history.getAttendanceScore());
-                historyItem.put("midtermScore", history.getMidtermScore());
-                historyItem.put("finalScore", history.getFinalScore());
-                historyItem.put("averageScore", history.getAvgScore());
-                historyItem.put("changeDescription", history.getChangeDescription());
-                historyItem.put("changedAt", history.getChangedAt());
-                historyItem.put("changedBy", Map.of(
-                        "name",
-                        history.getChangedByUser().getFname() + " " + history.getChangedByUser().getLname(),
-                        "username", history.getChangedByUser().getUsername()));
-                historyData.add(historyItem);
-            }
-
-            response.put("histories", historyData);
-
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            logger.error("Error loading score history for scoreId: " + scoreId, e);
-            return ResponseEntity.status(500).body(Map.of("error", "Có lỗi xảy ra khi tải lịch sử điểm"));
-        }
     }
 
     /**

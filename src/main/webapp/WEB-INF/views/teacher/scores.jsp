@@ -167,44 +167,6 @@
                                         </div>
 
                                         <c:if test="${not empty students or not empty scores}">
-                                            <!-- Quick Stats -->
-                                            <div class="quick-stats">
-                                                <div class="row">
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Tổng sinh viên:</span>
-                                                            <span class="stat-number">${fn:length(students)}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Đã có điểm:</span>
-                                                            <span class="stat-number">${fn:length(scores)}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Chưa có điểm:</span>
-                                                            <span class="stat-number">${fn:length(students) -
-                                                                fn:length(scores)}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="stat-item">
-                                                            <span class="stat-label">Tiến độ:</span>
-                                                            <span class="stat-number">
-                                                                <c:if test="${fn:length(students) > 0}">
-                                                                    <fmt:formatNumber
-                                                                        value="${(fn:length(scores) * 100) / fn:length(students)}"
-                                                                        maxFractionDigits="1" />%
-                                                                </c:if>
-                                                                <c:if test="${fn:length(students) == 0}">0%</c:if>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
                                             <!-- Scores Management Table -->
                                             <div class="card">
                                                 <div class="card-body p-0">
@@ -409,6 +371,7 @@
                                                                                                 data-score-id="${studentScore.id}"
                                                                                                 data-student-id="${student.id}"
                                                                                                 data-student-name="${student.user.lname} ${student.user.fname}"
+                                                                                                data-subject-id="${selectedSubjectId}"
                                                                                                 data-attendance-score="${studentScore.attendanceScore}"
                                                                                                 data-midterm-score="${studentScore.midtermScore}"
                                                                                                 data-final-score="${studentScore.finalScore}"
@@ -423,6 +386,7 @@
                                                                                                 class="btn btn-outline-success btn-sm add-score-btn"
                                                                                                 data-student-id="${student.id}"
                                                                                                 data-student-name="${student.user.lname} ${student.user.fname}"
+                                                                                                data-subject-id="${selectedSubjectId}"
                                                                                                 title="Nhập điểm mới">
                                                                                                 <i
                                                                                                     class="bi bi-plus-square"></i>
@@ -594,6 +558,7 @@
                                                                                         data-score-id="${score.id}"
                                                                                         data-student-id="${score.student.id}"
                                                                                         data-student-name="${score.student.user.lname} ${score.student.user.fname}"
+                                                                                        data-subject-id="${score.subject.id}"
                                                                                         data-attendance-score="${score.attendanceScore}"
                                                                                         data-midterm-score="${score.midtermScore}"
                                                                                         data-final-score="${score.finalScore}"
@@ -638,7 +603,7 @@
                                             <form id="scoreForm" method="POST" action="/teacher/scores/update">
                                                 <div class="modal-body">
                                                     <input type="hidden" name="studentId" id="studentId">
-                                                    <input type="hidden" name="subjectId" value="${selectedSubjectId}">
+                                                    <input type="hidden" name="subjectId" id="subjectId">
 
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Sinh viên</label>
@@ -746,7 +711,8 @@
                                                 const btn = e.target.closest('.add-score-btn');
                                                 const studentId = btn.dataset.studentId;
                                                 const studentName = btn.dataset.studentName;
-                                                addScore(studentId, studentName);
+                                                const subjectId = btn.dataset.subjectId;
+                                                addScore(studentId, studentName, subjectId);
                                             }
                                         });
 
@@ -757,11 +723,12 @@
                                                 const scoreId = btn.dataset.scoreId;
                                                 const studentId = btn.dataset.studentId;
                                                 const studentName = btn.dataset.studentName;
+                                                const subjectId = btn.dataset.subjectId;
                                                 const attendanceScore = btn.dataset.attendanceScore === 'null' || btn.dataset.attendanceScore === '' ? null : parseFloat(btn.dataset.attendanceScore);
                                                 const midtermScore = btn.dataset.midtermScore === 'null' || btn.dataset.midtermScore === '' ? null : parseFloat(btn.dataset.midtermScore);
                                                 const finalScore = btn.dataset.finalScore === 'null' || btn.dataset.finalScore === '' ? null : parseFloat(btn.dataset.finalScore);
                                                 const notes = btn.dataset.notes === 'null' ? '' : btn.dataset.notes;
-                                                editScore(scoreId, studentId, studentName, attendanceScore, midtermScore, finalScore, notes);
+                                                editScore(scoreId, studentId, studentName, subjectId, attendanceScore, midtermScore, finalScore, notes);
                                             }
                                         });
 
@@ -799,9 +766,10 @@
                                         form.submit();
                                     }
 
-                                    function addScore(studentId, studentName) {
+                                    function addScore(studentId, studentName, subjectId) {
                                         document.getElementById('scoreModalTitle').textContent = 'Thêm điểm mới';
                                         document.getElementById('studentId').value = studentId;
+                                        document.getElementById('subjectId').value = subjectId;
                                         document.getElementById('studentInfo').textContent = studentName;
                                         document.getElementById('attendanceScore').value = '';
                                         document.getElementById('midtermScore').value = '';
@@ -809,15 +777,15 @@
                                         document.getElementById('notes').value = '';
 
                                         // Update weight labels based on selected subject
-                                        var selectedSubjectId = '${selectedSubjectId}';
-                                        updateWeightLabels(selectedSubjectId);
+                                        updateWeightLabels(subjectId);
 
                                         new bootstrap.Modal(document.getElementById('scoreModal')).show();
                                     }
 
-                                    function editScore(scoreId, studentId, studentName, attendance, midterm, final, notes) {
+                                    function editScore(scoreId, studentId, studentName, subjectId, attendance, midterm, final, notes) {
                                         document.getElementById('scoreModalTitle').textContent = 'Chỉnh sửa điểm';
                                         document.getElementById('studentId').value = studentId;
+                                        document.getElementById('subjectId').value = subjectId;
                                         document.getElementById('studentInfo').textContent = studentName;
                                         document.getElementById('attendanceScore').value = attendance || '';
                                         document.getElementById('midtermScore').value = midterm || '';
@@ -825,8 +793,7 @@
                                         document.getElementById('notes').value = notes || '';
 
                                         // Update weight labels based on selected subject
-                                        var selectedSubjectId = '${selectedSubjectId}';
-                                        updateWeightLabels(selectedSubjectId);
+                                        updateWeightLabels(subjectId);
 
                                         new bootstrap.Modal(document.getElementById('scoreModal')).show();
                                     }
