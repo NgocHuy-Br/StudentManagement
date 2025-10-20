@@ -4,7 +4,9 @@ import com.StudentManagement.entity.*;
 import com.StudentManagement.repository.*;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -23,6 +25,7 @@ public class HomeRoomTeacherController {
     private final StudentRepository studentRepository;
     private final ScoreRepository scoreRepository;
     private final SubjectRepository subjectRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public HomeRoomTeacherController(
             UserRepository userRepository,
@@ -30,13 +33,15 @@ public class HomeRoomTeacherController {
             ClassroomRepository classroomRepository,
             StudentRepository studentRepository,
             ScoreRepository scoreRepository,
-            SubjectRepository subjectRepository) {
+            SubjectRepository subjectRepository,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.teacherRepository = teacherRepository;
         this.classroomRepository = classroomRepository;
         this.studentRepository = studentRepository;
         this.scoreRepository = scoreRepository;
         this.subjectRepository = subjectRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -76,7 +81,7 @@ public class HomeRoomTeacherController {
         model.addAttribute("firstName", teacher.getUser().getFname());
         model.addAttribute("roleDisplay", "Giáo viên");
 
-        return "teacher/dashboard";
+        return "teacher/dashboard_redesigned";
     }
 
     /**
@@ -508,5 +513,52 @@ public class HomeRoomTeacherController {
         ra.addFlashAttribute("success", "Xóa điểm thành công.");
 
         return "redirect:/teacher/scores";
+    }
+
+    /**
+     * Đổi mật khẩu cho giáo viên
+     */
+    @PostMapping("/change-password")
+    @Transactional
+    public String changePassword(@RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            Authentication auth,
+            RedirectAttributes ra) {
+
+        Teacher teacher = getCurrentTeacher(auth);
+        if (teacher == null) {
+            return "redirect:/auth/login";
+        }
+
+        // Validate input
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            ra.addFlashAttribute("error", "Mật khẩu mới không được để trống.");
+            return "redirect:/teacher";
+        }
+
+        if (newPassword.length() < 6) {
+            ra.addFlashAttribute("error", "Mật khẩu mới phải có ít nhất 6 ký tự.");
+            return "redirect:/teacher";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            ra.addFlashAttribute("error", "Xác nhận mật khẩu không khớp.");
+            return "redirect:/teacher";
+        }
+
+        // Verify current password
+        User user = teacher.getUser();
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            ra.addFlashAttribute("error", "Mật khẩu hiện tại không đúng.");
+            return "redirect:/teacher";
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        ra.addFlashAttribute("success", "Đổi mật khẩu thành công.");
+        return "redirect:/teacher";
     }
 }

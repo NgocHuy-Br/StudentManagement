@@ -170,7 +170,7 @@
                                                                 1 + (page.number * page.size)}</td>
                                                             <td>${t.user.username}</td>
                                                             <td>
-                                                                ${t.user.fname} ${t.user.lname}
+                                                                ${t.user.lname} ${t.user.fname}
                                                             </td>
                                                             <td>${t.user.email}</td>
                                                             <td>${t.user.phone}</td>
@@ -206,7 +206,7 @@
                                                                         class="btn btn-sm btn-outline-info view-teacher-detail"
                                                                         data-teacher-id="${t.id}"
                                                                         data-username="${fn:escapeXml(t.user.username)}"
-                                                                        data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
+                                                                        data-fullname="${fn:escapeXml(t.user.lname)} ${fn:escapeXml(t.user.fname)}"
                                                                         data-email="${fn:escapeXml(t.user.email)}"
                                                                         data-phone="${fn:escapeXml(t.user.phone)}"
                                                                         data-address="${fn:escapeXml(t.user.address)}"
@@ -222,7 +222,7 @@
                                                                         class="btn btn-sm btn-outline-primary edit-teacher"
                                                                         data-teacher-id="${t.id}"
                                                                         data-username="${fn:escapeXml(t.user.username)}"
-                                                                        data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
+                                                                        data-fullname="${fn:escapeXml(t.user.lname)} ${fn:escapeXml(t.user.fname)}"
                                                                         data-email="${fn:escapeXml(t.user.email)}"
                                                                         data-phone="${fn:escapeXml(t.user.phone)}"
                                                                         data-address="${fn:escapeXml(t.user.address)}"
@@ -237,7 +237,7 @@
                                                                         class="btn btn-sm btn-outline-danger delete-teacher"
                                                                         data-teacher-id="${t.id}"
                                                                         data-username="${fn:escapeXml(t.user.username)}"
-                                                                        data-fullname="${fn:escapeXml(t.user.fname)} ${fn:escapeXml(t.user.lname)}"
+                                                                        data-fullname="${fn:escapeXml(t.user.lname)} ${fn:escapeXml(t.user.fname)}"
                                                                         data-bs-toggle="tooltip" data-bs-placement="top"
                                                                         title="Xóa">
                                                                         <i class="bi bi-trash"></i>

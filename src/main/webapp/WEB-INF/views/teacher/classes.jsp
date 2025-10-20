@@ -97,32 +97,35 @@
                                         <!-- Class Selection -->
                                         <div class="class-selector">
                                             <div class="row align-items-center">
-                                                <div class="col-md-4">
-                                                    <label for="classSelect" class="form-label fw-semibold">
-                                                        <i class="bi bi-building"></i> Chọn lớp học
-                                                    </label>
-                                                    <select class="form-select" id="classSelect"
-                                                        onchange="filterByClass()">
-                                                        <option value="">Tất cả lớp</option>
-                                                        <c:forEach items="${assignedClasses}" var="classroom">
-                                                            <option value="${classroom.id}">${classroom.classCode}
-                                                            </option>
-                                                        </c:forEach>
-                                                    </select>
+                                                <div class="col-md-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light">
+                                                            <i class="bi bi-funnel"></i>
+                                                        </span>
+                                                        <select class="form-select" id="classSelect"
+                                                            onchange="filterByClass()">
+                                                            <option value="">Tất cả lớp</option>
+                                                            <c:forEach items="${assignedClasses}" var="classroom">
+                                                                <option value="${classroom.id}">${classroom.classCode}
+                                                                </option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <label for="searchInput" class="form-label fw-semibold">
-                                                        <i class="bi bi-search"></i> Tìm kiếm sinh viên
-                                                    </label>
-                                                    <input type="text" class="form-control" id="searchInput"
-                                                        placeholder="Tìm theo MSSV hoặc tên..."
-                                                        onkeyup="searchStudents()">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="class-info-badge mt-4">
-                                                        <i class="bi bi-people"></i>
-                                                        <span id="studentCount">${fn:length(allStudents)}</span> sinh
-                                                        viên
+                                                <div class="col-md-3">
+                                                    <div class="input-group">
+                                                        <button class="btn btn-outline-secondary" type="button"
+                                                            id="searchBtn" onclick="performSearch()">
+                                                            <i class="bi bi-search"></i>
+                                                        </button>
+                                                        <input type="text" class="form-control" id="searchInput"
+                                                            placeholder="Tìm theo MSSV hoặc tên..."
+                                                            onkeyup="handleSearchInput(event)">
+                                                        <button class="btn btn-outline-secondary" type="button"
+                                                            id="clearBtn" onclick="clearSearch()"
+                                                            style="display: none;">
+                                                            <i class="bi bi-x"></i>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -155,7 +158,7 @@
                                                                 <tr class="student-row"
                                                                     data-class-id="${student.classroom.id}"
                                                                     data-mssv="${student.user.username}"
-                                                                    data-name="${student.user.fname} ${student.user.lname}"
+                                                                    data-name="${student.user.lname} ${student.user.fname}"
                                                                     data-email="${student.user.email}"
                                                                     data-phone="${student.user.phone}">
                                                                     <td>
@@ -171,8 +174,8 @@
                                                                             class="text-primary">${student.user.username}</strong>
                                                                     </td>
                                                                     <td>
-                                                                        <strong>${student.user.fname}
-                                                                            ${student.user.lname}</strong>
+                                                                        <strong>${student.user.lname}
+                                                                            ${student.user.fname}</strong>
                                                                     </td>
                                                                     <td>
                                                                         <c:choose>
@@ -239,25 +242,20 @@
                                     function filterByClass() {
                                         const classId = document.getElementById('classSelect').value;
                                         const rows = document.querySelectorAll('.student-row');
-                                        let visibleCount = 0;
 
                                         rows.forEach(row => {
                                             if (classId === '' || row.dataset.classId === classId) {
                                                 row.style.display = '';
-                                                visibleCount++;
                                             } else {
                                                 row.style.display = 'none';
                                             }
                                         });
-
-                                        document.getElementById('studentCount').textContent = visibleCount;
                                     }
 
                                     // Search students (only by MSSV and name)
                                     function searchStudents() {
                                         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
                                         const rows = document.querySelectorAll('.student-row');
-                                        let visibleCount = 0;
 
                                         rows.forEach(row => {
                                             const mssv = row.dataset.mssv.toLowerCase();
@@ -269,7 +267,6 @@
                                                 const classId = document.getElementById('classSelect').value;
                                                 if (classId === '' || row.dataset.classId === classId) {
                                                     row.style.display = '';
-                                                    visibleCount++;
                                                 } else {
                                                     row.style.display = 'none';
                                                 }
@@ -277,8 +274,43 @@
                                                 row.style.display = 'none';
                                             }
                                         });
+                                    }
 
-                                        document.getElementById('studentCount').textContent = visibleCount;
+                                    // Handle search input with Enter key and show/hide clear button
+                                    function handleSearchInput(event) {
+                                        const searchInput = document.getElementById('searchInput');
+                                        const clearBtn = document.getElementById('clearBtn');
+
+                                        // Show/hide clear button based on input content
+                                        if (searchInput.value.trim() !== '') {
+                                            clearBtn.style.display = 'block';
+                                        } else {
+                                            clearBtn.style.display = 'none';
+                                        }
+
+                                        // Search on Enter key press
+                                        if (event.key === 'Enter') {
+                                            performSearch();
+                                        }
+                                    }
+
+                                    // Perform search when button clicked
+                                    function performSearch() {
+                                        searchStudents();
+                                        const clearBtn = document.getElementById('clearBtn');
+                                        const searchInput = document.getElementById('searchInput');
+                                        if (searchInput.value.trim() !== '') {
+                                            clearBtn.style.display = 'block';
+                                        }
+                                    }
+
+                                    // Clear search
+                                    function clearSearch() {
+                                        const searchInput = document.getElementById('searchInput');
+                                        const clearBtn = document.getElementById('clearBtn');
+                                        searchInput.value = '';
+                                        clearBtn.style.display = 'none';
+                                        searchStudents(); // Reset to show all students
                                     }
 
                                     // Check for flash messages on page load
@@ -290,6 +322,18 @@
                                     const errorMessage = '${error}';
                                     if (errorMessage && errorMessage.trim() !== '') {
                                         showNotification('error', errorMessage, 'Lỗi');
+                                    }
+
+                                    // Auto-select class from URL parameter
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    const classIdFromUrl = urlParams.get('classId');
+                                    if (classIdFromUrl) {
+                                        const classSelect = document.getElementById('classSelect');
+                                        if (classSelect) {
+                                            classSelect.value = classIdFromUrl;
+                                            // Trigger the filter function to show only selected class
+                                            filterByClass();
+                                        }
                                     }
                                 </script>
                     </div>

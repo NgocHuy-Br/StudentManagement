@@ -299,6 +299,7 @@ public class AdminController {
     @PostMapping("/students/edit")
     @Transactional
     public String editStudent(@RequestParam Long studentId,
+            @RequestParam(required = false) String username,
             @RequestParam(required = false) String fullName,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String phone,
@@ -327,6 +328,17 @@ public class AdminController {
         if (trimmedFullName.isEmpty()) {
             ra.addFlashAttribute("error", "Vui lòng nhập đầy đủ họ tên.");
             return "redirect:/admin/classrooms";
+        }
+
+        // Update username if provided and not already taken by another user
+        String trimmedUsername = (username != null && !username.trim().isEmpty()) ? username.trim() : null;
+        if (trimmedUsername != null) {
+            User existingUsernameUser = userRepository.findByUsername(trimmedUsername).orElse(null);
+            if (existingUsernameUser != null && !existingUsernameUser.getId().equals(user.getId())) {
+                ra.addFlashAttribute("error", "MSSV đã tồn tại: " + trimmedUsername);
+                return "redirect:/admin/classrooms";
+            }
+            user.setUsername(trimmedUsername);
         }
 
         // Update email if provided and not already taken by another user

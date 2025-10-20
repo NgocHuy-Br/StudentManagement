@@ -546,16 +546,16 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="mb-3">
-                                                                <label class="form-label">MSSV <span
-                                                                        class="text-danger">*</span></label>
+                                                                <label class="form-label">MSSV (Tài khoản đăng nhập)
+                                                                    <span class="text-danger">*</span></label>
                                                                 <input type="text" class="form-control" name="username"
                                                                     required>
                                                             </div>
                                                             <div class="mb-3">
-                                                                <label class="form-label">Mật khẩu</label>
-                                                                <input type="password" class="form-control"
-                                                                    name="password"
-                                                                    placeholder="Để trống để dùng MSSV làm mật khẩu">
+                                                                <div class="alert alert-info d-flex align-items-center">
+                                                                    <i class="bi bi-info-circle me-2"></i>
+                                                                    <span>Mật khẩu ban đầu chính là MSSV</span>
+                                                                </div>
                                                             </div>
                                                             <div class="mb-3">
                                                                 <label class="form-label">Họ <span
@@ -643,13 +643,13 @@
                                                 <input type="hidden" id="editStudentId" name="studentId" value="">
                                                 <div class="modal-body">
                                                     <div class="row g-3">
-                                                        <!-- Username (readonly) -->
+                                                        <!-- Username -->
                                                         <div class="col-md-6">
                                                             <label for="editUsername" class="form-label">
                                                                 <span class="text-danger">*</span> MSSV
                                                             </label>
                                                             <input type="text" class="form-control" id="editUsername"
-                                                                name="username" readonly>
+                                                                name="username" required>
                                                         </div>
 
                                                         <!-- Full Name -->
