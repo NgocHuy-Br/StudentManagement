@@ -330,83 +330,54 @@ public class HomeRoomTeacherController {
         // Lấy các lớp mà giáo viên chủ nhiệm
         List<Classroom> assignedClasses = classroomRepository.findByHomeRoomTeacher(teacher);
 
-        // Lấy môn học dựa theo lớp đã chọn
+        // Khởi tạo các list
         List<Subject> subjects = new ArrayList<>();
-        if (classroomId != null) {
-            // Nếu đã chọn lớp, chỉ lấy môn học của lớp đó
-            Classroom selectedClassroom = classroomRepository.findById(classroomId).orElse(null);
-            if (selectedClassroom != null && selectedClassroom.getMajor() != null) {
-                subjects = selectedClassroom.getMajor().getSubjects();
-            }
-        } else {
-            // Nếu chưa chọn lớp, lấy tất cả môn học của tất cả lớp mà giáo viên phụ trách
-            for (Classroom classroom : assignedClasses) {
-                if (classroom.getMajor() != null && classroom.getMajor().getSubjects() != null) {
-                    for (Subject subject : classroom.getMajor().getSubjects()) {
-                        if (!subjects.contains(subject)) {
-                            subjects.add(subject);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Nếu có chọn lớp cụ thể
         List<Student> students = new ArrayList<>();
         List<Score> scores = new ArrayList<>();
 
+        // Chỉ xử lý khi đã chọn lớp
         if (classroomId != null) {
             // Kiểm tra quyền truy cập lớp
             boolean hasAccess = assignedClasses.stream()
                     .anyMatch(c -> c.getId().equals(classroomId));
 
             if (hasAccess) {
+                // Lấy môn học của lớp đã chọn
+                Classroom selectedClassroom = classroomRepository.findById(classroomId).orElse(null);
+                if (selectedClassroom != null && selectedClassroom.getMajor() != null) {
+                    subjects = selectedClassroom.getMajor().getSubjects();
+                }
+
+                // Lấy sinh viên của lớp
                 students = studentRepository.findByClassroomId(classroomId);
 
                 if (subjectId != null) {
                     // Lọc điểm theo môn học cụ thể
                     scores = scoreRepository.findByStudentClassroomIdAndSubjectId(classroomId, subjectId);
                 } else {
-                    // Lấy tất cả điểm của lớp (tất cả môn học) - sử dụng method không phân trang
+                    // Lấy tất cả điểm của lớp (tất cả môn học)
                     scores = scoreRepository.findAllByClassroomId(classroomId);
                 }
+
+                // Lọc sinh viên theo tìm kiếm nếu có
+                if (search != null && !search.trim().isEmpty()) {
+                    String searchTerm = search.trim().toLowerCase();
+                    students = students.stream()
+                            .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
+                                    (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
+                                            .contains(searchTerm))
+                            .collect(Collectors.toList());
+
+                    // Lọc điểm tương ứng với sinh viên đã lọc
+                    List<Long> filteredStudentIds = students.stream()
+                            .map(Student::getId)
+                            .collect(Collectors.toList());
+
+                    scores = scores.stream()
+                            .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
+                            .collect(Collectors.toList());
+                }
             }
-        } else {
-            // Tất cả lớp - lấy tất cả sinh viên và điểm của các lớp mà giáo viên chủ nhiệm
-            List<Long> classroomIds = assignedClasses.stream()
-                    .map(Classroom::getId)
-                    .collect(Collectors.toList());
-
-            for (Classroom classroom : assignedClasses) {
-                students.addAll(studentRepository.findByClassroomId(classroom.getId()));
-            }
-
-            if (subjectId != null) {
-                // Lọc điểm theo môn học cụ thể cho tất cả lớp - sử dụng query tối ưu
-                scores = scoreRepository.findByClassroomIdsAndSubjectId(classroomIds, subjectId);
-            } else {
-                // Lấy tất cả điểm của tất cả lớp và tất cả môn học - sử dụng query tối ưu
-                scores = scoreRepository.findByClassroomIds(classroomIds);
-            }
-        }
-
-        // Lọc sinh viên theo tìm kiếm nếu có
-        if (search != null && !search.trim().isEmpty()) {
-            String searchTerm = search.trim().toLowerCase();
-            students = students.stream()
-                    .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
-                            (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
-                                    .contains(searchTerm))
-                    .collect(Collectors.toList());
-
-            // Lọc điểm tương ứng với sinh viên đã lọc
-            List<Long> filteredStudentIds = students.stream()
-                    .map(Student::getId)
-                    .collect(Collectors.toList());
-
-            scores = scores.stream()
-                    .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
-                    .collect(Collectors.toList());
         }
 
         model.addAttribute("teacher", teacher);
