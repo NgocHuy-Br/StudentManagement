@@ -192,15 +192,12 @@
                                             <!-- Export PDF Button -->
                                             <div class="mt-3">
                                                 <button type="button" class="btn btn-outline-danger"
-                                                    onclick="exportToPdf()" ${empty selectedClassroomId ? 'disabled'
-                                                    : '' }
-                                                    title="${empty selectedClassroomId ? 'Vui lòng chọn lớp học trước' : 'Xuất danh sách điểm ra file PDF'}">
+                                                    onclick="exportToPdf()" title="Xuất danh sách điểm ra file PDF">
                                                     <i class="bi bi-file-earmark-pdf"></i> Xuất PDF
                                                 </button>
                                                 <small class="text-muted ms-2">
                                                     <i class="bi bi-info-circle"></i>
-                                                    ${empty selectedClassroomId ? 'Chọn lớp để xuất PDF' : 'Xuất danh
-                                                    sách đang hiển thị'}
+                                                    Xuất danh sách đang hiển thị
                                                 </small>
                                             </div>
                                         </div>
@@ -921,13 +918,8 @@
 
                                     function exportToPdf() {
                                         // Lấy các giá trị filter hiện tại
-                                        const classroomId = document.getElementById('classroomSelect').value;
                                         const subjectId = document.getElementById('subjectSelect').value;
-
-                                        if (!classroomId) {
-                                            showNotification('error', 'Vui lòng chọn lớp học trước khi xuất PDF', 'Lỗi');
-                                            return;
-                                        }
+                                        const search = document.getElementById('searchInput').value;
 
                                         // Hiển thị thông báo đang tải
                                         const exportBtn = document.querySelector('button[onclick="exportToPdf()"]');
@@ -935,11 +927,22 @@
                                         exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang tạo PDF...';
                                         exportBtn.disabled = true;
 
-                                        // Tạo URL với các tham số
-                                        let url = `/teacher/classroom/${classroomId}/scores/export-pdf`;
+                                        // Tạo URL với các tham số (không cần classroomId vì auto-detect)
+                                        let url = '/teacher/scores/export-pdf';
+                                        const params = new URLSearchParams();
+
                                         if (subjectId) {
-                                            url += `?subjectId=${subjectId}`;
+                                            params.append('subjectId', subjectId);
                                         }
+                                        if (search && search.trim()) {
+                                            params.append('search', search.trim());
+                                        }
+
+                                        if (params.toString()) {
+                                            url += '?' + params.toString();
+                                        }
+
+                                        console.log('Exporting PDF with URL:', url);
 
                                         // Mở URL để tải PDF
                                         const downloadWindow = window.open(url, '_blank');

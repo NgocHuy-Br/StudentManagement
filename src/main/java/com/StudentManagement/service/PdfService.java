@@ -30,11 +30,10 @@ import java.util.stream.Collectors;
 public class PdfService {
 
         // Constants cho các chuỗi tiếng Việt để tránh encoding issues
-        private static final String SCHOOL_NAME = "HỌC VIỆN BƯU CHÍNH VIỄN THÔNG";
+        private static final String SCHOOL_NAME = "HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG";
         private static final String REPORT_TITLE = "BẢNG ĐIỂM SINH VIÊN";
         private static final String CLASS_LABEL = "Lớp: ";
         private static final String SUBJECT_LABEL = "Môn học: ";
-        private static final String FILTER_LABEL = "Bộ lọc áp dụng: ";
         private static final String EXPORTED_BY_LABEL = "Người xuất: ";
         private static final String PRINT_TIME_LABEL = "Thời gian in: ";
         private static final String NO_DATA_MESSAGE = "Không có dữ liệu điểm để hiển thị.";
@@ -106,10 +105,11 @@ public class PdfService {
                                 document.add(new Paragraph(SUBJECT_LABEL + subjectName).setFontSize(12).setBold());
                         }
 
-                        // Thông tin tìm kiếm nếu có
-                        if (searchCriteria != null && !searchCriteria.trim().isEmpty()) {
-                                document.add(new Paragraph(FILTER_LABEL + searchCriteria).setFontSize(10).setItalic());
-                        }
+                        // Bỏ dòng bộ lọc theo yêu cầu
+                        // if (searchCriteria != null && !searchCriteria.trim().isEmpty()) {
+                        // document.add(new Paragraph(FILTER_LABEL +
+                        // searchCriteria).setFontSize(10).setItalic());
+                        // }
 
                         // Thông tin người xuất và thời gian
                         if (exportedBy != null) {
@@ -168,8 +168,8 @@ public class PdfService {
                                         table.addCell(new Cell().add(new Paragraph(String.valueOf(index++)))
                                                         .setTextAlignment(TextAlignment.CENTER));
 
-                                        // Họ và tên (định dạng: Họ đệm + Tên)
-                                        String fullName = (user.getFname() + " " + user.getLname()).trim();
+                                        // Họ và tên (định dạng: Tên + Họ đệm)
+                                        String fullName = (user.getLname() + " " + user.getFname()).trim();
                                         table.addCell(new Cell().add(new Paragraph(fullName)));
 
                                         // MSSV
@@ -215,11 +215,7 @@ public class PdfService {
                                         }
                                         table.addCell(new Cell().add(new Paragraph(result))
                                                         .setTextAlignment(TextAlignment.CENTER)
-                                                        .setBold()
-                                                        .setFontColor(score.getAvgScore() != null
-                                                                        && score.getAvgScore() >= 5.0
-                                                                                        ? ColorConstants.GREEN
-                                                                                        : ColorConstants.RED));
+                                                        .setBold());
                                 }
 
                                 document.add(table);
