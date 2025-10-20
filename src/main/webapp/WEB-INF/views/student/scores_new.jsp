@@ -132,6 +132,27 @@
                             transition: all 0.2s ease;
                         }
 
+                        .btn-export-pdf {
+                            background: linear-gradient(45deg, #28a745, #20c997);
+                            border: none;
+                            color: white;
+                            font-weight: 600;
+                            border-radius: 25px;
+                            padding: 0.6rem 1.2rem;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);
+                        }
+
+                        .btn-export-pdf:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+                            color: white;
+                        }
+
+                        .btn-export-pdf:active {
+                            transform: translateY(0);
+                        }
+
                         .table-scores td {
                             padding: 1rem 0.75rem;
                             vertical-align: middle;
@@ -319,22 +340,29 @@
                                                 <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>Chi tiết điểm</h5>
                                             </div>
                                             <div class="col-md-6">
-                                                <div class="filter-dropdown">
-                                                    <div class="input-group">
-                                                        <span class="input-group-text bg-white">
-                                                            <i class="bi bi-funnel text-primary"></i>
-                                                        </span>
-                                                        <select name="subjectId" class="form-select" id="subjectFilter"
-                                                            onchange="filterSubjects()">
-                                                            <option value="">Tất cả môn học</option>
-                                                            <c:forEach var="subject" items="${subjects}">
-                                                                <option value="${subject.id}"
-                                                                    ${param.subjectId==subject.id ? 'selected' : '' }>
-                                                                    ${subject.subjectCode} - ${subject.subjectName}
-                                                                </option>
-                                                            </c:forEach>
-                                                        </select>
+                                                <div class="d-flex gap-2 justify-content-end">
+                                                    <div class="filter-dropdown flex-grow-1">
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-white">
+                                                                <i class="bi bi-funnel text-primary"></i>
+                                                            </span>
+                                                            <select name="subjectId" class="form-select"
+                                                                id="subjectFilter" onchange="filterSubjects()">
+                                                                <option value="">Tất cả môn học</option>
+                                                                <c:forEach var="subject" items="${subjects}">
+                                                                    <option value="${subject.id}"
+                                                                        ${param.subjectId==subject.id ? 'selected' : ''
+                                                                        }>
+                                                                        ${subject.subjectCode} - ${subject.subjectName}
+                                                                    </option>
+                                                                </c:forEach>
+                                                            </select>
+                                                        </div>
                                                     </div>
+                                                    <button type="button" class="btn btn-success btn-export-pdf"
+                                                        onclick="exportToPDF()" title="Xuất bảng điểm PDF">
+                                                        <i class="bi bi-file-earmark-pdf me-1"></i>Xuất PDF
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -572,6 +600,26 @@
                             // Hiển thị modal
                             const modal = new bootstrap.Modal(document.getElementById('scoreDetailModal'));
                             modal.show();
+                        }
+
+                        function exportToPDF() {
+                            // Lấy giá trị filter hiện tại
+                            const subjectFilter = document.getElementById('subjectFilter');
+                            const subjectId = subjectFilter.value;
+
+                            // Tạo URL với tham số filter
+                            let url = '/student/scores/export-pdf';
+                            if (subjectId) {
+                                url += '?subjectId=' + encodeURIComponent(subjectId);
+                            }
+
+                            // Tạo và trigger download
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = '';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
                         }
                     </script>
                 </body>

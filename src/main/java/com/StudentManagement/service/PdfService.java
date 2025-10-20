@@ -281,4 +281,204 @@ public class PdfService {
                         throw new RuntimeException("Lỗi khi tạo file PDF: " + e.getMessage(), e);
                 }
         }
+
+        public byte[] generateStudentScoresPDF(Student student, List<Score> scores, Double gpa) {
+                try {
+                        System.out.println("Starting PDF generation in service...");
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        PdfWriter writer = new PdfWriter(baos, new WriterProperties().setFullCompressionMode(true));
+                        PdfDocument pdfDoc = new PdfDocument(writer);
+                        Document document = new Document(pdfDoc);
+
+                        // Sử dụng font hỗ trợ tiếng Việt
+                        PdfFont font = null;
+                        try {
+                                // Thử sử dụng Arial từ hệ thống Windows
+                                font = PdfFontFactory.createFont("c:/windows/fonts/arial.ttf", "Identity-H");
+                                document.setFont(font);
+                                System.out.println("Arial font from system created successfully");
+                        } catch (Exception e1) {
+                                try {
+                                        // Nếu không được, thử Times-Roman với encoding UTF-8
+                                        font = PdfFontFactory.createFont("Times-Roman", "Identity-H");
+                                        document.setFont(font);
+                                        System.out.println("Times-Roman font created successfully");
+                                } catch (Exception e2) {
+                                        try {
+                                                // Thử Helvetica với encoding khác
+                                                font = PdfFontFactory.createFont("Helvetica", "Identity-H");
+                                                document.setFont(font);
+                                                System.out.println(
+                                                                "Helvetica font with Identity-H created successfully");
+                                        } catch (Exception e3) {
+                                                // Cuối cùng sử dụng font mặc định
+                                                System.out.println(
+                                                                "Using default font - Vietnamese characters may not display correctly");
+                                        }
+                                }
+                        }
+
+                        // Header thông tin trường
+                        document.add(new Paragraph(SCHOOL_NAME)
+                                        .setTextAlignment(TextAlignment.CENTER)
+                                        .setFontSize(16)
+                                        .setBold());
+
+                        document.add(new Paragraph("BẢNG ĐIỂM SINH VIÊN")
+                                        .setTextAlignment(TextAlignment.CENTER)
+                                        .setFontSize(20)
+                                        .setBold()
+                                        .setMarginBottom(20));
+
+                        // Thông tin sinh viên
+                        Table infoTable = new Table(2).useAllAvailableWidth();
+                        infoTable.addCell(new Cell().add(new Paragraph("Họ và tên: " + student.getUser().getLname()
+                                        + " " + student.getUser().getFname()).setBold()).setBorder(null));
+                        infoTable.addCell(new Cell().add(
+                                        new Paragraph("Mã sinh viên: " + student.getUser().getUsername()).setBold())
+                                        .setBorder(null));
+                        infoTable.addCell(
+                                        new Cell().add(new Paragraph("Ngành học: " + student.getMajor().getMajorName()))
+                                                        .setBorder(null));
+                        infoTable.addCell(new Cell().add(new Paragraph("Lớp: " + student.getClassroom().getClassCode()))
+                                        .setBorder(null));
+
+                        // Thêm GPA và thời gian xuất
+                        infoTable.addCell(new Cell()
+                                        .add(new Paragraph("Điểm trung bình tích lũy: " + String.format("%.1f", gpa))
+                                                        .setBold())
+                                        .setBorder(null));
+                        infoTable.addCell(new Cell()
+                                        .add(new Paragraph("Thời gian xuất: " + LocalDateTime.now()
+                                                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))))
+                                        .setBorder(null));
+
+                        document.add(infoTable);
+                        document.add(new Paragraph(" ")); // Khoảng trống
+
+                        // Bảng điểm
+                        if (scores.isEmpty()) {
+                                document.add(new Paragraph(NO_DATA_MESSAGE)
+                                                .setTextAlignment(TextAlignment.CENTER)
+                                                .setFontSize(14)
+                                                .setItalic());
+                        } else {
+                                // Header của bảng
+                                float[] columnWidths = { 1, 4, 2, 1.5f, 2, 2 }; // TT, Tên môn, Mã môn, Tín chỉ, Điểm
+                                                                                // TB, Kết quả
+                                Table table = new Table(UnitValue.createPercentArray(columnWidths))
+                                                .useAllAvailableWidth();
+
+                                // Tạo header
+                                table.addHeaderCell(new Cell().add(new Paragraph("STT").setBold())
+                                                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                                                .setTextAlignment(TextAlignment.CENTER));
+                                table.addHeaderCell(new Cell().add(new Paragraph("Tên môn học").setBold())
+                                                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                                                .setTextAlignment(TextAlignment.CENTER));
+                                table.addHeaderCell(new Cell().add(new Paragraph("Mã môn").setBold())
+                                                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                                                .setTextAlignment(TextAlignment.CENTER));
+                                table.addHeaderCell(new Cell().add(new Paragraph("Tín chỉ").setBold())
+                                                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                                                .setTextAlignment(TextAlignment.CENTER));
+                                table.addHeaderCell(new Cell().add(new Paragraph("Điểm TB").setBold())
+                                                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                                                .setTextAlignment(TextAlignment.CENTER));
+                                table.addHeaderCell(new Cell().add(new Paragraph("Kết quả").setBold())
+                                                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                                                .setTextAlignment(TextAlignment.CENTER));
+
+                                // Thêm dữ liệu
+                                int index = 1;
+                                for (Score score : scores) {
+                                        table.addCell(new Cell().add(new Paragraph(String.valueOf(index++)))
+                                                        .setTextAlignment(TextAlignment.CENTER));
+                                        table.addCell(new Cell()
+                                                        .add(new Paragraph(score.getSubject().getSubjectName())));
+                                        table.addCell(new Cell().add(new Paragraph(score.getSubject().getSubjectCode()))
+                                                        .setTextAlignment(TextAlignment.CENTER));
+                                        table.addCell(new Cell()
+                                                        .add(new Paragraph(
+                                                                        String.valueOf(score.getSubject().getCredit())))
+                                                        .setTextAlignment(TextAlignment.CENTER));
+
+                                        // Điểm trung bình
+                                        if (score.getAvgScore() != null) {
+                                                table.addCell(new Cell()
+                                                                .add(new Paragraph(String.format("%.1f",
+                                                                                score.getAvgScore())))
+                                                                .setTextAlignment(TextAlignment.CENTER));
+                                        } else {
+                                                table.addCell(new Cell().add(new Paragraph("-"))
+                                                                .setTextAlignment(TextAlignment.CENTER));
+                                        }
+
+                                        // Kết quả
+                                        if (score.getAvgScore() != null) {
+                                                String result = score.getAvgScore() >= 5.0 ? PASSED_RESULT
+                                                                : FAILED_RESULT;
+                                                table.addCell(new Cell().add(new Paragraph(result))
+                                                                .setTextAlignment(TextAlignment.CENTER));
+                                        } else {
+                                                table.addCell(new Cell().add(new Paragraph("-"))
+                                                                .setTextAlignment(TextAlignment.CENTER));
+                                        }
+                                }
+
+                                document.add(table);
+                        }
+
+                        // Footer với chữ ký
+                        document.add(new Paragraph(" ").setMarginTop(30));
+                        Table signatureTable = new Table(2).useAllAvailableWidth();
+
+                        Cell leftSignatureTitle = new Cell().add(new Paragraph("SINH VIÊN")
+                                        .setTextAlignment(TextAlignment.CENTER)
+                                        .setBold())
+                                        .setBorder(null);
+                        Cell rightSignatureTitle = new Cell().add(new Paragraph("PHÒNG ĐÀO TẠO")
+                                        .setTextAlignment(TextAlignment.CENTER)
+                                        .setBold())
+                                        .setBorder(null);
+
+                        signatureTable.addCell(leftSignatureTitle);
+                        signatureTable.addCell(rightSignatureTitle);
+
+                        // Khoảng trống cho chữ ký
+                        Cell leftSpace = new Cell().add(new Paragraph(" ").setMarginTop(30))
+                                        .setBorder(null);
+                        Cell rightSpace = new Cell().add(new Paragraph(" ").setMarginTop(30))
+                                        .setBorder(null);
+
+                        signatureTable.addCell(leftSpace);
+                        signatureTable.addCell(rightSpace);
+
+                        // Tên người ký
+                        Cell leftSignature = new Cell()
+                                        .add(new Paragraph("(" + student.getUser().getLname() + " "
+                                                        + student.getUser().getFname() + ")")
+                                                        .setTextAlignment(TextAlignment.CENTER)
+                                                        .setItalic())
+                                        .setBorder(null);
+                        Cell rightSignature = new Cell().add(new Paragraph("(..............................)")
+                                        .setTextAlignment(TextAlignment.CENTER))
+                                        .setBorder(null);
+
+                        signatureTable.addCell(leftSignature);
+                        signatureTable.addCell(rightSignature);
+
+                        document.add(signatureTable);
+
+                        document.close();
+                        byte[] pdfBytes = baos.toByteArray();
+                        System.out.println("PDF generated successfully. Size: " + pdfBytes.length + " bytes");
+                        return pdfBytes;
+
+                } catch (Exception e) {
+                        System.err.println("Error generating PDF: " + e.getMessage());
+                        e.printStackTrace();
+                        throw new RuntimeException("Lỗi khi tạo file PDF bảng điểm: " + e.getMessage(), e);
+                }
+        }
 }

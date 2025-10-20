@@ -8,6 +8,9 @@ import com.StudentManagement.repository.ScoreRepository;
 import com.StudentManagement.repository.StudentRepository;
 import com.StudentManagement.repository.SubjectRepository;
 import com.StudentManagement.repository.UserRepository;
+import com.StudentManagement.service.PdfService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,17 +30,20 @@ public class StudentController {
     private final ScoreRepository scoreRepository;
     private final SubjectRepository subjectRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PdfService pdfService;
 
     public StudentController(UserRepository userRepository,
             StudentRepository studentRepository,
             ScoreRepository scoreRepository,
             SubjectRepository subjectRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            PdfService pdfService) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
         this.scoreRepository = scoreRepository;
         this.subjectRepository = subjectRepository;
         this.passwordEncoder = passwordEncoder;
+        this.pdfService = pdfService;
     }
 
     private void addUserInfo(Authentication auth, Model model) {
@@ -186,6 +192,61 @@ public class StudentController {
             response.put("success", false);
             response.put("message", "Có lỗi xảy ra: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/scores/export-pdf")
+    public ResponseEntity<byte[]> exportScoresPDF(Authentication authentication,
+            @RequestParam(required = false) Long subjectId) {
+        try {
+            System.out.println("Starting PDF export...");
+
+            Student student = getCurrentStudent(authentication);
+            if (student == null) {
+                System.out.println("Student not found");
+                return ResponseEntity.badRequest().build();
+            }
+
+            System.out.println("Student found: " + student.getUser().getUsername());
+
+            List<Score> allScores = scoreRepository.findByStudent(student);
+            System.out.println("All scores count: " + allScores.size());
+
+            // Lọc theo subject nếu có
+            List<Score> scores = allScores.stream()
+                    .filter(score -> subjectId == null || score.getSubject().getId().equals(subjectId))
+                    .collect(Collectors.toList());
+
+            System.out.println("Filtered scores count: " + scores.size());
+
+            // Sắp xếp điểm theo mã môn
+            scores.sort(Comparator.comparing(s -> s.getSubject().getSubjectCode()));
+
+            // Tính GPA
+            Double gpa = scoreRepository.calculateGPAForStudent(student);
+            System.out.println("GPA: " + gpa);
+
+            // Tạo PDF
+            System.out.println("Generating PDF...");
+            byte[] pdfBytes = pdfService.generateStudentScoresPDF(student, scores, gpa != null ? gpa : 0.0);
+            System.out.println("PDF generated successfully, size: " + pdfBytes.length);
+
+            // Tạo filename
+            String filename = "BangDiem_" + student.getUser().getUsername() + "_" +
+                    java.time.LocalDate.now().toString() + ".pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", filename);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            System.err.println("Error in PDF export: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
