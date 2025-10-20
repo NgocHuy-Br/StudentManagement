@@ -2,7 +2,11 @@ package com.StudentManagement.controller;
 
 import com.StudentManagement.entity.*;
 import com.StudentManagement.repository.*;
+import com.StudentManagement.service.PdfService;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -13,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -25,6 +30,7 @@ public class HomeRoomTeacherController {
     private final StudentRepository studentRepository;
     private final ScoreRepository scoreRepository;
     private final SubjectRepository subjectRepository;
+    private final PdfService pdfService;
     private final PasswordEncoder passwordEncoder;
 
     public HomeRoomTeacherController(
@@ -34,6 +40,7 @@ public class HomeRoomTeacherController {
             StudentRepository studentRepository,
             ScoreRepository scoreRepository,
             SubjectRepository subjectRepository,
+            PdfService pdfService,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.teacherRepository = teacherRepository;
@@ -41,6 +48,7 @@ public class HomeRoomTeacherController {
         this.studentRepository = studentRepository;
         this.scoreRepository = scoreRepository;
         this.subjectRepository = subjectRepository;
+        this.pdfService = pdfService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -551,5 +559,133 @@ public class HomeRoomTeacherController {
 
         ra.addFlashAttribute("success", "Đổi mật khẩu thành công.");
         return "redirect:/teacher";
+    }
+
+    /**
+     * Export điểm lớp ra PDF (Giáo viên chủ nhiệm)
+     */
+    @GetMapping("/classroom/{classroomId}/scores/export-pdf")
+    public ResponseEntity<byte[]> exportClassScoresPdf(
+            @PathVariable Long classroomId,
+            @RequestParam(required = false) Long subjectId,
+            Authentication auth) {
+
+        try {
+            // Kiểm tra quyền truy cập
+            Teacher teacher = getCurrentTeacher(auth);
+            if (teacher == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Kiểm tra lớp có thuộc quyền quản lý của giáo viên không
+            Optional<Classroom> classroomOpt = classroomRepository.findById(classroomId);
+            if (classroomOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Classroom classroom = classroomOpt.get();
+            // Kiểm tra giáo viên có phải chủ nhiệm của lớp này không
+            ClassroomTeacher currentTeacherRecord = classroom.getCurrentHomeRoomTeacherRecord();
+            if (currentTeacherRecord == null || !currentTeacherRecord.getTeacher().getId().equals(teacher.getId())) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Lấy điểm của lớp - tạo tất cả combination sinh viên x môn học
+            List<Score> scores = new ArrayList<>();
+            List<Student> students = studentRepository.findByClassroomId(classroomId);
+            List<Subject> subjects = new ArrayList<>();
+
+            if (classroom.getMajor() != null) {
+                subjects = classroom.getMajor().getSubjects();
+            }
+
+            // Tạo tất cả các combination sinh viên x môn học
+            for (Student student : students) {
+                if (subjectId != null) {
+                    // Chỉ một môn học được chọn
+                    Optional<Subject> subjectOpt = subjectRepository.findById(subjectId);
+                    if (subjectOpt.isPresent()) {
+                        Subject subject = subjectOpt.get();
+                        // Tìm score thực tế hoặc tạo score ảo
+                        Optional<Score> existingScoreOpt = scoreRepository
+                                .findByStudentIdAndSubjectId(student.getId(), subjectId);
+
+                        if (existingScoreOpt.isPresent()) {
+                            scores.add(existingScoreOpt.get());
+                        } else {
+                            // Tạo Score ảo với tất cả điểm null
+                            Score virtualScore = new Score();
+                            virtualScore.setStudent(student);
+                            virtualScore.setSubject(subject);
+                            virtualScore.setAttendanceScore(null);
+                            virtualScore.setMidtermScore(null);
+                            virtualScore.setFinalScore(null);
+                            virtualScore.setAvgScore(null);
+                            scores.add(virtualScore);
+                        }
+                    }
+                } else {
+                    // Tất cả môn học của chuyên ngành
+                    for (Subject subject : subjects) {
+                        Optional<Score> existingScoreOpt = scoreRepository
+                                .findByStudentIdAndSubjectId(student.getId(), subject.getId());
+
+                        if (existingScoreOpt.isPresent()) {
+                            scores.add(existingScoreOpt.get());
+                        } else {
+                            // Tạo Score ảo với tất cả điểm null
+                            Score virtualScore = new Score();
+                            virtualScore.setStudent(student);
+                            virtualScore.setSubject(subject);
+                            virtualScore.setAttendanceScore(null);
+                            virtualScore.setMidtermScore(null);
+                            virtualScore.setFinalScore(null);
+                            virtualScore.setAvgScore(null);
+                            scores.add(virtualScore);
+                        }
+                    }
+                }
+            }
+
+            // Lấy thông tin lớp và môn học
+            String classroomName = classroom.getClassCode();
+            String subjectName = null;
+            if (subjectId != null) {
+                Optional<Subject> subject = subjectRepository.findById(subjectId);
+                if (subject.isPresent()) {
+                    subjectName = subject.get().getSubjectName();
+                }
+            }
+
+            // Thông tin người xuất
+            String exportedBy = (teacher.getUser().getFname() + " " + teacher.getUser().getLname()).trim();
+            if (exportedBy.isEmpty()) {
+                exportedBy = teacher.getUser().getUsername();
+            }
+
+            // Tạo PDF
+            byte[] pdfData = pdfService.generateScoresPdf(scores, classroomId, subjectId, classroomName, subjectName,
+                    exportedBy, null);
+
+            // Tạo tên file
+            String fileName = "BangDiem_" + classroomName.replaceAll("[^\\w\\s-]", "").replaceAll("\\s+", "_");
+            if (subjectName != null) {
+                fileName += "_" + subjectName.replaceAll("[^\\w\\s-]", "").replaceAll("\\s+", "_");
+            }
+            fileName += "_" + java.time.LocalDate.now().toString() + ".pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", fileName);
+            headers.setContentLength(pdfData.length);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfData);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

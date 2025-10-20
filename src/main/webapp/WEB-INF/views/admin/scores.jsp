@@ -186,9 +186,16 @@
                                             <!-- Export PDF Button -->
                                             <div class="mt-3">
                                                 <button type="button" class="btn btn-outline-danger"
-                                                    onclick="exportToPdf()">
+                                                    onclick="exportToPdf()" ${empty selectedClassroomId ? 'disabled'
+                                                    : '' }
+                                                    title="${empty selectedClassroomId ? 'Vui lòng chọn lớp học trước' : 'Xuất danh sách điểm ra file PDF'}">
                                                     <i class="bi bi-file-earmark-pdf"></i> Xuất PDF
                                                 </button>
+                                                <small class="text-muted ms-2">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    ${empty selectedClassroomId ? 'Chọn lớp để xuất PDF' : 'Xuất danh
+                                                    sách đang hiển thị'}
+                                                </small>
                                             </div>
                                         </div>
 
@@ -649,13 +656,23 @@
                                         const subjectId = document.getElementById('subjectSelect').value;
                                         const search = document.getElementById('searchInput').value;
 
+                                        // Kiểm tra điều kiện
+                                        if (!classroomId) {
+                                            showNotification('error', 'Vui lòng chọn lớp học trước khi xuất PDF', 'Lỗi');
+                                            return;
+                                        }
+
+                                        // Hiển thị thông báo đang tải
+                                        const exportBtn = document.querySelector('button[onclick="exportToPdf()"]');
+                                        const originalText = exportBtn.innerHTML;
+                                        exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang tạo PDF...';
+                                        exportBtn.disabled = true;
+
                                         // Tạo URL với các tham số
                                         let url = '/admin/scores/export-pdf?';
                                         const params = new URLSearchParams();
 
-                                        if (classroomId) {
-                                            params.append('classroomId', classroomId);
-                                        }
+                                        params.append('classroomId', classroomId);
                                         if (subjectId) {
                                             params.append('subjectId', subjectId);
                                         }
@@ -666,7 +683,20 @@
                                         url += params.toString();
 
                                         // Tải file PDF
-                                        window.open(url, '_blank');
+                                        const downloadWindow = window.open(url, '_blank');
+
+                                        // Phục hồi nút sau 2 giây
+                                        setTimeout(() => {
+                                            exportBtn.innerHTML = originalText;
+                                            exportBtn.disabled = false;
+                                        }, 2000);
+
+                                        // Kiểm tra nếu popup bị chặn
+                                        if (!downloadWindow || downloadWindow.closed || typeof downloadWindow.closed == 'undefined') {
+                                            showNotification('warning', 'Vui lòng cho phép popup để tải file PDF', 'Cảnh báo');
+                                            exportBtn.innerHTML = originalText;
+                                            exportBtn.disabled = false;
+                                        }
                                     }
 
                                     // Check for flash messages on page load

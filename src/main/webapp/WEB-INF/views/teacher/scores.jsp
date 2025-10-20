@@ -188,6 +188,21 @@
                                                     </div>
                                                 </div>
                                             </form>
+
+                                            <!-- Export PDF Button -->
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-outline-danger"
+                                                    onclick="exportToPdf()" ${empty selectedClassroomId ? 'disabled'
+                                                    : '' }
+                                                    title="${empty selectedClassroomId ? 'Vui lòng chọn lớp học trước' : 'Xuất danh sách điểm ra file PDF'}">
+                                                    <i class="bi bi-file-earmark-pdf"></i> Xuất PDF
+                                                </button>
+                                                <small class="text-muted ms-2">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    ${empty selectedClassroomId ? 'Chọn lớp để xuất PDF' : 'Xuất danh
+                                                    sách đang hiển thị'}
+                                                </small>
+                                            </div>
                                         </div>
 
                                         <c:choose>
@@ -902,6 +917,45 @@
                                     const errorMessage = '${error}';
                                     if (errorMessage && errorMessage.trim() !== '') {
                                         showNotification('error', errorMessage, 'Lỗi');
+                                    }
+
+                                    function exportToPdf() {
+                                        // Lấy các giá trị filter hiện tại
+                                        const classroomId = document.getElementById('classroomSelect').value;
+                                        const subjectId = document.getElementById('subjectSelect').value;
+
+                                        if (!classroomId) {
+                                            showNotification('error', 'Vui lòng chọn lớp học trước khi xuất PDF', 'Lỗi');
+                                            return;
+                                        }
+
+                                        // Hiển thị thông báo đang tải
+                                        const exportBtn = document.querySelector('button[onclick="exportToPdf()"]');
+                                        const originalText = exportBtn.innerHTML;
+                                        exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang tạo PDF...';
+                                        exportBtn.disabled = true;
+
+                                        // Tạo URL với các tham số
+                                        let url = `/teacher/classroom/${classroomId}/scores/export-pdf`;
+                                        if (subjectId) {
+                                            url += `?subjectId=${subjectId}`;
+                                        }
+
+                                        // Mở URL để tải PDF
+                                        const downloadWindow = window.open(url, '_blank');
+
+                                        // Phục hồi nút sau 2 giây
+                                        setTimeout(() => {
+                                            exportBtn.innerHTML = originalText;
+                                            exportBtn.disabled = false;
+                                        }, 2000);
+
+                                        // Kiểm tra nếu popup bị chặn
+                                        if (!downloadWindow || downloadWindow.closed || typeof downloadWindow.closed == 'undefined') {
+                                            showNotification('warning', 'Vui lòng cho phép popup để tải file PDF', 'Cảnh báo');
+                                            exportBtn.innerHTML = originalText;
+                                            exportBtn.disabled = false;
+                                        }
                                     }
                                 </script>
                     </div>

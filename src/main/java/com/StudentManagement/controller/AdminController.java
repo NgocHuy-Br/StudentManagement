@@ -2925,63 +2925,111 @@ public class AdminController {
     public ResponseEntity<byte[]> exportScoresPdf(
             @RequestParam(required = false) Long classroomId,
             @RequestParam(required = false) Long subjectId,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            Authentication auth) {
 
         try {
-            // Lấy tất cả lớp học
-            List<Classroom> allClasses = classroomRepository.findAll();
-
-            // Lấy tất cả môn học
-            List<Subject> subjects = subjectRepository.findAll();
-
-            // Logic tương tự như manageScores để lấy dữ liệu cần export
-            List<Student> students = new ArrayList<>();
+            // Logic tương tự manageScores để tạo tất cả dòng có thể có
             List<com.StudentManagement.entity.Score> scores = new ArrayList<>();
 
             if (classroomId != null) {
-                students = studentRepository.findByClassroomId(classroomId);
+                // Lấy thông tin lớp và sinh viên
+                Classroom selectedClassroom = classroomRepository.findById(classroomId).orElse(null);
+                List<Student> students = studentRepository.findByClassroomId(classroomId);
+                List<Subject> subjects = new ArrayList<>();
 
-                if (subjectId != null) {
-                    scores = scoreRepository.findByStudentClassroomIdAndSubjectId(classroomId, subjectId);
-                } else {
-                    Page<com.StudentManagement.entity.Score> scorePages = scoreRepository.findByClassroomId(classroomId,
-                            Pageable.unpaged());
-                    scores = scorePages.getContent();
+                if (selectedClassroom != null && selectedClassroom.getMajor() != null) {
+                    subjects = selectedClassroom.getMajor().getSubjects();
                 }
-            } else {
-                for (Classroom classroom : allClasses) {
-                    students.addAll(studentRepository.findByClassroomId(classroom.getId()));
 
+                // Lọc sinh viên theo tìm kiếm nếu có
+                if (search != null && !search.trim().isEmpty()) {
+                    String searchTerm = search.trim().toLowerCase();
+                    students = students.stream()
+                            .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
+                                    (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
+                                            .contains(searchTerm))
+                            .collect(java.util.stream.Collectors.toList());
+                }
+
+                // Tạo tất cả các combination sinh viên x môn học
+                for (Student student : students) {
                     if (subjectId != null) {
-                        scores.addAll(
-                                scoreRepository.findByStudentClassroomIdAndSubjectId(classroom.getId(), subjectId));
+                        // Chỉ một môn học được chọn
+                        Optional<Subject> subjectOpt = subjectRepository.findById(subjectId);
+                        if (subjectOpt.isPresent()) {
+                            Subject subject = subjectOpt.get();
+                            // Tìm score thực tế hoặc tạo score ảo
+                            Optional<com.StudentManagement.entity.Score> existingScoreOpt = scoreRepository
+                                    .findByStudentIdAndSubjectId(student.getId(), subjectId);
+
+                            if (existingScoreOpt.isPresent()) {
+                                scores.add(existingScoreOpt.get());
+                            } else {
+                                // Tạo Score ảo với tất cả điểm null
+                                com.StudentManagement.entity.Score virtualScore = new com.StudentManagement.entity.Score();
+                                virtualScore.setStudent(student);
+                                virtualScore.setSubject(subject);
+                                virtualScore.setAttendanceScore(null);
+                                virtualScore.setMidtermScore(null);
+                                virtualScore.setFinalScore(null);
+                                virtualScore.setAvgScore(null);
+                                scores.add(virtualScore);
+                            }
+                        }
                     } else {
-                        Page<com.StudentManagement.entity.Score> scorePages = scoreRepository
-                                .findByClassroomId(classroom.getId(), Pageable.unpaged());
-                        scores.addAll(scorePages.getContent());
+                        // Tất cả môn học của chuyên ngành
+                        for (Subject subject : subjects) {
+                            Optional<com.StudentManagement.entity.Score> existingScoreOpt = scoreRepository
+                                    .findByStudentIdAndSubjectId(student.getId(), subject.getId());
+
+                            if (existingScoreOpt.isPresent()) {
+                                scores.add(existingScoreOpt.get());
+                            } else {
+                                // Tạo Score ảo với tất cả điểm null
+                                com.StudentManagement.entity.Score virtualScore = new com.StudentManagement.entity.Score();
+                                virtualScore.setStudent(student);
+                                virtualScore.setSubject(subject);
+                                virtualScore.setAttendanceScore(null);
+                                virtualScore.setMidtermScore(null);
+                                virtualScore.setFinalScore(null);
+                                virtualScore.setAvgScore(null);
+                                scores.add(virtualScore);
+                            }
+                        }
                     }
                 }
+            } else {
+                // Không chọn lớp cụ thể - xuất tất cả (thường không khuyến khích)
+                if (subjectId != null) {
+                    // Lấy điểm của tất cả lớp cho một môn học
+                    List<Classroom> allClasses = classroomRepository.findAll();
+                    for (Classroom classroom : allClasses) {
+                        scores.addAll(
+                                scoreRepository.findByStudentClassroomIdAndSubjectId(classroom.getId(), subjectId));
+                    }
+                } else {
+                    // Lấy tất cả điểm - có thể rất nhiều, nên hạn chế
+                    Page<com.StudentManagement.entity.Score> scorePages = scoreRepository.findAll(Pageable.unpaged());
+                    scores = scorePages.getContent();
+                }
+
+                // Áp dụng bộ lọc tìm kiếm nếu có
+                if (search != null && !search.trim().isEmpty()) {
+                    String searchTerm = search.trim().toLowerCase();
+                    scores = scores.stream()
+                            .filter(score -> {
+                                Student student = score.getStudent();
+                                String fullName = (student.getUser().getFname() + " " + student.getUser().getLname())
+                                        .toLowerCase();
+                                String username = student.getUser().getUsername().toLowerCase();
+                                return fullName.contains(searchTerm) || username.contains(searchTerm);
+                            })
+                            .collect(java.util.stream.Collectors.toList());
+                }
             }
 
-            // Lọc theo tìm kiếm nếu có
-            if (search != null && !search.trim().isEmpty()) {
-                String searchTerm = search.trim().toLowerCase();
-                students = students.stream()
-                        .filter(student -> student.getUser().getUsername().toLowerCase().contains(searchTerm) ||
-                                (student.getUser().getFname() + " " + student.getUser().getLname()).toLowerCase()
-                                        .contains(searchTerm))
-                        .collect(java.util.stream.Collectors.toList());
-
-                List<Long> filteredStudentIds = students.stream()
-                        .map(Student::getId)
-                        .collect(java.util.stream.Collectors.toList());
-
-                scores = scores.stream()
-                        .filter(score -> filteredStudentIds.contains(score.getStudent().getId()))
-                        .collect(java.util.stream.Collectors.toList());
-            }
-
-            // Lấy tên lớp và môn học
+            // Lấy thông tin lớp và môn học cho tiêu đề
             String classroomName = null;
             String subjectName = null;
 
@@ -2999,16 +3047,40 @@ public class AdminController {
                 }
             }
 
-            // Tạo PDF
-            byte[] pdfData = pdfService.generateScoresPdf(scores, classroomId, subjectId, classroomName, subjectName);
+            // Lấy thông tin người xuất
+            String exportedBy = null;
+            if (auth != null) {
+                String username = auth.getName();
+                Optional<User> userOpt = userRepository.findByUsername(username);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    exportedBy = (user.getFname() + " " + user.getLname()).trim();
+                    if (exportedBy.isEmpty()) {
+                        exportedBy = username;
+                    }
+                }
+            }
+
+            // Tạo thông tin tìm kiếm cho PDF
+            String searchCriteria = null;
+            if (search != null && !search.trim().isEmpty()) {
+                searchCriteria = "Tìm kiếm: \"" + search.trim() + "\"";
+            }
+
+            // Tạo PDF với thông tin bổ sung
+            byte[] pdfData = pdfService.generateScoresPdf(scores, classroomId, subjectId, classroomName, subjectName,
+                    exportedBy, searchCriteria);
 
             // Tạo tên file
             String fileName = "BangDiem";
             if (classroomName != null) {
-                fileName += "_" + classroomName.replaceAll("[^\\w\\s-]", "");
+                fileName += "_" + classroomName.replaceAll("[^\\w\\s-]", "").replaceAll("\\s+", "_");
             }
             if (subjectName != null) {
-                fileName += "_" + subjectName.replaceAll("[^\\w\\s-]", "");
+                fileName += "_" + subjectName.replaceAll("[^\\w\\s-]", "").replaceAll("\\s+", "_");
+            }
+            if (search != null && !search.trim().isEmpty()) {
+                fileName += "_filtered";
             }
             fileName += "_" + java.time.LocalDate.now().toString() + ".pdf";
 
@@ -3022,8 +3094,8 @@ public class AdminController {
                     .body(pdfData);
 
         } catch (Exception e) {
-            // Log error
-            e.printStackTrace();
+            // Log lỗi chi tiết
+            logger.error("Lỗi khi xuất PDF: ", e);
             return ResponseEntity.internalServerError().build();
         }
     }
