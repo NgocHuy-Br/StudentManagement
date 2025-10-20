@@ -46,19 +46,6 @@
                             width: 80px;
                         }
 
-                        .student-avatar {
-                            width: 32px;
-                            height: 32px;
-                            border-radius: 50%;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            color: white;
-                            font-weight: 600;
-                            font-size: 12px;
-                        }
-
                         .avg-score {
                             font-weight: 700;
                             font-size: 1.1rem;
@@ -131,7 +118,7 @@
                                                         <i class="bi bi-building"></i> Chọn lớp học
                                                     </label>
                                                     <select class="form-select" id="classroomSelect" name="classroomId"
-                                                        onchange="this.form.submit()">
+                                                        onchange="resetSubjectAndSubmit()">
                                                         <option value="">-- Tất cả lớp --</option>
                                                         <c:forEach items="${assignedClasses}" var="classroom">
                                                             <option value="${classroom.id}"
@@ -152,7 +139,7 @@
                                                         <c:forEach items="${subjects}" var="subject">
                                                             <option value="${subject.id}"
                                                                 ${selectedSubjectId==subject.id ? 'selected' : '' }>
-                                                                ${subject.subjectCode} - ${subject.subjectName}
+                                                                ${subject.subjectName}
                                                             </option>
                                                         </c:forEach>
                                                     </select>
@@ -225,17 +212,17 @@
                                                         <table class="table table-hover mb-0">
                                                             <thead class="bg-light">
                                                                 <tr>
-                                                                    <th style="width: 50px;">TT</th>
-                                                                    <th style="width: 100px;">MSSV</th>
-                                                                    <th>Sinh viên</th>
-                                                                    <th style="width: 150px;">Tên môn học</th>
-                                                                    <th style="width: 100px;">Điểm chuyên cần</th>
-                                                                    <th style="width: 100px;">Điểm giữa kỳ</th>
-                                                                    <th style="width: 100px;">Điểm cuối kỳ</th>
-                                                                    <th style="width: 100px;">Điểm TB</th>
-                                                                    <th style="width: 120px;">Kết quả</th>
-                                                                    <th>Ghi chú</th>
-                                                                    <th style="width: 120px;">Thao tác</th>
+                                                                    <th style="width: 40px;">TT</th>
+                                                                    <th style="width: 130px;">MSSV</th>
+                                                                    <th style="width: 150px;">Sinh viên</th>
+                                                                    <th style="width: 180px;">Tên môn học</th>
+                                                                    <th style="width: 80px;">Điểm chuyên cần</th>
+                                                                    <th style="width: 80px;">Điểm giữa kỳ</th>
+                                                                    <th style="width: 80px;">Điểm cuối kỳ</th>
+                                                                    <th style="width: 70px;">Điểm TB</th>
+                                                                    <th style="width: 90px;">Kết quả</th>
+                                                                    <th style="width: 150px;">Ghi chú</th>
+                                                                    <th style="width: 90px;">Nhập điểm</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -260,23 +247,9 @@
                                                                                         class="fw-semibold text-primary">${student.user.username}</span>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <div
-                                                                                        class="d-flex align-items-center">
-                                                                                        <div
-                                                                                            class="student-avatar me-2">
-                                                                                            ${fn:substring(student.user.fname,
-                                                                                            0,
-                                                                                            1)}${fn:substring(student.user.lname,
-                                                                                            0, 1)}
-                                                                                        </div>
-                                                                                        <div>
-                                                                                            <div class="fw-semibold">
-                                                                                                ${student.user.fname}
-                                                                                                ${student.user.lname}
-                                                                                            </div>
-                                                                                            <small
-                                                                                                class="text-muted">${student.user.email}</small>
-                                                                                        </div>
+                                                                                    <div class="fw-semibold">
+                                                                                        ${student.user.lname}
+                                                                                        ${student.user.fname}
                                                                                     </div>
                                                                                 </td>
                                                                                 <td>
@@ -287,10 +260,8 @@
                                                                                             test="${subject.id == selectedSubjectId}">
                                                                                             <div
                                                                                                 class="fw-semibold text-info">
-                                                                                                ${subject.subjectCode}
+                                                                                                ${subject.subjectName}
                                                                                             </div>
-                                                                                            <small
-                                                                                                class="text-muted">${subject.subjectName}</small>
                                                                                         </c:if>
                                                                                     </c:forEach>
                                                                                 </td>
@@ -344,6 +315,7 @@
                                                                                                         class="avg-score score-excellent">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${studentScore.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:when>
@@ -353,6 +325,7 @@
                                                                                                         class="avg-score score-good">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${studentScore.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:when>
@@ -362,6 +335,7 @@
                                                                                                         class="avg-score score-average">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${studentScore.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:when>
@@ -370,6 +344,7 @@
                                                                                                         class="avg-score score-poor">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${studentScore.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:otherwise>
@@ -433,7 +408,7 @@
                                                                                                 class="btn btn-outline-primary btn-sm me-1 edit-score-btn"
                                                                                                 data-score-id="${studentScore.id}"
                                                                                                 data-student-id="${student.id}"
-                                                                                                data-student-name="${student.user.fname} ${student.user.lname}"
+                                                                                                data-student-name="${student.user.lname} ${student.user.fname}"
                                                                                                 data-attendance-score="${studentScore.attendanceScore}"
                                                                                                 data-midterm-score="${studentScore.midtermScore}"
                                                                                                 data-final-score="${studentScore.finalScore}"
@@ -447,7 +422,7 @@
                                                                                             <button type="button"
                                                                                                 class="btn btn-outline-success btn-sm add-score-btn"
                                                                                                 data-student-id="${student.id}"
-                                                                                                data-student-name="${student.user.fname} ${student.user.lname}"
+                                                                                                data-student-name="${student.user.lname} ${student.user.fname}"
                                                                                                 title="Nhập điểm mới">
                                                                                                 <i
                                                                                                     class="bi bi-plus-square"></i>
@@ -469,31 +444,15 @@
                                                                                         class="fw-semibold text-primary">${score.student.user.username}</span>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <div
-                                                                                        class="d-flex align-items-center">
-                                                                                        <div
-                                                                                            class="student-avatar me-2">
-                                                                                            ${fn:substring(score.student.user.fname,
-                                                                                            0,
-                                                                                            1)}${fn:substring(score.student.user.lname,
-                                                                                            0, 1)}
-                                                                                        </div>
-                                                                                        <div>
-                                                                                            <div class="fw-semibold">
-                                                                                                ${score.student.user.fname}
-                                                                                                ${score.student.user.lname}
-                                                                                            </div>
-                                                                                            <small
-                                                                                                class="text-muted">${score.student.user.email}</small>
-                                                                                        </div>
+                                                                                    <div class="fw-semibold">
+                                                                                        ${score.student.user.lname}
+                                                                                        ${score.student.user.fname}
                                                                                     </div>
                                                                                 </td>
                                                                                 <td>
                                                                                     <div class="fw-semibold text-info">
-                                                                                        ${score.subject.subjectCode}
+                                                                                        ${score.subject.subjectName}
                                                                                     </div>
-                                                                                    <small
-                                                                                        class="text-muted">${score.subject.subjectName}</small>
                                                                                 </td>
                                                                                 <td>
                                                                                     <c:choose>
@@ -545,6 +504,7 @@
                                                                                                         class="avg-score score-excellent">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${score.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:when>
@@ -554,6 +514,7 @@
                                                                                                         class="avg-score score-good">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${score.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:when>
@@ -563,6 +524,7 @@
                                                                                                         class="avg-score score-average">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${score.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:when>
@@ -571,6 +533,7 @@
                                                                                                         class="avg-score score-poor">
                                                                                                         <fmt:formatNumber
                                                                                                             value="${score.avgScore}"
+                                                                                                            minFractionDigits="1"
                                                                                                             maxFractionDigits="1" />
                                                                                                     </span>
                                                                                                 </c:otherwise>
@@ -630,7 +593,7 @@
                                                                                         class="btn btn-outline-primary btn-sm edit-score-btn"
                                                                                         data-score-id="${score.id}"
                                                                                         data-student-id="${score.student.id}"
-                                                                                        data-student-name="${score.student.user.fname} ${score.student.user.lname}"
+                                                                                        data-student-name="${score.student.user.lname} ${score.student.user.fname}"
                                                                                         data-attendance-score="${score.attendanceScore}"
                                                                                         data-midterm-score="${score.midtermScore}"
                                                                                         data-final-score="${score.finalScore}"
@@ -688,8 +651,8 @@
                                                         <div class="col-md-4">
                                                             <div class="mb-3">
                                                                 <label for="attendanceScore" class="form-label">Điểm
-                                                                    chuyên cần
-                                                                    (10%)</label>
+                                                                    chuyên cần<br>(<span
+                                                                        id="attendanceWeightLabel">10%</span>)</label>
                                                                 <input type="number" class="form-control"
                                                                     id="attendanceScore" name="attendanceScore" min="0"
                                                                     max="10" step="0.1" placeholder="0.0">
@@ -698,8 +661,8 @@
                                                         <div class="col-md-4">
                                                             <div class="mb-3">
                                                                 <label for="midtermScore" class="form-label">Điểm giữa
-                                                                    kỳ
-                                                                    (30%)</label>
+                                                                    kỳ<br>(<span
+                                                                        id="midtermWeightLabel">30%</span>)</label>
                                                                 <input type="number" class="form-control"
                                                                     id="midtermScore" name="midtermScore" min="0"
                                                                     max="10" step="0.1" placeholder="0.0">
@@ -707,8 +670,9 @@
                                                         </div>
                                                         <div class="col-md-4">
                                                             <div class="mb-3">
-                                                                <label for="finalScore" class="form-label">Điểm cuối kỳ
-                                                                    (60%)</label>
+                                                                <label for="finalScore" class="form-label">Điểm cuối
+                                                                    kỳ<br>(<span
+                                                                        id="finalWeightLabel">60%</span>)</label>
                                                                 <input type="number" class="form-control"
                                                                     id="finalScore" name="finalScore" min="0" max="10"
                                                                     step="0.1" placeholder="0.0">
@@ -735,8 +699,47 @@
                                 <script
                                     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                                 <script>
+                                    // Create subjects mapping for weights
+                                    var subjectsData = {};
+                                    <c:forEach items="${subjects}" var="subject">
+                                        subjectsData['${subject.id}'] = { };
+                                        subjectsData['${subject.id}'].attendanceWeight = Math.round(${subject.attendanceWeight} * 100);
+                                        subjectsData['${subject.id}'].midtermWeight = Math.round(${subject.midtermWeight} * 100);
+                                        subjectsData['${subject.id}'].finalWeight = Math.round(${subject.finalWeight} * 100);
+                                    </c:forEach>
+
+                                    // Function to update weight labels
+                                    function updateWeightLabels(subjectId) {
+                                        if (subjectId && subjectsData[subjectId]) {
+                                            var weights = subjectsData[subjectId];
+                                            document.getElementById('attendanceWeightLabel').textContent = weights.attendanceWeight + '%';
+                                            document.getElementById('midtermWeightLabel').textContent = weights.midtermWeight + '%';
+                                            document.getElementById('finalWeightLabel').textContent = weights.finalWeight + '%';
+                                        } else {
+                                            // Default values when no subject selected
+                                            document.getElementById('attendanceWeightLabel').textContent = '10%';
+                                            document.getElementById('midtermWeightLabel').textContent = '30%';
+                                            document.getElementById('finalWeightLabel').textContent = '60%';
+                                        }
+                                    }
+
+                                    // Reset subject selection when classroom changes
+                                    function resetSubjectAndSubmit() {
+                                        const subjectSelect = document.getElementById('subjectSelect');
+                                        subjectSelect.value = ''; // Reset to "-- Tất cả môn học --"
+                                        const form = subjectSelect.closest('form');
+                                        form.submit();
+                                    }
+
                                     // Event listeners for buttons
                                     document.addEventListener('DOMContentLoaded', function () {
+                                        // Clean up any existing modal state on page load
+                                        const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+                                        existingBackdrops.forEach(backdrop => backdrop.remove());
+                                        document.body.classList.remove('modal-open');
+                                        document.body.style.removeProperty('overflow');
+                                        document.body.style.removeProperty('padding-right');
+
                                         // Add score button handler
                                         document.addEventListener('click', function (e) {
                                             if (e.target.closest('.add-score-btn')) {
@@ -761,6 +764,28 @@
                                                 editScore(scoreId, studentId, studentName, attendanceScore, midtermScore, finalScore, notes);
                                             }
                                         });
+
+                                        // Form submit handler to close modal before submit
+                                        const scoreForm = document.getElementById('scoreForm');
+                                        if (scoreForm) {
+                                            scoreForm.addEventListener('submit', function (e) {
+                                                // Close modal immediately when form is submitted
+                                                const modal = bootstrap.Modal.getInstance(document.getElementById('scoreModal'));
+                                                if (modal) {
+                                                    modal.hide();
+                                                }
+                                                // Remove backdrop if it exists
+                                                setTimeout(function () {
+                                                    const backdrop = document.querySelector('.modal-backdrop');
+                                                    if (backdrop) {
+                                                        backdrop.remove();
+                                                    }
+                                                    document.body.classList.remove('modal-open');
+                                                    document.body.style.removeProperty('overflow');
+                                                    document.body.style.removeProperty('padding-right');
+                                                }, 100);
+                                            });
+                                        }
                                     });
 
                                     function clearSearch() {
@@ -783,6 +808,10 @@
                                         document.getElementById('finalScore').value = '';
                                         document.getElementById('notes').value = '';
 
+                                        // Update weight labels based on selected subject
+                                        var selectedSubjectId = '${selectedSubjectId}';
+                                        updateWeightLabels(selectedSubjectId);
+
                                         new bootstrap.Modal(document.getElementById('scoreModal')).show();
                                     }
 
@@ -794,6 +823,10 @@
                                         document.getElementById('midtermScore').value = midterm || '';
                                         document.getElementById('finalScore').value = final || '';
                                         document.getElementById('notes').value = notes || '';
+
+                                        // Update weight labels based on selected subject
+                                        var selectedSubjectId = '${selectedSubjectId}';
+                                        updateWeightLabels(selectedSubjectId);
 
                                         new bootstrap.Modal(document.getElementById('scoreModal')).show();
                                     }

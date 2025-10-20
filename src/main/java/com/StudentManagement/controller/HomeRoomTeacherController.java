@@ -330,8 +330,26 @@ public class HomeRoomTeacherController {
         // Lấy các lớp mà giáo viên chủ nhiệm
         List<Classroom> assignedClasses = classroomRepository.findByHomeRoomTeacher(teacher);
 
-        // Lấy tất cả môn học
-        List<Subject> subjects = subjectRepository.findAll();
+        // Lấy môn học dựa theo lớp đã chọn
+        List<Subject> subjects = new ArrayList<>();
+        if (classroomId != null) {
+            // Nếu đã chọn lớp, chỉ lấy môn học của lớp đó
+            Classroom selectedClassroom = classroomRepository.findById(classroomId).orElse(null);
+            if (selectedClassroom != null && selectedClassroom.getMajor() != null) {
+                subjects = selectedClassroom.getMajor().getSubjects();
+            }
+        } else {
+            // Nếu chưa chọn lớp, lấy tất cả môn học của tất cả lớp mà giáo viên phụ trách
+            for (Classroom classroom : assignedClasses) {
+                if (classroom.getMajor() != null && classroom.getMajor().getSubjects() != null) {
+                    for (Subject subject : classroom.getMajor().getSubjects()) {
+                        if (!subjects.contains(subject)) {
+                            subjects.add(subject);
+                        }
+                    }
+                }
+            }
+        }
 
         // Nếu có chọn lớp cụ thể
         List<Student> students = new ArrayList<>();
@@ -349,24 +367,26 @@ public class HomeRoomTeacherController {
                     // Lọc điểm theo môn học cụ thể
                     scores = scoreRepository.findByStudentClassroomIdAndSubjectId(classroomId, subjectId);
                 } else {
-                    // Lấy tất cả điểm của lớp (tất cả môn học)
-                    Page<Score> scorePages = scoreRepository.findByClassroomId(classroomId, Pageable.unpaged());
-                    scores = scorePages.getContent();
+                    // Lấy tất cả điểm của lớp (tất cả môn học) - sử dụng method không phân trang
+                    scores = scoreRepository.findAllByClassroomId(classroomId);
                 }
             }
         } else {
             // Tất cả lớp - lấy tất cả sinh viên và điểm của các lớp mà giáo viên chủ nhiệm
+            List<Long> classroomIds = assignedClasses.stream()
+                    .map(Classroom::getId)
+                    .collect(Collectors.toList());
+
             for (Classroom classroom : assignedClasses) {
                 students.addAll(studentRepository.findByClassroomId(classroom.getId()));
+            }
 
-                if (subjectId != null) {
-                    // Lọc điểm theo môn học cụ thể cho tất cả lớp
-                    scores.addAll(scoreRepository.findByStudentClassroomIdAndSubjectId(classroom.getId(), subjectId));
-                } else {
-                    // Lấy tất cả điểm của tất cả lớp
-                    Page<Score> scorePages = scoreRepository.findByClassroomId(classroom.getId(), Pageable.unpaged());
-                    scores.addAll(scorePages.getContent());
-                }
+            if (subjectId != null) {
+                // Lọc điểm theo môn học cụ thể cho tất cả lớp - sử dụng query tối ưu
+                scores = scoreRepository.findByClassroomIdsAndSubjectId(classroomIds, subjectId);
+            } else {
+                // Lấy tất cả điểm của tất cả lớp và tất cả môn học - sử dụng query tối ưu
+                scores = scoreRepository.findByClassroomIds(classroomIds);
             }
         }
 
